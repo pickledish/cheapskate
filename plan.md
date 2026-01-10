@@ -12,24 +12,23 @@ This application is a "Serverless" web platform designed to solve the problem of
 
 * **Separation of Facts vs. Dimensions:** Statement data (Facts) is stored sparsely; Market data (Dimensions) is filled continuously.
 * **Dual Scope:** The app supports two distinct views—**"Net Worth"** (All assets) and **"Investable Portfolio"** (Liquid assets only for rebalancing).
-* **Zero-Maintenance Infrastructure:** Uses Supabase (DB/Auth) and Cloudflare (Compute/Hosting) to eliminate server management.
+* **Zero-Maintenance Infrastructure:** Uses Supabase (DB/Auth/Edge Functions) and Cloudflare Pages (Hosting) to eliminate server management.
 
 ---
 
 ## 2. High-Level Architecture
 
-* **Database:** Supabase (PostgreSQL)
-* Handles Auth, Data Storage, and Row-Level Security (RLS).
+* **Database & Auth:** Supabase (PostgreSQL)
+  * Handles Auth, Data Storage, and Row-Level Security (RLS).
 
-
-* **Compute:** Cloudflare Workers
-* **Function A (API):** Validates User JWT -> Parses PDF via LLM -> Returns structured JSON.
-* **Function B (Cron):** Scheduled monthly -> Fetches public market prices -> Updates DB.
-
+* **Compute:** Supabase Edge Functions (Deno)
+  * **`parse-pdf`:** Validates User JWT -> Parses PDF via LLM -> Returns structured JSON.
+  * **`update-prices`:** Scheduled monthly -> Fetches public market prices -> Updates DB.
+  * Deployed via `supabase functions deploy`, code lives in `functions/` directory.
 
 * **Frontend:** Cloudflare Pages (Static React/Next.js)
-* Talks directly to Supabase for data fetching/auth.
-* Talks to Cloudflare Worker for PDF parsing.
+  * Talks directly to Supabase for data fetching/auth.
+  * Calls Supabase Edge Functions for PDF parsing.
 
 
 
@@ -78,33 +77,30 @@ This application is a "Serverless" web platform designed to solve the problem of
 
 ---
 
-## 4. Compute Layer (Cloudflare Workers)
+## 4. Compute Layer (Supabase Edge Functions)
 
-We utilize a single Cloudflare Worker deployment to handle two distinct triggers.
+Edge Functions are Deno-based serverless functions deployed via `supabase functions deploy`. Code lives in the `functions/` directory of this repo.
 
-### Trigger A: PDF Ingestion (HTTP Route)
+### Function: `parse-pdf`
 
-* **Endpoint:** `POST /parse-pdf`
+* **Endpoint:** `POST /functions/v1/parse-pdf`
 * **Workflow:**
-1. **Auth:** Inspects the `Authorization` header for a valid Supabase JWT, verifies using supabase Asymmetric (public) key.
-2. **Logic:** Accepts a PDF file (or extracted text).
-3. **LLM Call:** Sends payload to OpenAI/Anthropic with a strict JSON Schema.
-* *Prompt:* "Extract holdings. Return JSON: `[{ ticker: 'AAPL', shares: 50.0 }]`."
-
-
-4. **Response:** Returns the JSON payload to the frontend for user verification.
-
+  1. **Auth:** Supabase automatically validates the JWT from the `Authorization` header.
+  2. **Logic:** Accepts a PDF file (or extracted text).
+  3. **LLM Call:** Sends payload to Anthropic with a strict JSON Schema.
+     * *Prompt:* "Extract holdings. Return JSON: `[{ ticker: 'AAPL', shares: 50.0 }]`."
+  4. **Response:** Returns the JSON payload to the frontend for user verification.
 
 * **Note:** This function **does not write to the DB**. The Frontend inserts the verified rows to Supabase.
 * **Note on Unknown Tickers:** If the PDF contains a ticker not present in the `securities` table, the frontend will error on insert. For now, new securities are added manually to the Supabase table. A proper UI for this can be added later.
 
-### Trigger B: Market Data (Cron Job)
+### Function: `update-prices` (Cron)
 
-* **Schedule:** 1st of every month.
+* **Schedule:** 1st of every month (configured in Supabase Dashboard or via `supabase functions deploy --schedule`).
 * **Workflow:**
-1. **Query:** Fetches all unique tickers from the global `securities` table.
-2. **Fetch:** Hits a financial data API (e.g., Yahoo/AlphaVantage) for the previous month's closing price.
-3. **Write:** Inserts new rows into `security_prices` using the Supabase Service Role Key (Admin Access).
+  1. **Query:** Fetches all unique tickers from the global `securities` table.
+  2. **Fetch:** Hits a financial data API (e.g., Yahoo/AlphaVantage) for the previous month's closing price.
+  3. **Write:** Inserts new rows into `security_prices` using the Supabase Service Role Key (available as `SUPABASE_SERVICE_ROLE_KEY` env var).
 
 
 
@@ -158,7 +154,21 @@ Since statement data is sparse (e.g., User uploads a PDF in Jan, but not Feb), t
 
 ---
 
-## 7. Out of Scope (V1)
+## 7. Repository Structure
+
+```
+cheapskate/
+├── terraform/       # Infrastructure (Supabase project, settings)
+├── sql/             # Database migrations (tables, views, RLS policies)
+├── functions/       # Supabase Edge Functions (Deno/TypeScript)
+│   ├── parse-pdf/
+│   └── update-prices/
+└── frontend/        # React/Next.js app (Cloudflare Pages)
+```
+
+---
+
+## 8. Out of Scope (V1)
 
 The following features are explicitly deferred for the initial implementation:
 
