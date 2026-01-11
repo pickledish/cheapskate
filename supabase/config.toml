@@ -1,3 +1,8 @@
+[auth]
+# Allow/disallow new user signups
+enable_signup = true
+# Auto-confirm users for local development (no email verification needed)
+enable_confirmations = false
 
 [functions.parse-pdf]
 enabled = true
