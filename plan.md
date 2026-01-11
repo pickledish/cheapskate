@@ -70,8 +70,8 @@ This application is a "Serverless" web platform designed to solve the problem of
 | Table Name | Description | Key Columns |
 | --- | --- | --- |
 | **`user_private_securities`** | Custom assets visible only to owner. | `id`, `user_id`, `name`, `allocation` (JSONB), `is_liquid` (Boolean) |
-| **`user_private_prices`** | Manual valuation history. | `security_id`, `date`, `total_value_usd` |
-| **`user_private_positions`** | Symmetrical link (kept for consistency). | `security_id`, `share_quantity` (Default 1.0) |
+| **`user_private_prices`** | Point-in-time price history. | `security_id`, `price_date`, `price` |
+| **`user_private_positions`** | Point-in-time quantity history. | `security_id`, `position_date`, `quantity` (Default 1.0) |
 
 > ***Note on `is_liquid`:** This boolean flag allows the UI to easily filter assets for the "Investable" vs. "Net Worth" views. It is implicit that all non-private positions are liquid.*
 
@@ -158,12 +158,13 @@ Since statement data is sparse (e.g., User uploads a PDF in Jan, but not Feb), t
 
 ```
 cheapskate/
-├── terraform/       # Infrastructure (Supabase project, settings)
-├── sql/             # Database migrations (tables, views, RLS policies)
-├── functions/       # Supabase Edge Functions (Deno/TypeScript)
-│   ├── parse-pdf/
-│   └── update-prices/
-└── frontend/        # React/Next.js app (Cloudflare Pages)
+├── terraform/           # Infrastructure (Supabase project, settings)
+├── supabase/
+│   ├── migrations/      # Database migrations (tables, views, RLS policies)
+│   └── functions/       # Supabase Edge Functions (Deno/TypeScript)
+│       ├── parse-pdf/
+│       └── update-prices/
+└── frontend/            # React/Next.js app (Cloudflare Pages)
 ```
 
 ---
