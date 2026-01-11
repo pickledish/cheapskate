@@ -10,6 +10,8 @@ terraform/crash.log
 access-token
 *.pem
 *.key
+supabase/.env
+supabase/.env.local
 
 # OS
 .DS_Store

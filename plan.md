@@ -86,10 +86,9 @@ Edge Functions are Deno-based serverless functions deployed via `supabase functi
 * **Endpoint:** `POST /functions/v1/parse-pdf`
 * **Workflow:**
   1. **Auth:** Supabase automatically validates the JWT from the `Authorization` header.
-  2. **Logic:** Accepts a PDF file (or extracted text).
-  3. **LLM Call:** Sends payload to Anthropic with a strict JSON Schema.
-     * *Prompt:* "Extract holdings. Return JSON: `[{ ticker: 'AAPL', shares: 50.0 }]`."
-  4. **Response:** Returns the JSON payload to the frontend for user verification.
+  2. **Logic:** Accepts base64-encoded PDF in request body.
+  3. **LLM Call:** Sends PDF to Gemini Flash with a Zod-defined JSON Schema for structured output.
+  4. **Response:** Returns validated JSON: `{ holdings: [{ ticker, quantity }], statement_date? }`
 
 * **Note:** This function **does not write to the DB**. The Frontend inserts the verified rows to Supabase.
 * **Note on Unknown Tickers:** If the PDF contains a ticker not present in the `securities` table, the frontend will error on insert. For now, new securities are added manually to the Supabase table. A proper UI for this can be added later.
