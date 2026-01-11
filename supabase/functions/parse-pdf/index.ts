@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 
@@ -62,11 +63,25 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify Authorization header exists (Supabase validates the JWT)
+    // Verify user is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -158,12 +173,17 @@ Rules:
 /* To invoke locally:
 
   1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Set your Gemini API key: `supabase secrets set GEMINI_API_KEY=your-key-here`
-  3. Make an HTTP request:
+  2. Run `supabase functions serve --env-file ./supabase/.env`
+  3. Get a user access token:
+     - Sign up/in via your app, or
+     - Use the Supabase Dashboard > Authentication > Users > Generate Link
+  4. Make an HTTP request with the user's access token:
 
   curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/parse-pdf' \
-    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
+    --header 'Authorization: Bearer <USER_ACCESS_TOKEN>' \
     --header 'Content-Type: application/json' \
     --data '{"pdf_base64":"<base64-encoded-pdf>"}'
+
+  Note: The anon key will NOT work - you need a real user session token.
 
 */
