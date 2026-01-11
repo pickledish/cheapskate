@@ -3,9 +3,12 @@ import AppLayout from '@/components/AppLayout.vue'
 import AddAccountModal from '@/components/modals/AddAccountModal.vue'
 import AddPrivateAssetModal from '@/components/modals/AddPrivateAssetModal.vue'
 import UploadStatementModal from '@/components/modals/UploadStatementModal.vue'
-import UpdateValueModal from '@/components/modals/UpdateValueModal.vue'
-import UpdateSharesModal from '@/components/modals/UpdateSharesModal.vue'
+import UpdatePrivateAssetModal from '@/components/modals/UpdatePrivateAssetModal.vue'
 import { supabase } from '@/lib/supabase'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+
+dayjs.extend(relativeTime)
 
 export default {
   name: 'AccountsView',
@@ -14,8 +17,7 @@ export default {
     AddAccountModal,
     AddPrivateAssetModal,
     UploadStatementModal,
-    UpdateValueModal,
-    UpdateSharesModal
+    UpdatePrivateAssetModal
   },
   data() {
     return {
@@ -32,8 +34,7 @@ export default {
       showAddAssetModal: false,
       showUploadModal: false,
       selectedAccount: null,
-      showValueModal: false,
-      showSharesModal: false,
+      showUpdateAssetModal: false,
       selectedAsset: null
     }
   },
@@ -178,23 +179,13 @@ export default {
       }
     },
 
-    openValueModal(asset) {
+    openUpdateAssetModal(asset) {
       this.selectedAsset = asset
-      this.showValueModal = true
+      this.showUpdateAssetModal = true
     },
 
-    closeValueModal() {
-      this.showValueModal = false
-      this.selectedAsset = null
-    },
-
-    openSharesModal(asset) {
-      this.selectedAsset = asset
-      this.showSharesModal = true
-    },
-
-    closeSharesModal() {
-      this.showSharesModal = false
+    closeUpdateAssetModal() {
+      this.showUpdateAssetModal = false
       this.selectedAsset = null
     },
 
@@ -204,14 +195,13 @@ export default {
     },
 
     async onAssetUpdated() {
-      this.closeValueModal()
-      this.closeSharesModal()
+      this.closeUpdateAssetModal()
       await this.loadData()
     },
 
-    formatDate(dateStr) {
+    relativeDate(dateStr) {
       if (!dateStr) return null
-      return new Date(dateStr).toLocaleDateString()
+      return dayjs(dateStr).fromNow()
     }
   }
 }
@@ -248,7 +238,7 @@ export default {
               <p class="text-sm text-gray-500">{{ account.account_type }}</p>
               <p class="text-xs text-gray-400 mt-2">
                 <span v-if="account.latestStatementDate">
-                  Shares as of {{ formatDate(account.latestStatementDate) }}
+                  Shares updated {{ relativeDate(account.latestStatementDate) }}
                 </span>
                 <span v-else class="italic">No statements yet</span>
               </p>
@@ -258,7 +248,7 @@ export default {
                 v-on:click="openUploadModal(account)"
                 class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                Upload
+                Update
               </button>
               <button
                 v-on:click="deleteAccount(account)"
@@ -308,13 +298,13 @@ export default {
               <div class="text-xs text-gray-400 mt-2 space-y-1">
                 <p>
                   <span v-if="asset.latestPriceDate">
-                    Price as of {{ formatDate(asset.latestPriceDate) }}
+                    Price updated {{ relativeDate(asset.latestPriceDate) }}
                   </span>
                   <span v-else class="italic">No price set</span>
                 </p>
                 <p>
                   <span v-if="asset.latestPositionDate">
-                    Shares as of {{ formatDate(asset.latestPositionDate) }}
+                    Shares updated {{ relativeDate(asset.latestPositionDate) }}
                   </span>
                   <span v-else class="italic">No shares set</span>
                 </p>
@@ -322,16 +312,10 @@ export default {
             </div>
             <div class="mt-4 flex flex-wrap gap-2">
               <button
-                v-on:click="openValueModal(asset)"
-                class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                v-on:click="openUpdateAssetModal(asset)"
+                class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                Value
-              </button>
-              <button
-                v-on:click="openSharesModal(asset)"
-                class="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700"
-              >
-                Shares
+                Update
               </button>
               <button
                 v-on:click="deletePrivateAsset(asset)"
@@ -374,17 +358,10 @@ export default {
       v-on:uploaded="onStatementUploaded"
     />
 
-    <UpdateValueModal
-      v-if="showValueModal"
+    <UpdatePrivateAssetModal
+      v-if="showUpdateAssetModal"
       v-bind:asset="selectedAsset"
-      v-on:close="closeValueModal"
-      v-on:updated="onAssetUpdated"
-    />
-
-    <UpdateSharesModal
-      v-if="showSharesModal"
-      v-bind:asset="selectedAsset"
-      v-on:close="closeSharesModal"
+      v-on:close="closeUpdateAssetModal"
       v-on:updated="onAssetUpdated"
     />
   </AppLayout>
