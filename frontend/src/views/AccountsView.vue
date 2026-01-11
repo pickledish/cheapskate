@@ -1,5 +1,7 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
+import AddAccountModal from '@/components/modals/AddAccountModal.vue'
+import AddPrivateAssetModal from '@/components/modals/AddPrivateAssetModal.vue'
 import UploadStatementModal from '@/components/modals/UploadStatementModal.vue'
 import UpdateValueModal from '@/components/modals/UpdateValueModal.vue'
 import UpdateSharesModal from '@/components/modals/UpdateSharesModal.vue'
@@ -9,28 +11,25 @@ export default {
   name: 'AccountsView',
   components: {
     AppLayout,
+    AddAccountModal,
+    AddPrivateAssetModal,
     UploadStatementModal,
     UpdateValueModal,
     UpdateSharesModal
   },
   data() {
     return {
-      // Regular accounts
+      // Data with metadata
       accounts: [],
-      newAccountName: '',
-      newAccountType: 'brokerage',
-      accountTypes: ['retirement', 'brokerage', 'hsa', 'other'],
-
-      // Private assets
       privateAssets: [],
-      newAssetName: '',
-      newAssetIsLiquid: false,
 
       // Loading/error state
       loading: true,
       error: null,
 
       // Modal state
+      showAddAccountModal: false,
+      showAddAssetModal: false,
       showUploadModal: false,
       selectedAccount: null,
       showValueModal: false,
@@ -46,17 +45,82 @@ export default {
       this.loading = true
       this.error = null
       try {
-        // Load accounts and private assets in parallel
-        const [accountsResult, assetsResult] = await Promise.all([
-          supabase.from('user_accounts').select('*').order('created_at'),
-          supabase.from('user_private_securities').select('*').order('created_at')
-        ])
+        // Load accounts
+        const { data: accountsData, error: accountsError } = await supabase
+          .from('user_accounts')
+          .select('*')
+          .order('created_at')
 
-        if (accountsResult.error) throw accountsResult.error
-        if (assetsResult.error) throw assetsResult.error
+        if (accountsError) throw accountsError
 
-        this.accounts = accountsResult.data
-        this.privateAssets = assetsResult.data
+        // Load most recent statement date for each account
+        const { data: statementsData, error: statementsError } = await supabase
+          .from('user_statements')
+          .select('account_id, statement_date')
+          .order('statement_date', { ascending: false })
+
+        if (statementsError) throw statementsError
+
+        // Build map of account_id -> most recent statement_date
+        const latestStatementByAccount = {}
+        for (const stmt of statementsData) {
+          if (!latestStatementByAccount[stmt.account_id]) {
+            latestStatementByAccount[stmt.account_id] = stmt.statement_date
+          }
+        }
+
+        // Merge metadata into accounts
+        this.accounts = accountsData.map(account => ({
+          ...account,
+          latestStatementDate: latestStatementByAccount[account.id] || null
+        }))
+
+        // Load private assets
+        const { data: assetsData, error: assetsError } = await supabase
+          .from('user_private_securities')
+          .select('*')
+          .order('created_at')
+
+        if (assetsError) throw assetsError
+
+        // Load most recent prices for private assets
+        const { data: pricesData, error: pricesError } = await supabase
+          .from('user_private_prices')
+          .select('security_id, price_date')
+          .order('price_date', { ascending: false })
+
+        if (pricesError) throw pricesError
+
+        // Load most recent positions for private assets
+        const { data: positionsData, error: positionsError } = await supabase
+          .from('user_private_positions')
+          .select('security_id, position_date')
+          .order('position_date', { ascending: false })
+
+        if (positionsError) throw positionsError
+
+        // Build maps
+        const latestPriceByAsset = {}
+        for (const price of pricesData) {
+          if (!latestPriceByAsset[price.security_id]) {
+            latestPriceByAsset[price.security_id] = price.price_date
+          }
+        }
+
+        const latestPositionByAsset = {}
+        for (const pos of positionsData) {
+          if (!latestPositionByAsset[pos.security_id]) {
+            latestPositionByAsset[pos.security_id] = pos.position_date
+          }
+        }
+
+        // Merge metadata into private assets
+        this.privateAssets = assetsData.map(asset => ({
+          ...asset,
+          latestPriceDate: latestPriceByAsset[asset.id] || null,
+          latestPositionDate: latestPositionByAsset[asset.id] || null
+        }))
+
       } catch (err) {
         this.error = err.message
       } finally {
@@ -64,26 +128,7 @@ export default {
       }
     },
 
-    // Regular account methods
-    async createAccount() {
-      if (!this.newAccountName.trim()) return
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        const { error } = await supabase.from('user_accounts').insert({
-          user_id: user.id,
-          name: this.newAccountName.trim(),
-          account_type: this.newAccountType
-        })
-        if (error) throw error
-
-        this.newAccountName = ''
-        await this.loadData()
-      } catch (err) {
-        this.error = err.message
-      }
-    },
-
+    // Account methods
     async deleteAccount(account) {
       if (!confirm(`Delete "${account.name}"? This will also delete all statements for this account.`)) {
         return
@@ -108,33 +153,17 @@ export default {
       this.selectedAccount = null
     },
 
+    async onAccountCreated() {
+      this.showAddAccountModal = false
+      await this.loadData()
+    },
+
     async onStatementUploaded() {
       this.closeUploadModal()
       await this.loadData()
     },
 
     // Private asset methods
-    async createPrivateAsset() {
-      if (!this.newAssetName.trim()) return
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        const { error } = await supabase.from('user_private_securities').insert({
-          user_id: user.id,
-          name: this.newAssetName.trim(),
-          is_liquid: this.newAssetIsLiquid,
-          allocation: {}
-        })
-        if (error) throw error
-
-        this.newAssetName = ''
-        this.newAssetIsLiquid = false
-        await this.loadData()
-      } catch (err) {
-        this.error = err.message
-      }
-    },
-
     async deletePrivateAsset(asset) {
       if (!confirm(`Delete "${asset.name}"? This will also delete all price and position history.`)) {
         return
@@ -169,10 +198,20 @@ export default {
       this.selectedAsset = null
     },
 
+    async onAssetCreated() {
+      this.showAddAssetModal = false
+      await this.loadData()
+    },
+
     async onAssetUpdated() {
       this.closeValueModal()
       this.closeSharesModal()
       await this.loadData()
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return null
+      return new Date(dateStr).toLocaleDateString()
     }
   }
 }
@@ -189,141 +228,145 @@ export default {
       <!-- Loading state -->
       <div v-if="loading" class="text-gray-500">Loading...</div>
 
-      <!-- Regular Accounts Section -->
+      <!-- Investment Accounts Section -->
       <section v-if="!loading">
-        <h2 class="text-xl font-bold text-gray-900 mb-4">Investment Accounts</h2>
+        <h2 class="text-xl font-bold text-gray-900 mb-2">Investment Accounts</h2>
         <p class="text-sm text-gray-600 mb-4">
           Brokerage accounts, 401(k)s, IRAs, HSAs, etc. Upload PDF statements to track holdings.
         </p>
 
-        <!-- Account list -->
-        <div class="bg-white rounded-lg shadow overflow-hidden mb-4">
-          <ul class="divide-y divide-gray-200">
-            <li v-for="account in accounts" v-bind:key="account.id" class="p-4 flex items-center justify-between">
-              <div>
-                <span class="font-medium text-gray-900">{{ account.name }}</span>
-                <span class="ml-2 text-sm text-gray-500">({{ account.account_type }})</span>
-              </div>
-              <div class="flex space-x-2">
-                <button
-                  v-on:click="openUploadModal(account)"
-                  class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Upload Statement
-                </button>
-                <button
-                  v-on:click="deleteAccount(account)"
-                  class="px-3 py-1 text-sm text-red-600 hover:text-red-800"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-            <li v-if="accounts.length === 0" class="p-4 text-gray-500 text-center">
-              No accounts yet. Add one below.
-            </li>
-          </ul>
-        </div>
+        <!-- Card grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Account cards -->
+          <div
+            v-for="account in accounts"
+            v-bind:key="account.id"
+            class="bg-white rounded-lg shadow p-4 flex flex-col"
+          >
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900">{{ account.name }}</h3>
+              <p class="text-sm text-gray-500">{{ account.account_type }}</p>
+              <p class="text-xs text-gray-400 mt-2">
+                <span v-if="account.latestStatementDate">
+                  Shares as of {{ formatDate(account.latestStatementDate) }}
+                </span>
+                <span v-else class="italic">No statements yet</span>
+              </p>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button
+                v-on:click="openUploadModal(account)"
+                class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Upload
+              </button>
+              <button
+                v-on:click="deleteAccount(account)"
+                class="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
 
-        <!-- Add account form -->
-        <form v-on:submit.prevent="createAccount" class="flex space-x-2">
-          <input
-            v-model="newAccountName"
-            type="text"
-            placeholder="Account name (e.g., Fidelity 401k)"
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <select
-            v-model="newAccountType"
-            class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option v-for="type in accountTypes" v-bind:key="type" v-bind:value="type">
-              {{ type }}
-            </option>
-          </select>
+          <!-- Add account card -->
           <button
-            type="submit"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            v-on:click="showAddAccountModal = true"
+            class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors min-h-[140px]"
           >
-            Add Account
+            <span class="text-3xl mb-2">+</span>
+            <span class="text-sm font-medium">Add Account</span>
           </button>
-        </form>
+        </div>
       </section>
 
       <!-- Private Assets Section -->
       <section v-if="!loading">
-        <h2 class="text-xl font-bold text-gray-900 mb-4">Private Assets</h2>
+        <h2 class="text-xl font-bold text-gray-900 mb-2">Private Assets</h2>
         <p class="text-sm text-gray-600 mb-4">
           Real estate, private equity, startups, etc. Manually track value and quantity.
         </p>
 
-        <!-- Private assets list -->
-        <div class="bg-white rounded-lg shadow overflow-hidden mb-4">
-          <ul class="divide-y divide-gray-200">
-            <li v-for="asset in privateAssets" v-bind:key="asset.id" class="p-4 flex items-center justify-between">
-              <div>
-                <span class="font-medium text-gray-900">{{ asset.name }}</span>
-                <span v-if="asset.is_liquid" class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+        <!-- Card grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Asset cards -->
+          <div
+            v-for="asset in privateAssets"
+            v-bind:key="asset.id"
+            class="bg-white rounded-lg shadow p-4 flex flex-col"
+          >
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <h3 class="font-semibold text-gray-900">{{ asset.name }}</h3>
+                <span
+                  v-if="asset.is_liquid"
+                  class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded"
+                >
                   Liquid
                 </span>
-                <span v-else class="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-                  Illiquid
-                </span>
               </div>
-              <div class="flex space-x-2">
-                <button
-                  v-on:click="openValueModal(asset)"
-                  class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  Update Value
-                </button>
-                <button
-                  v-on:click="openSharesModal(asset)"
-                  class="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700"
-                >
-                  Update Shares
-                </button>
-                <button
-                  v-on:click="deletePrivateAsset(asset)"
-                  class="px-3 py-1 text-sm text-red-600 hover:text-red-800"
-                >
-                  Delete
-                </button>
+              <div class="text-xs text-gray-400 mt-2 space-y-1">
+                <p>
+                  <span v-if="asset.latestPriceDate">
+                    Price as of {{ formatDate(asset.latestPriceDate) }}
+                  </span>
+                  <span v-else class="italic">No price set</span>
+                </p>
+                <p>
+                  <span v-if="asset.latestPositionDate">
+                    Shares as of {{ formatDate(asset.latestPositionDate) }}
+                  </span>
+                  <span v-else class="italic">No shares set</span>
+                </p>
               </div>
-            </li>
-            <li v-if="privateAssets.length === 0" class="p-4 text-gray-500 text-center">
-              No private assets yet. Add one below.
-            </li>
-          </ul>
-        </div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button
+                v-on:click="openValueModal(asset)"
+                class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                Value
+              </button>
+              <button
+                v-on:click="openSharesModal(asset)"
+                class="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700"
+              >
+                Shares
+              </button>
+              <button
+                v-on:click="deletePrivateAsset(asset)"
+                class="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
 
-        <!-- Add private asset form -->
-        <form v-on:submit.prevent="createPrivateAsset" class="flex space-x-2 items-center">
-          <input
-            v-model="newAssetName"
-            type="text"
-            placeholder="Asset name (e.g., Primary Residence)"
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <label class="flex items-center space-x-2 text-sm text-gray-700">
-            <input
-              v-model="newAssetIsLiquid"
-              type="checkbox"
-              class="rounded border-gray-300"
-            />
-            <span>Liquid</span>
-          </label>
+          <!-- Add asset card -->
           <button
-            type="submit"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            v-on:click="showAddAssetModal = true"
+            class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors min-h-[140px]"
           >
-            Add Asset
+            <span class="text-3xl mb-2">+</span>
+            <span class="text-sm font-medium">Add Asset</span>
           </button>
-        </form>
+        </div>
       </section>
     </div>
 
     <!-- Modals -->
+    <AddAccountModal
+      v-if="showAddAccountModal"
+      v-on:close="showAddAccountModal = false"
+      v-on:created="onAccountCreated"
+    />
+
+    <AddPrivateAssetModal
+      v-if="showAddAssetModal"
+      v-on:close="showAddAssetModal = false"
+      v-on:created="onAssetCreated"
+    />
+
     <UploadStatementModal
       v-if="showUploadModal"
       v-bind:account="selectedAccount"
