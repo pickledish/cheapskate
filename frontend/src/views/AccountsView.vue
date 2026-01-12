@@ -62,10 +62,54 @@ export default {
           }
         }
 
+        // Load holdings with asset info to calculate account values
+        const { data: holdingsData, error: holdingsError } = await supabase
+          .from('asset_holdings')
+          .select('account_id, asset_id, holding_date, quantity')
+          .order('holding_date', { ascending: false })
+
+        if (holdingsError) throw holdingsError
+
+        // Load all asset prices
+        const { data: pricesData, error: pricesError } = await supabase
+          .from('asset_prices')
+          .select('asset_id, price_date, price')
+          .order('price_date', { ascending: false })
+
+        if (pricesError) throw pricesError
+
+        // Build map of asset_id -> latest price
+        const latestPriceByAsset = {}
+        for (const p of pricesData) {
+          if (!latestPriceByAsset[p.asset_id]) {
+            latestPriceByAsset[p.asset_id] = parseFloat(p.price)
+          }
+        }
+
+        // Build map of (account_id, asset_id) -> latest quantity
+        const latestHoldingByAccountAsset = {}
+        for (const h of holdingsData) {
+          const key = `${h.account_id}-${h.asset_id}`
+          if (!latestHoldingByAccountAsset[key]) {
+            latestHoldingByAccountAsset[key] = parseFloat(h.quantity)
+          }
+        }
+
+        // Calculate total value per account
+        const accountValues = {}
+        for (const key in latestHoldingByAccountAsset) {
+          const [accountId, assetId] = key.split('-')
+          const quantity = latestHoldingByAccountAsset[key]
+          const price = latestPriceByAsset[assetId] || 0
+          const value = quantity * price
+          accountValues[accountId] = (accountValues[accountId] || 0) + value
+        }
+
         // Merge metadata into accounts
         this.accounts = accountsData.map(account => ({
           ...account,
-          latestStatementDate: latestStatementByAccount[account.id] || null
+          latestStatementDate: latestStatementByAccount[account.id] || null,
+          totalValue: accountValues[account.id] || null
         }))
 
       } catch (err) {
@@ -73,6 +117,16 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+
+    formatCurrency(value) {
+      if (value == null) return null
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(value)
     },
 
     async deleteAccount(account) {
@@ -156,36 +210,57 @@ export default {
           <div
             v-for="account in accounts"
             v-bind:key="account.id"
-            class="bg-white rounded-lg shadow p-4 flex flex-col"
+            class="bg-white rounded-lg shadow p-4 flex flex-col relative"
           >
-            <div class="flex-1">
-              <h3 class="font-semibold text-gray-900">{{ account.name }}</h3>
-              <p class="text-sm text-gray-500">{{ account.account_type }}</p>
-              <p class="text-xs text-gray-400 mt-2">
-                <span v-if="account.latestStatementDate">
-                  Last updated {{ relativeDate(account.latestStatementDate) }}
-                </span>
-                <span v-else class="italic">No data yet</span>
-              </p>
-            </div>
-            <div class="mt-4 flex flex-wrap gap-2">
+            <!-- Edit and Delete buttons in upper right -->
+            <div class="absolute top-4 right-4 flex gap-1">
               <button
-                v-on:click="openUploadModal(account)"
-                class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                class="w-6 h-6 flex items-center justify-center text-xs text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                title="Edit account"
               >
-                Upload Statement
-              </button>
-              <button
-                v-on:click="openUpdatePositionModal(account)"
-                class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-              >
-                Update Shares
+                E
               </button>
               <button
                 v-on:click="deleteAccount(account)"
-                class="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+                class="w-6 h-6 flex items-center justify-center text-xs text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                title="Delete account"
               >
-                Delete
+                D
+              </button>
+            </div>
+
+            <div class="flex-1 pr-6">
+              <h3 class="font-semibold text-gray-900">{{ account.name }}</h3>
+              <!-- Account type tag -->
+              <span class="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                {{ account.account_type }}
+              </span>
+              <!-- Value and last updated -->
+              <div class="mt-3">
+                <p v-if="account.totalValue != null" class="text-xs text-gray-400">
+                  Value of {{ formatCurrency(account.totalValue) }}
+                </p>
+                <p class="text-xs text-gray-400">
+                  <span v-if="account.latestStatementDate">
+                    Last updated {{ relativeDate(account.latestStatementDate) }}
+                  </span>
+                  <span v-else class="italic">No data yet</span>
+                </p>
+              </div>
+            </div>
+            <!-- Action buttons - full width, both grey -->
+            <div class="mt-4 grid grid-cols-2 gap-2">
+              <button
+                v-on:click="openUploadModal(account)"
+                class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-blue-600 hover:text-white transition-colors"
+              >
+                Statement Upload
+              </button>
+              <button
+                v-on:click="openUpdatePositionModal(account)"
+                class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-blue-600 hover:text-white transition-colors"
+              >
+                Manual Update
               </button>
             </div>
           </div>

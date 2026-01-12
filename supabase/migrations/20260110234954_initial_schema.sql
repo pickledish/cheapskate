@@ -125,7 +125,7 @@ create table assets (
     is_liquid boolean not null default true,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
-    unique nulls not distinct (user_id, ticker)
+    unique (user_id, ticker)
 );
 
 alter table assets enable row level security;
