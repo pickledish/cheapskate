@@ -110,8 +110,8 @@ Expected response:
 ```json
 {
   "holdings": [
-    { "ticker": "VTI", "quantity": 100.5 },
-    { "ticker": "$CASH", "quantity": 1234.56 }
+    { "name": "VTI", "quantity": 100.5, "total_value": 25125.00, "price": 250.00 },
+    { "name": "$CASH", "quantity": 1234.56, "total_value": 1234.56 }
   ],
   "statement_date": "2025-01-31"
 }
@@ -120,16 +120,14 @@ Expected response:
 ## Database Schema
 
 Key tables:
-- `securities` - Public tickers with allocation breakdowns
-- `security_prices` - End-of-month price history
 - `user_accounts` - Investment accounts (401k, IRA, brokerage, etc.)
 - `user_statements` - Uploaded PDF statements
-- `user_statement_positions` - Holdings from statements
-- `user_private_securities` - Custom private assets (real estate, startups)
-- `user_private_positions` - Point-in-time quantity history
-- `user_private_prices` - Point-in-time price history
+- `user_securities` - All assets (public tickers and private assets like real estate)
+- `user_security_positions` - Position/quantity history (linked to accounts, optionally to statements)
+- `user_security_prices` - Price history (optionally linked to statements)
+- `user_goals` - Target allocation for rebalancing
 
-All user tables are protected by Row Level Security (RLS).
+All tables are per-user and protected by Row Level Security (RLS).
 
 ## Edge Functions
 
@@ -140,7 +138,7 @@ Parses investment statement PDFs using Gemini 3 Flash.
 - **Endpoint:** `POST /functions/v1/parse-pdf`
 - **Auth:** Requires Supabase JWT in Authorization header
 - **Body:** `{ "pdf_base64": "<base64-encoded-pdf>" }`
-- **Returns:** `{ "holdings": [...], "statement_date": "YYYY-MM-DD" }`
+- **Returns:** `{ "holdings": [{ "name", "quantity", "total_value", "price?" }], "statement_date?" }`
 
 ### update-prices (TODO)
 

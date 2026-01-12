@@ -5,8 +5,10 @@ import { z } from "zod";
 
 // Define the schema once - used for both API request and response validation
 const HoldingSchema = z.object({
-  ticker: z.string().describe("Stock/ETF/fund ticker symbol (e.g., AAPL, VTI, VTSAX). For cash, use '$CASH'. For unknown funds, use name in CAPS with underscores."),
+  name: z.string().describe("Asset identifier: ticker symbol (e.g., AAPL, VTI) or descriptive name (e.g., 'Target Date 2060 Fund'). For cash, use '$CASH'."),
   quantity: z.number().describe("Number of shares/units as a decimal. For $CASH, this is the dollar amount."),
+  total_value: z.number().describe("Total market value of this holding in dollars. Required for all holdings."),
+  price: z.number().optional().describe("Per-share/per-unit price if explicitly shown. Optional - will be computed from total_value/quantity if not provided."),
 });
 
 const ParsePdfResponseSchema = z.object({
@@ -27,16 +29,24 @@ const geminiSchema = {
       items: {
         type: "object",
         properties: {
-          ticker: {
+          name: {
             type: "string",
-            description: "Stock/ETF/fund ticker symbol (e.g., AAPL, VTI, VTSAX). For cash, use '$CASH'. For unknown funds, use name in CAPS with underscores.",
+            description: "Asset identifier: ticker symbol (e.g., AAPL, VTI) or descriptive name (e.g., 'Target Date 2060 Fund'). For cash, use '$CASH'.",
           },
           quantity: {
             type: "number",
             description: "Number of shares/units as a decimal. For $CASH, this is the dollar amount.",
           },
+          total_value: {
+            type: "number",
+            description: "Total market value of this holding in dollars. Required for all holdings.",
+          },
+          price: {
+            type: "number",
+            description: "Per-share/per-unit price if explicitly shown. Optional - will be computed from total_value/quantity if not provided.",
+          },
         },
-        required: ["ticker", "quantity"],
+        required: ["name", "quantity", "total_value"],
       },
     },
     statement_date: {
@@ -96,6 +106,32 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fetch user's existing securities to help LLM match against known assets
+    const { data: existingSecurities } = await supabase
+      .from("user_securities")
+      .select("ticker, name");
+
+    // Build the prompt with optional existing securities context
+    let promptText = `Analyze this investment statement PDF and extract all holdings/positions.
+
+Rules:
+- Extract every holding/position with its name, quantity (shares/units), and total market value
+- For the name field, use the ticker symbol if one is shown (e.g., AAPL, VTI), otherwise use a descriptive name
+- For each holding, also extract the per-share price if it's explicitly shown
+- For cash balances, use name "$CASH" with quantity AND total_value both equal to the dollar amount
+- Only include actual holdings, not transaction history
+- Extract the statement date if visible`;
+
+    if (existingSecurities && existingSecurities.length > 0) {
+      const knownAssets = existingSecurities
+        .map((s) => s.ticker ?? s.name)
+        .join(", ");
+      promptText += `
+
+Known assets: ${knownAssets}
+If you are reasonably confident that a holding in this statement represents the same asset as one listed above, use that exact name from the list.`;
+    }
+
     // Initialize Gemini client (uses GEMINI_API_KEY env var)
     const ai = new GoogleGenAI({ apiKey: Deno.env.get("GEMINI_API_KEY") });
 
@@ -113,14 +149,7 @@ Deno.serve(async (req) => {
               },
             },
             {
-              text: `Analyze this investment statement PDF and extract all holdings/positions.
-
-Rules:
-- Extract every holding/position with its ticker symbol and quantity (number of shares/units)
-- For cash balances, use ticker "$CASH" and quantity as the dollar amount
-- If a ticker symbol is unclear, use the fund name in CAPS with underscores (e.g., "TARGET_DATE_2050")
-- Only include actual holdings, not transaction history
-- Extract the statement date if visible`,
+              text: promptText,
             },
           ],
         },
