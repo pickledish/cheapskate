@@ -5,6 +5,7 @@ import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import InvestmentsView from '@/views/InvestmentsView.vue'
 import AccountsView from '@/views/AccountsView.vue'
+import AssetsView from '@/views/AssetsView.vue'
 
 const routes = [
   {
@@ -23,6 +24,12 @@ const routes = [
     path: '/investments',
     name: 'investments',
     component: InvestmentsView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/assets',
+    name: 'assets',
+    component: AssetsView,
     meta: { requiresAuth: true }
   },
   {

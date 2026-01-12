@@ -20,7 +20,7 @@ export default {
       // File state
       file: null,
 
-      // Parsed data
+      // Parsed data (holdings now have: name, quantity, total_value, price?)
       holdings: [],
       statementDate: '',
 
@@ -107,6 +107,27 @@ export default {
       this.holdings.splice(index, 1)
     },
 
+    computePrice(holding) {
+      if (holding.price) return holding.price
+      if (holding.quantity && holding.quantity !== 0) {
+        return holding.total_value / holding.quantity
+      }
+      return holding.total_value // fallback for quantity=0 edge case
+    },
+
+    formatCurrency(value) {
+      if (value === null || value === undefined) return '-'
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(value)
+    },
+
+    formatNumber(value) {
+      if (value === null || value === undefined) return '-'
+      return value.toLocaleString(undefined, { maximumFractionDigits: 4 })
+    },
+
     async saveStatement() {
       if (this.holdings.length === 0) {
         this.error = 'No holdings to save'
@@ -123,6 +144,9 @@ export default {
       this.error = null
 
       try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
+
         // 1. Create the statement record
         const { data: statement, error: statementError } = await supabase
           .from('user_statements')
@@ -135,44 +159,74 @@ export default {
 
         if (statementError) throw statementError
 
-        // 2. Look up security IDs for all tickers
-        const tickers = this.holdings.map(h => h.ticker)
-        const { data: securities, error: secError } = await supabase
-          .from('securities')
-          .select('id, ticker')
-          .in('ticker', tickers)
+        // 2. Process each holding
+        for (const holding of this.holdings) {
+          // Look up security by ticker=name OR name=name
+          let { data: security } = await supabase
+            .from('user_securities')
+            .select('id')
+            .or(`ticker.eq.${holding.name},name.eq.${holding.name}`)
+            .single()
 
-        if (secError) throw secError
+          // If not found, auto-create
+          if (!security) {
+            const { data: newSecurity, error: createError } = await supabase
+              .from('user_securities')
+              .insert({
+                user_id: user.id,
+                ticker: holding.name,
+                name: holding.name,
+                is_liquid: true,
+                allocation: {}
+              })
+              .select()
+              .single()
 
-        // Build ticker -> security_id map
-        const tickerToId = {}
-        for (const sec of securities) {
-          tickerToId[sec.ticker] = sec.id
-        }
+            if (createError) {
+              // Rollback: delete the statement
+              await supabase.from('user_statements').delete().eq('id', statement.id)
+              throw createError
+            }
+            security = newSecurity
+          }
 
-        // Check for missing tickers
-        const missingTickers = tickers.filter(t => !tickerToId[t])
-        if (missingTickers.length > 0) {
-          // Rollback: delete the statement we just created
-          await supabase.from('user_statements').delete().eq('id', statement.id)
-          throw new Error(`Unknown tickers: ${missingTickers.join(', ')}. Please add these to the securities table first.`)
-        }
+          // Compute price
+          const price = this.computePrice(holding)
 
-        // 3. Insert positions
-        const positions = this.holdings.map(h => ({
-          statement_id: statement.id,
-          security_id: tickerToId[h.ticker],
-          quantity: h.quantity
-        }))
+          // Insert/update price
+          const { error: priceError } = await supabase
+            .from('user_security_prices')
+            .upsert({
+              security_id: security.id,
+              price_date: this.statementDate,
+              price: price,
+              statement_id: statement.id
+            }, {
+              onConflict: 'security_id,price_date'
+            })
 
-        const { error: posError } = await supabase
-          .from('user_statement_positions')
-          .insert(positions)
+          if (priceError) {
+            await supabase.from('user_statements').delete().eq('id', statement.id)
+            throw priceError
+          }
 
-        if (posError) {
-          // Rollback: delete the statement
-          await supabase.from('user_statements').delete().eq('id', statement.id)
-          throw posError
+          // Insert/update position
+          const { error: posError } = await supabase
+            .from('user_security_positions')
+            .upsert({
+              security_id: security.id,
+              account_id: this.account.id,
+              position_date: this.statementDate,
+              quantity: holding.quantity,
+              statement_id: statement.id
+            }, {
+              onConflict: 'security_id,account_id,position_date'
+            })
+
+          if (posError) {
+            await supabase.from('user_statements').delete().eq('id', statement.id)
+            throw posError
+          }
         }
 
         // Success!
@@ -229,7 +283,7 @@ export default {
     <!-- Step 2: Preview -->
     <div v-if="step === 'preview'">
       <p class="text-sm text-gray-600 mb-4">
-        Review the parsed holdings below. Remove any incorrect entries, then confirm.
+        Review the parsed holdings below. New assets will be created automatically.
       </p>
 
       <!-- Statement date -->
@@ -249,15 +303,19 @@ export default {
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50 sticky top-0">
             <tr>
-              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ticker</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Action</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Value</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Price</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"></th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="(holding, index) in holdings" v-bind:key="index">
-              <td class="px-4 py-2 text-sm text-gray-900">{{ holding.ticker }}</td>
-              <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ holding.quantity.toLocaleString() }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900">{{ holding.name }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ formatNumber(holding.quantity) }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ formatCurrency(holding.total_value) }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ formatCurrency(computePrice(holding)) }}</td>
               <td class="px-4 py-2 text-right">
                 <button
                   v-on:click="removeHolding(index)"
@@ -268,7 +326,7 @@ export default {
               </td>
             </tr>
             <tr v-if="holdings.length === 0">
-              <td colspan="3" class="px-4 py-4 text-sm text-gray-500 text-center">
+              <td colspan="5" class="px-4 py-4 text-sm text-gray-500 text-center">
                 No holdings found
               </td>
             </tr>
