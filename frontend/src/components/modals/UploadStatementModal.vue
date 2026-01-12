@@ -149,7 +149,7 @@ export default {
 
         // 1. Create the statement record
         const { data: statement, error: statementError } = await supabase
-          .from('user_statements')
+          .from('statements')
           .insert({
             account_id: this.account.id,
             statement_date: this.statementDate
@@ -161,33 +161,32 @@ export default {
 
         // 2. Process each holding
         for (const holding of this.holdings) {
-          // Look up security by ticker=name OR name=name
-          let { data: security } = await supabase
-            .from('user_securities')
+          // Look up asset by ticker=name OR name=name
+          let { data: asset } = await supabase
+            .from('assets')
             .select('id')
             .or(`ticker.eq.${holding.name},name.eq.${holding.name}`)
             .single()
 
           // If not found, auto-create
-          if (!security) {
-            const { data: newSecurity, error: createError } = await supabase
-              .from('user_securities')
+          if (!asset) {
+            const { data: newAsset, error: createError } = await supabase
+              .from('assets')
               .insert({
                 user_id: user.id,
                 ticker: holding.name,
                 name: holding.name,
-                is_liquid: true,
-                allocation: {}
+                is_liquid: true
               })
               .select()
               .single()
 
             if (createError) {
               // Rollback: delete the statement
-              await supabase.from('user_statements').delete().eq('id', statement.id)
+              await supabase.from('statements').delete().eq('id', statement.id)
               throw createError
             }
-            security = newSecurity
+            asset = newAsset
           }
 
           // Compute price
@@ -195,37 +194,37 @@ export default {
 
           // Insert/update price
           const { error: priceError } = await supabase
-            .from('user_security_prices')
+            .from('asset_prices')
             .upsert({
-              security_id: security.id,
+              asset_id: asset.id,
               price_date: this.statementDate,
               price: price,
               statement_id: statement.id
             }, {
-              onConflict: 'security_id,price_date'
+              onConflict: 'asset_id,price_date'
             })
 
           if (priceError) {
-            await supabase.from('user_statements').delete().eq('id', statement.id)
+            await supabase.from('statements').delete().eq('id', statement.id)
             throw priceError
           }
 
-          // Insert/update position
-          const { error: posError } = await supabase
-            .from('user_security_positions')
+          // Insert/update holding
+          const { error: holdingError } = await supabase
+            .from('asset_holdings')
             .upsert({
-              security_id: security.id,
+              asset_id: asset.id,
               account_id: this.account.id,
-              position_date: this.statementDate,
+              holding_date: this.statementDate,
               quantity: holding.quantity,
               statement_id: statement.id
             }, {
-              onConflict: 'security_id,account_id,position_date'
+              onConflict: 'asset_id,account_id,holding_date'
             })
 
-          if (posError) {
-            await supabase.from('user_statements').delete().eq('id', statement.id)
-            throw posError
+          if (holdingError) {
+            await supabase.from('statements').delete().eq('id', statement.id)
+            throw holdingError
           }
         }
 

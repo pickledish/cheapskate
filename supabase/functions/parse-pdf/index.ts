@@ -106,9 +106,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch user's existing securities to help LLM match against known assets
-    const { data: existingSecurities } = await supabase
-      .from("user_securities")
+    // Fetch user's existing assets to help LLM match against known assets
+    const { data: existingAssets } = await supabase
+      .from("assets")
       .select("ticker, name");
 
     // Build the prompt with optional existing securities context
@@ -122,8 +122,8 @@ Rules:
 - Only include actual holdings, not transaction history
 - Extract the statement date if visible`;
 
-    if (existingSecurities && existingSecurities.length > 0) {
-      const knownAssets = existingSecurities
+    if (existingAssets && existingAssets.length > 0) {
+      const knownAssets = existingAssets
         .map((s) => s.ticker ?? s.name)
         .join(", ");
       promptText += `

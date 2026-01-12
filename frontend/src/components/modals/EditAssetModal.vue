@@ -17,7 +17,6 @@ export default {
       name: '',
       ticker: '',
       isLiquid: true,
-      allocation: '',
       loading: false,
       error: null
     }
@@ -27,10 +26,6 @@ export default {
     this.name = this.asset.name || ''
     this.ticker = this.asset.ticker || ''
     this.isLiquid = this.asset.is_liquid
-    // Convert allocation object to JSON string for editing
-    this.allocation = Object.keys(this.asset.allocation || {}).length > 0
-      ? JSON.stringify(this.asset.allocation, null, 2)
-      : ''
   },
   methods: {
     async save() {
@@ -39,26 +34,14 @@ export default {
         return
       }
 
-      // Parse allocation JSON if provided
-      let allocationObj = {}
-      if (this.allocation.trim()) {
-        try {
-          allocationObj = JSON.parse(this.allocation)
-        } catch (e) {
-          this.error = 'Invalid allocation JSON. Example: {"stock": 0.6, "bond": 0.4}'
-          return
-        }
-      }
-
       this.loading = true
       this.error = null
 
       try {
-        const { error } = await supabase.from('user_securities').update({
+        const { error } = await supabase.from('assets').update({
           name: this.name.trim(),
           ticker: this.ticker.trim() || null,
-          is_liquid: this.isLiquid,
-          allocation: allocationObj
+          is_liquid: this.isLiquid
         }).eq('id', this.asset.id)
 
         if (error) throw error
@@ -117,21 +100,6 @@ export default {
             Liquid asset (include in rebalancing calculations)
           </span>
         </label>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
-          Allocation (JSON, optional)
-        </label>
-        <textarea
-          v-model="allocation"
-          rows="3"
-          placeholder='e.g., {"stock": 0.6, "bond": 0.4}'
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-        ></textarea>
-        <p class="mt-1 text-xs text-gray-500">
-          Asset class breakdown for portfolio analysis. Leave blank if unknown.
-        </p>
       </div>
     </div>
 

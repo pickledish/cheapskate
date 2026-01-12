@@ -27,12 +27,11 @@ export default {
 
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        const { error } = await supabase.from('user_securities').insert({
+        const { error } = await supabase.from('assets').insert({
           user_id: user.id,
           name: this.name.trim(),
           ticker: this.ticker.trim() || null,
-          is_liquid: this.isLiquid,
-          allocation: {}
+          is_liquid: this.isLiquid
         })
 
         if (error) throw error

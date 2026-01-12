@@ -41,13 +41,13 @@ export default {
       this.error = null
 
       try {
-        const { error } = await supabase.from('user_security_prices').upsert({
-          security_id: this.asset.id,
+        const { error } = await supabase.from('asset_prices').upsert({
+          asset_id: this.asset.id,
           price_date: this.date,
           price: priceNum,
           statement_id: null  // manual update
         }, {
-          onConflict: 'security_id,price_date'
+          onConflict: 'asset_id,price_date'
         })
 
         if (error) throw error

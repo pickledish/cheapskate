@@ -47,26 +47,26 @@ export default {
       this.error = null
 
       try {
-        // Look up security by ticker OR name (exact match)
+        // Look up asset by ticker OR name (exact match)
         const assetNameTrimmed = this.assetName.trim()
-        const { data: security, error: lookupError } = await supabase
-          .from('user_securities')
+        const { data: asset, error: lookupError } = await supabase
+          .from('assets')
           .select('id')
           .or(`ticker.eq.${assetNameTrimmed},name.eq.${assetNameTrimmed}`)
           .single()
 
-        if (lookupError || !security) {
+        if (lookupError || !asset) {
           throw new Error(`No asset found matching "${assetNameTrimmed}". Create it in the Assets tab first.`)
         }
 
-        const { error } = await supabase.from('user_security_positions').upsert({
-          security_id: security.id,
+        const { error } = await supabase.from('asset_holdings').upsert({
+          asset_id: asset.id,
           account_id: this.account.id,
-          position_date: this.date,
+          holding_date: this.date,
           quantity: quantityNum,
           statement_id: null  // manual update
         }, {
-          onConflict: 'security_id,account_id,position_date'
+          onConflict: 'asset_id,account_id,holding_date'
         })
 
         if (error) throw error

@@ -40,7 +40,7 @@ export default {
       try {
         // Load accounts
         const { data: accountsData, error: accountsError } = await supabase
-          .from('user_accounts')
+          .from('accounts')
           .select('*')
           .order('created_at')
 
@@ -48,7 +48,7 @@ export default {
 
         // Load most recent statement date for each account
         const { data: statementsData, error: statementsError } = await supabase
-          .from('user_statements')
+          .from('statements')
           .select('account_id, statement_date')
           .order('statement_date', { ascending: false })
 
@@ -81,7 +81,7 @@ export default {
       }
 
       try {
-        const { error } = await supabase.from('user_accounts').delete().eq('id', account.id)
+        const { error } = await supabase.from('accounts').delete().eq('id', account.id)
         if (error) throw error
         await this.loadData()
       } catch (err) {

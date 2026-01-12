@@ -38,27 +38,27 @@ export default {
       this.loading = true
       this.error = null
       try {
-        // Load securities
-        const { data: securitiesData, error: securitiesError } = await supabase
-          .from('user_securities')
+        // Load assets
+        const { data: assetsData, error: assetsError } = await supabase
+          .from('assets')
           .select('*')
           .order('name')
 
-        if (securitiesError) throw securitiesError
+        if (assetsError) throw assetsError
 
-        // Load most recent prices for each security
+        // Load most recent prices for each asset
         const { data: pricesData, error: pricesError } = await supabase
-          .from('user_security_prices')
-          .select('security_id, price_date, price')
+          .from('asset_prices')
+          .select('asset_id, price_date, price')
           .order('price_date', { ascending: false })
 
         if (pricesError) throw pricesError
 
-        // Build map of security_id -> { price, date }
+        // Build map of asset_id -> { price, date }
         const latestPriceByAsset = {}
         for (const p of pricesData) {
-          if (!latestPriceByAsset[p.security_id]) {
-            latestPriceByAsset[p.security_id] = {
+          if (!latestPriceByAsset[p.asset_id]) {
+            latestPriceByAsset[p.asset_id] = {
               price: p.price,
               date: p.price_date
             }
@@ -66,7 +66,7 @@ export default {
         }
 
         // Merge metadata into assets
-        this.assets = securitiesData.map(asset => ({
+        this.assets = assetsData.map(asset => ({
           ...asset,
           latestPrice: latestPriceByAsset[asset.id]?.price || null,
           latestPriceDate: latestPriceByAsset[asset.id]?.date || null

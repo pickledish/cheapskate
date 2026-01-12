@@ -27,7 +27,7 @@ export default {
 
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        const { error } = await supabase.from('user_accounts').insert({
+        const { error } = await supabase.from('accounts').insert({
           user_id: user.id,
           name: this.name.trim(),
           account_type: this.accountType
