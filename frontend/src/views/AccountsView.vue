@@ -28,6 +28,7 @@ export default {
       accounts: [],
       loading: true,
       error: null,
+      searchQuery: '',
 
       // Modal state
       showAddAccountModal: false,
@@ -35,6 +36,25 @@ export default {
       showUploadModal: false,
       showUpdatePositionModal: false,
       selectedAccount: null
+    }
+  },
+  computed: {
+    filteredAccounts() {
+      const query = this.searchQuery.toLowerCase().trim()
+      if (!query) return this.accounts
+
+      return this.accounts.filter(account => {
+        // Search in name
+        if (account.name.toLowerCase().includes(query)) return true
+
+        // Search in tag values
+        const tags = account.tags || {}
+        for (const value of Object.values(tags)) {
+          if (String(value).toLowerCase().includes(query)) return true
+        }
+
+        return false
+      })
     }
   },
   async mounted() {
@@ -230,7 +250,15 @@ export default {
 
       <!-- Investment Accounts Section -->
       <section v-if="!loading">
-        <h2 class="text-xl font-bold text-gray-900 mb-2">Investment Accounts</h2>
+        <div class="flex items-center justify-between mb-0.5">
+          <h2 class="text-2xl font-bold text-gray-900">Investment Accounts</h2>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search accounts..."
+            class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+          />
+        </div>
         <p class="text-sm text-gray-600 mb-4">
           Brokerage accounts, 401(k)s, IRAs, HSAs, etc. Upload PDF statements or manually update shares.
         </p>
@@ -239,7 +267,7 @@ export default {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- Account cards -->
           <div
-            v-for="account in accounts"
+            v-for="account in filteredAccounts"
             v-bind:key="account.id"
             class="bg-white rounded-lg shadow p-4 flex flex-col relative"
           >
