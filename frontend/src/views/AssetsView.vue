@@ -22,12 +22,29 @@ export default {
       assets: [],
       loading: true,
       error: null,
+      searchQuery: '',
 
       // Modal state
       showAddAssetModal: false,
       showEditAssetModal: false,
       showUpdatePriceModal: false,
       selectedAsset: null
+    }
+  },
+  computed: {
+    filteredAssets() {
+      const query = this.searchQuery.toLowerCase().trim()
+      if (!query) return this.assets
+
+      return this.assets.filter(asset => {
+        // Search in name
+        if (asset.name.toLowerCase().includes(query)) return true
+
+        // Search in ticker
+        if (asset.ticker && asset.ticker.toLowerCase().includes(query)) return true
+
+        return false
+      })
     }
   },
   async mounted() {
@@ -130,20 +147,18 @@ export default {
   <AppLayout>
     <div class="space-y-6">
       <!-- Header -->
-      <div class="flex justify-between items-center">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Assets</h1>
-          <p class="text-sm text-gray-600">
-            All your securities and assets. Edit metadata or update prices here.
-          </p>
-        </div>
-        <button
-          v-on:click="showAddAssetModal = true"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Add Asset
-        </button>
+      <div class="flex items-center justify-between mb-0.5">
+        <h2 class="text-2xl font-bold text-gray-900">Assets</h2>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search assets..."
+          class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+        />
       </div>
+      <p class="text-sm text-gray-600 mb-4">
+        All your securities and assets. Edit metadata or update prices here.
+      </p>
 
       <!-- Error display -->
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">
@@ -154,77 +169,77 @@ export default {
       <div v-if="loading" class="text-gray-500">Loading...</div>
 
       <!-- Assets table -->
-      <div v-if="!loading && assets.length > 0" class="bg-white shadow rounded-lg overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ticker
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Liquid
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Latest Price
-              </th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="asset in assets" v-bind:key="asset.id">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ asset.name }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-500">{{ asset.ticker || '-' }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  v-if="asset.is_liquid"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                >
-                  Yes
-                </span>
-                <span v-else class="text-sm text-gray-400">No</span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ formatPrice(asset.latestPrice) }}</div>
-                <div v-if="asset.latestPriceDate" class="text-xs text-gray-400">
-                  {{ relativeDate(asset.latestPriceDate) }}
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                <button
-                  v-on:click="openEditModal(asset)"
-                  class="text-blue-600 hover:text-blue-900"
-                >
-                  Edit
-                </button>
-                <button
-                  v-on:click="openUpdatePriceModal(asset)"
-                  class="text-blue-600 hover:text-blue-900"
-                >
-                  Update Price
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <div v-if="!loading">
+        <div v-if="assets.length > 0" class="bg-white shadow rounded-lg overflow-hidden">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ticker
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Liquid
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Latest Price
+                </th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="asset in filteredAssets" v-bind:key="asset.id">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">{{ asset.name }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-500">{{ asset.ticker || '-' }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span
+                    v-if="asset.is_liquid"
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  >
+                    Yes
+                  </span>
+                  <span v-else class="text-sm text-gray-400">No</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">{{ formatPrice(asset.latestPrice) }}</div>
+                  <div v-if="asset.latestPriceDate" class="text-xs text-gray-400">
+                    {{ relativeDate(asset.latestPriceDate) }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                  <button
+                    v-on:click="openEditModal(asset)"
+                    class="text-blue-600 hover:text-blue-900"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    v-on:click="openUpdatePriceModal(asset)"
+                    class="text-blue-600 hover:text-blue-900"
+                  >
+                    Update Price
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <!-- Empty state -->
-      <div v-if="!loading && assets.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
-        <p class="text-gray-500 mb-4">No assets yet. Add your first asset to get started.</p>
+        <!-- Add asset button -->
         <button
           v-on:click="showAddAssetModal = true"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          class="mt-4 w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
         >
-          Add Asset
+          <span class="text-xl mr-2">+</span>
+          <span class="text-sm font-medium">Add Asset</span>
         </button>
       </div>
     </div>
