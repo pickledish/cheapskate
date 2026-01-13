@@ -1,9 +1,11 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
 import AddAccountModal from '@/components/modals/AddAccountModal.vue'
+import EditAccountModal from '@/components/modals/EditAccountModal.vue'
 import UploadStatementModal from '@/components/modals/UploadStatementModal.vue'
 import UpdatePositionModal from '@/components/modals/UpdatePositionModal.vue'
 import { supabase } from '@/lib/supabase'
+import { getTagColor } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { PencilIcon, TrashIcon } from '@heroicons/vue/24/solid'
@@ -15,6 +17,7 @@ export default {
   components: {
     AppLayout,
     AddAccountModal,
+    EditAccountModal,
     UploadStatementModal,
     UpdatePositionModal,
     PencilIcon,
@@ -28,6 +31,7 @@ export default {
 
       // Modal state
       showAddAccountModal: false,
+      showEditAccountModal: false,
       showUploadModal: false,
       showUpdatePositionModal: false,
       selectedAccount: null
@@ -184,6 +188,30 @@ export default {
     relativeDate(dateStr) {
       if (!dateStr) return null
       return dayjs(dateStr).fromNow()
+    },
+
+    getTagEntries(tags) {
+      if (!tags || typeof tags !== 'object') return []
+      return Object.entries(tags)
+    },
+
+    getTagColor(key) {
+      return getTagColor(key)
+    },
+
+    openEditAccountModal(account) {
+      this.selectedAccount = account
+      this.showEditAccountModal = true
+    },
+
+    closeEditAccountModal() {
+      this.showEditAccountModal = false
+      this.selectedAccount = null
+    },
+
+    async onAccountUpdated() {
+      this.closeEditAccountModal()
+      await this.loadData()
     }
   }
 }
@@ -218,6 +246,7 @@ export default {
             <!-- Edit and Delete buttons in upper right -->
             <div class="absolute top-4 right-4 flex gap-1">
               <button
+                v-on:click="openEditAccountModal(account)"
                 class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
                 title="Edit account"
               >
@@ -234,12 +263,19 @@ export default {
 
             <div class="flex-1 pr-6">
               <h3 class="font-semibold text-gray-900">{{ account.name }}</h3>
-              <!-- Account type tag -->
-              <span class="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                {{ account.account_type }}
-              </span>
+              <!-- Tags -->
+              <div class="flex flex-wrap gap-1 mt-2">
+                <span
+                  v-for="[key, value] in getTagEntries(account.tags)"
+                  v-bind:key="key"
+                  class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                  v-bind:class="[getTagColor(key).bg, getTagColor(key).text]"
+                >
+                  {{ value }}
+                </span>
+              </div>
               <!-- Value and last updated -->
-              <div class="mt-3">
+              <div class="mt-4">
                 <p v-if="account.totalValue != null" class="text-xs text-gray-400">
                   Value - {{ formatCurrency(account.totalValue) }}
                 </p>
@@ -285,6 +321,13 @@ export default {
       v-if="showAddAccountModal"
       v-on:close="showAddAccountModal = false"
       v-on:created="onAccountCreated"
+    />
+
+    <EditAccountModal
+      v-if="showEditAccountModal"
+      v-bind:account="selectedAccount"
+      v-on:close="closeEditAccountModal"
+      v-on:updated="onAccountUpdated"
     />
 
     <UploadStatementModal

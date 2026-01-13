@@ -1,21 +1,50 @@
 <script>
 import BaseModal from './BaseModal.vue'
 import { supabase } from '@/lib/supabase'
+import { getTagColor } from '@/lib/tagColors'
+import { XMarkIcon } from '@heroicons/vue/24/solid'
 
 export default {
   name: 'AddAccountModal',
-  components: { BaseModal },
+  components: { BaseModal, XMarkIcon },
   emits: ['close', 'created'],
   data() {
     return {
       name: '',
-      accountType: 'brokerage',
-      accountTypes: ['retirement', 'brokerage', 'hsa', 'other'],
+      tags: [],
+      newTagKey: '',
+      newTagValue: '',
       loading: false,
       error: null
     }
   },
   methods: {
+    addTag() {
+      const key = this.newTagKey.trim().toLowerCase()
+      const value = this.newTagValue.trim()
+
+      if (!key || !value) return
+
+      // Don't add duplicate keys
+      if (this.tags.some(t => t.key === key)) {
+        this.error = `Tag "${key}" already exists`
+        return
+      }
+
+      this.tags.push({ key, value })
+      this.newTagKey = ''
+      this.newTagValue = ''
+      this.error = null
+    },
+
+    removeTag(index) {
+      this.tags.splice(index, 1)
+    },
+
+    getTagColor(key) {
+      return getTagColor(key)
+    },
+
     async save() {
       if (!this.name.trim()) {
         this.error = 'Please enter an account name'
@@ -27,10 +56,17 @@ export default {
 
       try {
         const { data: { user } } = await supabase.auth.getUser()
+
+        // Convert tags array to object
+        const tagsObject = {}
+        for (const tag of this.tags) {
+          tagsObject[tag.key] = tag.value
+        }
+
         const { error } = await supabase.from('accounts').insert({
           user_id: user.id,
           name: this.name.trim(),
-          account_type: this.accountType
+          tags: tagsObject
         })
 
         if (error) throw error
@@ -71,18 +107,57 @@ export default {
         />
       </div>
 
+      <!-- Tags section -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">
-          Account Type
+          Tags
         </label>
-        <select
-          v-model="accountType"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option v-for="type in accountTypes" v-bind:key="type" v-bind:value="type">
-            {{ type }}
-          </option>
-        </select>
+
+        <!-- Existing tags -->
+        <div v-if="tags.length > 0" class="flex flex-wrap gap-1 mb-2">
+          <span
+            v-for="(tag, index) in tags"
+            v-bind:key="tag.key"
+            class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded"
+            v-bind:class="[getTagColor(tag.key).bg, getTagColor(tag.key).text]"
+          >
+            {{ tag.key }}: {{ tag.value }}
+            <button
+              v-on:click="removeTag(index)"
+              class="hover:opacity-70"
+              type="button"
+            >
+              <XMarkIcon class="w-3 h-3" />
+            </button>
+          </span>
+        </div>
+
+        <!-- Add tag inputs -->
+        <div class="grid grid-cols-[1fr_1fr_auto] gap-2">
+          <input
+            v-model="newTagKey"
+            type="text"
+            placeholder="key"
+            class="min-w-0 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+          <input
+            v-model="newTagValue"
+            type="text"
+            placeholder="value"
+            v-on:keyup.enter="addTag"
+            class="min-w-0 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+          <button
+            v-on:click="addTag"
+            type="button"
+            class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm whitespace-nowrap"
+          >
+            Add
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">
+          e.g., type: retirement, owner: brandon, pretax: yes
+        </p>
       </div>
     </div>
 
