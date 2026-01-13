@@ -4,19 +4,9 @@ import { PieChart } from 'echarts/charts'
 import { LegendComponent, TooltipComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
+import { getHexColor } from '@/lib/tagColors'
 
 use([PieChart, LegendComponent, TooltipComponent, CanvasRenderer])
-
-const COLORS = [
-  '#3B82F6', // blue
-  '#10B981', // green
-  '#F59E0B', // amber
-  '#EF4444', // red
-  '#8B5CF6', // purple
-  '#EC4899', // pink
-  '#06B6D4', // cyan
-  '#F97316', // orange
-]
 
 export default {
   name: 'AssetClassPieChart',
@@ -35,7 +25,8 @@ export default {
     chartOption() {
       const data = this.labels.map((label, i) => ({
         name: label,
-        value: this.values[i]
+        value: this.values[i],
+        itemStyle: { color: getHexColor(label) }
       }))
 
       return {
@@ -51,7 +42,6 @@ export default {
             return `${params.name}: ${formatted} (${params.percent}%)`
           }
         },
-        color: COLORS,
         series: [{
           type: 'pie',
           radius: ['0%', '60%'],

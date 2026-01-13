@@ -3,6 +3,7 @@ import AppLayout from '@/components/AppLayout.vue'
 import AddAssetClassModal from '@/components/modals/AddAssetClassModal.vue'
 import EditAssetClassModal from '@/components/modals/EditAssetClassModal.vue'
 import { supabase } from '@/lib/supabase'
+import { getTagColor } from '@/lib/tagColors'
 
 export default {
   name: 'AssetClassesView',
@@ -79,6 +80,10 @@ export default {
     async onUpdated() {
       this.closeEditModal()
       await this.loadData()
+    },
+
+    getClassColor(name) {
+      return getTagColor(name)
     }
   }
 }
@@ -127,7 +132,12 @@ export default {
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="assetClass in assetClasses" v-bind:key="assetClass.id">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ assetClass.name }}</div>
+                <span
+                  class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                  v-bind:class="[getClassColor(assetClass.name).bg, getClassColor(assetClass.name).text]"
+                >
+                  {{ assetClass.name }}
+                </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                 <button

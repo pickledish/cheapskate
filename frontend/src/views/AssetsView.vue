@@ -4,6 +4,7 @@ import AddAssetModal from '@/components/modals/AddAssetModal.vue'
 import EditAssetModal from '@/components/modals/EditAssetModal.vue'
 import UpdatePriceModal from '@/components/modals/UpdatePriceModal.vue'
 import { supabase } from '@/lib/supabase'
+import { getTagColor } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
@@ -155,6 +156,10 @@ export default {
     relativeDate(dateStr) {
       if (!dateStr) return null
       return dayjs(dateStr).fromNow()
+    },
+
+    getClassColor(className) {
+      return getTagColor(className)
     }
   }
 }
@@ -216,10 +221,17 @@ export default {
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm text-gray-500">{{ asset.ticker || '-' }}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span v-if="asset.assetClasses.length" class="text-sm text-gray-900">
-                    {{ asset.assetClasses.join(', ') }}
-                  </span>
+                <td class="px-6 py-4">
+                  <div v-if="asset.assetClasses.length" class="flex flex-wrap gap-1">
+                    <span
+                      v-for="className in asset.assetClasses"
+                      v-bind:key="className"
+                      class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                      v-bind:class="[getClassColor(className).bg, getClassColor(className).text]"
+                    >
+                      {{ className }}
+                    </span>
+                  </div>
                   <span v-else class="text-sm text-gray-400">-</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
