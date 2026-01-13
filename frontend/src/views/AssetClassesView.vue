@@ -171,6 +171,12 @@ export default {
             tag="tbody"
             handle=".drag-handle"
             v-on:end="onReorder"
+            v-bind:animation="150"
+            v-bind:force-fallback="true"
+            fallback-class="drag-fallback-hidden"
+            ghost-class="drag-ghost"
+            chosen-class="drag-chosen"
+            drag-class="drag-active"
             class="bg-white divide-y divide-gray-200"
           >
             <tr v-for="assetClass in assetClasses" v-bind:key="assetClass.id">
@@ -248,3 +254,33 @@ export default {
     />
   </AppLayout>
 </template>
+
+<style>
+/* Hide the fallback element that follows the cursor (must be global) */
+.drag-fallback-hidden {
+  display: none !important;
+}
+</style>
+
+<style scoped>
+/* Style the placeholder row in the list */
+.drag-ghost {
+  background-color: #eff6ff;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Hide the element being dragged by cursor */
+.drag-chosen {
+  opacity: 0.4;
+}
+
+/* Active drag state */
+.drag-active {
+  cursor: grabbing;
+}
+
+/* Change cursor while dragging */
+.drag-handle:active {
+  cursor: grabbing;
+}
+</style>
