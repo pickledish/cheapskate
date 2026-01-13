@@ -24,13 +24,26 @@ export default {
       this.error = null
 
       try {
-        // 1. Load all holdings (ordered by date desc to get latest first)
+        // 1. Load accounts with rebalancing enabled
+        const { data: accountsData, error: accountsError } = await supabase
+          .from('accounts')
+          .select('id')
+          .eq('rebalancing', true)
+
+        if (accountsError) throw accountsError
+
+        const rebalancingAccountIds = new Set(accountsData.map(a => a.id))
+
+        // 2. Load all holdings (ordered by date desc to get latest first)
         const { data: holdingsData, error: holdingsError } = await supabase
           .from('asset_holdings')
           .select('asset_id, account_id, quantity, holding_date')
           .order('holding_date', { ascending: false })
 
         if (holdingsError) throw holdingsError
+
+        // Filter to only holdings from rebalancing accounts
+        const filteredHoldings = holdingsData.filter(h => rebalancingAccountIds.has(h.account_id))
 
         // 2. Load all prices (ordered by date desc to get latest first)
         const { data: pricesData, error: pricesError } = await supabase
@@ -49,7 +62,7 @@ export default {
 
         // Build map: get latest holding per asset-account combo, then sum by asset
         const latestHoldingByAssetAccount = {}
-        for (const h of holdingsData) {
+        for (const h of filteredHoldings) {
           const key = `${h.asset_id}-${h.account_id}`
           if (!latestHoldingByAssetAccount[key]) {
             latestHoldingByAssetAccount[key] = {
@@ -140,8 +153,8 @@ export default {
   <AppLayout>
     <div class="space-y-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Investments</h1>
-        <p class="text-sm text-gray-600 mt-1">Portfolio composition by asset class</p>
+        <h1 class="text-2xl font-bold text-gray-900">Rebalancing</h1>
+        <p class="text-sm text-gray-600 mt-1">Portfolio composition by asset class (rebalancing accounts only)</p>
       </div>
 
       <!-- Error display -->

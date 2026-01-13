@@ -22,8 +22,8 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/investments',
-    name: 'investments',
+    path: '/rebalancing',
+    name: 'rebalancing',
     component: InvestmentsView,
     meta: { requiresAuth: true }
   },
