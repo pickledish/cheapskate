@@ -27,6 +27,14 @@ export default {
   async mounted() {
     await this.loadData()
   },
+  computed: {
+    totalGoals() {
+      return this.assetClasses.reduce((sum, ac) => sum + (ac.goal || 0), 0)
+    },
+    hasAnyGoals() {
+      return this.assetClasses.some(ac => ac.goal > 0)
+    }
+  },
   methods: {
     async loadData() {
       this.loading = true
@@ -124,6 +132,9 @@ export default {
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Name
               </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Goal
+              </th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
@@ -138,6 +149,9 @@ export default {
                 >
                   {{ assetClass.name }}
                 </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ assetClass.goal > 0 ? (assetClass.goal * 100) + '%' : '-' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                 <button
@@ -155,6 +169,17 @@ export default {
               </td>
             </tr>
           </tbody>
+          <tfoot v-if="hasAnyGoals" class="bg-gray-50">
+            <tr>
+              <td class="px-6 py-3 text-sm font-medium text-gray-900">
+                Total
+              </td>
+              <td class="px-6 py-3 text-sm font-medium" v-bind:class="Math.abs(totalGoals - 1) < 0.001 ? 'text-green-600' : 'text-amber-600'">
+                {{ totalGoals * 100 }}%
+              </td>
+              <td></td>
+            </tr>
+          </tfoot>
         </table>
       </div>
 

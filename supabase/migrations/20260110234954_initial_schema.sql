@@ -37,33 +37,6 @@ create policy "Users can delete their own accounts"
     on accounts for delete
     using (auth.uid() = user_id);
 
--- Goals: Rebalancing target allocations
-create table goals (
-    user_id uuid primary key references auth.users(id) on delete cascade,
-    target_allocation jsonb not null default '{}'::jsonb,
-    created_at timestamptz not null default now(),
-    updated_at timestamptz not null default now()
-);
-
-alter table goals enable row level security;
-
-create policy "Users can view their own goals"
-    on goals for select
-    using (auth.uid() = user_id);
-
-create policy "Users can insert their own goals"
-    on goals for insert
-    with check (auth.uid() = user_id);
-
-create policy "Users can update their own goals"
-    on goals for update
-    using (auth.uid() = user_id)
-    with check (auth.uid() = user_id);
-
-create policy "Users can delete their own goals"
-    on goals for delete
-    using (auth.uid() = user_id);
-
 -- Statements: Uploaded PDF statements
 create table statements (
     id bigint generated always as identity primary key,
@@ -255,6 +228,7 @@ create table asset_classes (
     id bigint generated always as identity primary key,
     user_id uuid not null references auth.users(id) on delete cascade,
     name text not null,
+    goal numeric not null default 0 check (goal >= 0 and goal <= 1),
     created_at timestamptz not null default now(),
     unique (user_id, name)
 );

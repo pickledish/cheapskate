@@ -12,7 +12,9 @@ export default {
       error: null,
       classLabels: [],
       classValues: [],
-      totalValue: 0
+      totalValue: 0,
+      totalGoals: 0,
+      hasAnyGoals: false
     }
   },
   async mounted() {
@@ -59,6 +61,18 @@ export default {
           .select('asset_id, percentage, asset_classes(id, name)')
 
         if (allocationsError) throw allocationsError
+
+        // 4. Load asset classes for goals
+        const { data: assetClassesData, error: assetClassesError } = await supabase
+          .from('asset_classes')
+          .select('id, name, goal')
+
+        if (assetClassesError) throw assetClassesError
+
+        // Calculate total goals (only classes with goal > 0)
+        const classesWithGoals = assetClassesData.filter(ac => ac.goal > 0)
+        this.hasAnyGoals = classesWithGoals.length > 0
+        this.totalGoals = classesWithGoals.reduce((sum, ac) => sum + ac.goal, 0)
 
         // Build map: get latest holding per asset-account combo, then sum by asset
         const latestHoldingByAssetAccount = {}
@@ -160,6 +174,11 @@ export default {
       <!-- Error display -->
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">
         {{ error }}
+      </div>
+
+      <!-- Goals warning -->
+      <div v-if="!loading && hasAnyGoals && Math.abs(totalGoals - 1) > 0.001" class="p-4 bg-amber-50 text-amber-800 rounded-md">
+        Target allocations sum to {{ totalGoals * 100 }}%, not 100%. Update your asset class goals.
       </div>
 
       <!-- Loading state -->
