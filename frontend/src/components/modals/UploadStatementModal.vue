@@ -175,8 +175,7 @@ export default {
               .insert({
                 user_id: user.id,
                 ticker: holding.name,
-                name: holding.name,
-                is_liquid: true
+                name: holding.name
               })
               .select()
               .single()

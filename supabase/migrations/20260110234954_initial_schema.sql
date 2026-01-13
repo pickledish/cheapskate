@@ -122,7 +122,6 @@ create table assets (
     user_id uuid not null references auth.users(id) on delete cascade,
     ticker text,  -- nullable for private assets without tickers
     name text not null,
-    is_liquid boolean not null default true,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
     unique (user_id, ticker)

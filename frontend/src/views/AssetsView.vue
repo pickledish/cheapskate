@@ -71,6 +71,13 @@ export default {
 
         if (pricesError) throw pricesError
 
+        // Load asset allocations with class names
+        const { data: allocationsData, error: allocationsError } = await supabase
+          .from('asset_allocations')
+          .select('asset_id, asset_classes(name)')
+
+        if (allocationsError) throw allocationsError
+
         // Build map of asset_id -> { price, date }
         const latestPriceByAsset = {}
         for (const p of pricesData) {
@@ -82,11 +89,21 @@ export default {
           }
         }
 
+        // Build map of asset_id -> [class names]
+        const classesByAsset = {}
+        for (const a of allocationsData) {
+          if (!classesByAsset[a.asset_id]) {
+            classesByAsset[a.asset_id] = []
+          }
+          classesByAsset[a.asset_id].push(a.asset_classes.name)
+        }
+
         // Merge metadata into assets
         this.assets = assetsData.map(asset => ({
           ...asset,
           latestPrice: latestPriceByAsset[asset.id]?.price || null,
-          latestPriceDate: latestPriceByAsset[asset.id]?.date || null
+          latestPriceDate: latestPriceByAsset[asset.id]?.date || null,
+          assetClasses: classesByAsset[asset.id] || []
         }))
 
       } catch (err) {
@@ -181,7 +198,7 @@ export default {
                   Ticker
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Liquid
+                  Asset Class
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Latest Price
@@ -200,13 +217,10 @@ export default {
                   <div class="text-sm text-gray-500">{{ asset.ticker || '-' }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <span
-                    v-if="asset.is_liquid"
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                  >
-                    Yes
+                  <span v-if="asset.assetClasses.length" class="text-sm text-gray-900">
+                    {{ asset.assetClasses.join(', ') }}
                   </span>
-                  <span v-else class="text-sm text-gray-400">No</span>
+                  <span v-else class="text-sm text-gray-400">-</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm text-gray-900">{{ formatPrice(asset.latestPrice) }}</div>

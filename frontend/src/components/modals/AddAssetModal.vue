@@ -10,7 +10,6 @@ export default {
     return {
       name: '',
       ticker: '',
-      isLiquid: true,
       loading: false,
       error: null
     }
@@ -30,8 +29,7 @@ export default {
         const { error } = await supabase.from('assets').insert({
           user_id: user.id,
           name: this.name.trim(),
-          ticker: this.ticker.trim() || null,
-          is_liquid: this.isLiquid
+          ticker: this.ticker.trim() || null
         })
 
         if (error) throw error
@@ -87,21 +85,6 @@ export default {
         </p>
       </div>
 
-      <div>
-        <label class="flex items-center space-x-2">
-          <input
-            v-model="isLiquid"
-            type="checkbox"
-            class="rounded border-gray-300"
-          />
-          <span class="text-sm text-gray-700">
-            Liquid asset (include in rebalancing calculations)
-          </span>
-        </label>
-        <p class="mt-1 text-xs text-gray-500">
-          Uncheck for illiquid assets like real estate that shouldn't be considered when rebalancing.
-        </p>
-      </div>
     </div>
 
     <!-- Actions -->
