@@ -6,6 +6,7 @@ import UpdatePositionModal from '@/components/modals/UpdatePositionModal.vue'
 import { supabase } from '@/lib/supabase'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import { PencilIcon, TrashIcon } from '@heroicons/vue/24/solid'
 
 dayjs.extend(relativeTime)
 
@@ -15,7 +16,9 @@ export default {
     AppLayout,
     AddAccountModal,
     UploadStatementModal,
-    UpdatePositionModal
+    UpdatePositionModal,
+    PencilIcon,
+    TrashIcon
   },
   data() {
     return {
@@ -215,17 +218,17 @@ export default {
             <!-- Edit and Delete buttons in upper right -->
             <div class="absolute top-4 right-4 flex gap-1">
               <button
-                class="w-6 h-6 flex items-center justify-center text-xs text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
                 title="Edit account"
               >
-                E
+                <PencilIcon class="w-4 h-4" />
               </button>
               <button
                 v-on:click="deleteAccount(account)"
-                class="w-6 h-6 flex items-center justify-center text-xs text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
                 title="Delete account"
               >
-                D
+                <TrashIcon class="w-4 h-4" />
               </button>
             </div>
 
@@ -238,11 +241,11 @@ export default {
               <!-- Value and last updated -->
               <div class="mt-3">
                 <p v-if="account.totalValue != null" class="text-xs text-gray-400">
-                  Value of {{ formatCurrency(account.totalValue) }}
+                  Value - {{ formatCurrency(account.totalValue) }}
                 </p>
                 <p class="text-xs text-gray-400">
                   <span v-if="account.latestStatementDate">
-                    Last updated {{ relativeDate(account.latestStatementDate) }}
+                    Last updated - {{ relativeDate(account.latestStatementDate) }}
                   </span>
                   <span v-else class="italic">No data yet</span>
                 </p>
