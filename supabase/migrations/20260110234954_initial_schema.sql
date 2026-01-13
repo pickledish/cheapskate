@@ -229,6 +229,7 @@ create table asset_classes (
     user_id uuid not null references auth.users(id) on delete cascade,
     name text not null,
     goal numeric not null default 0 check (goal >= 0 and goal <= 1),
+    sort_order integer not null default 0,
     created_at timestamptz not null default now(),
     unique (user_id, name)
 );

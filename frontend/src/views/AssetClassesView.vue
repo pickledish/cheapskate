@@ -2,6 +2,7 @@
 import AppLayout from '@/components/AppLayout.vue'
 import AddAssetClassModal from '@/components/modals/AddAssetClassModal.vue'
 import EditAssetClassModal from '@/components/modals/EditAssetClassModal.vue'
+import { VueDraggable } from 'vue-draggable-plus'
 import { supabase } from '@/lib/supabase'
 import { getTagColor } from '@/lib/tagColors'
 
@@ -10,7 +11,8 @@ export default {
   components: {
     AppLayout,
     AddAssetClassModal,
-    EditAssetClassModal
+    EditAssetClassModal,
+    VueDraggable
   },
   data() {
     return {
@@ -43,7 +45,7 @@ export default {
         const { data, error } = await supabase
           .from('asset_classes')
           .select('*')
-          .order('name')
+          .order('sort_order')
 
         if (error) throw error
 
@@ -92,6 +94,29 @@ export default {
 
     getClassColor(name) {
       return getTagColor(name)
+    },
+
+    async onReorder() {
+      // Update sort_order for all items based on new array positions
+      try {
+        const updates = this.assetClasses.map((ac, index) => ({
+          id: ac.id,
+          sort_order: index
+        }))
+
+        for (const update of updates) {
+          const { error } = await supabase
+            .from('asset_classes')
+            .update({ sort_order: update.sort_order })
+            .eq('id', update.id)
+
+          if (error) throw error
+        }
+      } catch (err) {
+        this.error = err.message
+        // Reload to restore correct order on error
+        await this.loadData()
+      }
     }
   }
 }
@@ -129,6 +154,7 @@ export default {
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
+              <th class="w-10"></th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Name
               </th>
@@ -140,8 +166,19 @@ export default {
               </th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <VueDraggable
+            v-model="assetClasses"
+            tag="tbody"
+            handle=".drag-handle"
+            v-on:end="onReorder"
+            class="bg-white divide-y divide-gray-200"
+          >
             <tr v-for="assetClass in assetClasses" v-bind:key="assetClass.id">
+              <td class="drag-handle cursor-grab px-3 py-4 text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+                </svg>
+              </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   class="inline-block px-2 py-0.5 text-xs font-medium rounded"
@@ -168,9 +205,10 @@ export default {
                 </button>
               </td>
             </tr>
-          </tbody>
+          </VueDraggable>
           <tfoot v-if="hasAnyGoals" class="bg-gray-50">
             <tr>
+              <td></td>
               <td class="px-6 py-3 text-sm font-medium text-gray-900">
                 Total
               </td>

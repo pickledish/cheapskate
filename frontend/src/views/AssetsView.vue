@@ -72,10 +72,10 @@ export default {
 
         if (pricesError) throw pricesError
 
-        // Load asset allocations with class names
+        // Load asset allocations with class names and sort order
         const { data: allocationsData, error: allocationsError } = await supabase
           .from('asset_allocations')
-          .select('asset_id, asset_classes(name)')
+          .select('asset_id, asset_classes(name, sort_order)')
 
         if (allocationsError) throw allocationsError
 
@@ -90,13 +90,22 @@ export default {
           }
         }
 
-        // Build map of asset_id -> [class names]
+        // Build map of asset_id -> [class names], sorted by sort_order
         const classesByAsset = {}
         for (const a of allocationsData) {
           if (!classesByAsset[a.asset_id]) {
             classesByAsset[a.asset_id] = []
           }
-          classesByAsset[a.asset_id].push(a.asset_classes.name)
+          classesByAsset[a.asset_id].push({
+            name: a.asset_classes.name,
+            sort_order: a.asset_classes.sort_order
+          })
+        }
+        // Sort each asset's classes by sort_order and extract names
+        for (const assetId in classesByAsset) {
+          classesByAsset[assetId] = classesByAsset[assetId]
+            .sort((a, b) => a.sort_order - b.sort_order)
+            .map(c => c.name)
         }
 
         // Merge metadata into assets

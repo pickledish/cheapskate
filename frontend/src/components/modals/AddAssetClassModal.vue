@@ -26,10 +26,23 @@ export default {
 
       try {
         const { data: { user } } = await supabase.auth.getUser()
+
+        // Get max sort_order for this user
+        const { data: maxData } = await supabase
+          .from('asset_classes')
+          .select('sort_order')
+          .eq('user_id', user.id)
+          .order('sort_order', { ascending: false })
+          .limit(1)
+          .single()
+
+        const nextSortOrder = (maxData?.sort_order ?? -1) + 1
+
         const { error } = await supabase.from('asset_classes').insert({
           user_id: user.id,
           name: this.name.trim(),
-          goal: this.goal / 100
+          goal: this.goal / 100,
+          sort_order: nextSortOrder
         })
 
         if (error) throw error

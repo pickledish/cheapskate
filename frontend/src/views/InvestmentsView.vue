@@ -12,9 +12,16 @@ export default {
       error: null,
       classLabels: [],
       classValues: [],
+      goalLabels: [],
+      goalValues: [],
       totalValue: 0,
       totalGoals: 0,
       hasAnyGoals: false
+    }
+  },
+  computed: {
+    goalsAreValid() {
+      return this.hasAnyGoals && Math.abs(this.totalGoals - 1) < 0.001
     }
   },
   async mounted() {
@@ -62,17 +69,28 @@ export default {
 
         if (allocationsError) throw allocationsError
 
-        // 4. Load asset classes for goals
+        // 4. Load asset classes for goals and sort order
         const { data: assetClassesData, error: assetClassesError } = await supabase
           .from('asset_classes')
-          .select('id, name, goal')
+          .select('id, name, goal, sort_order')
+          .order('sort_order')
 
         if (assetClassesError) throw assetClassesError
+
+        // Build sort order map for chart ordering
+        const classSortOrder = {}
+        for (const ac of assetClassesData) {
+          classSortOrder[ac.name] = ac.sort_order
+        }
 
         // Calculate total goals (only classes with goal > 0)
         const classesWithGoals = assetClassesData.filter(ac => ac.goal > 0)
         this.hasAnyGoals = classesWithGoals.length > 0
         this.totalGoals = classesWithGoals.reduce((sum, ac) => sum + ac.goal, 0)
+
+        // Build goal arrays for pie chart, sorted by sort_order
+        this.goalLabels = classesWithGoals.map(ac => ac.name)
+        this.goalValues = classesWithGoals.map(ac => ac.goal)
 
         // Build map: get latest holding per asset-account combo, then sum by asset
         const latestHoldingByAssetAccount = {}
@@ -136,9 +154,13 @@ export default {
           }
         }
 
-        // Convert to arrays for chart, sorted by value descending
+        // Convert to arrays for chart, sorted by user-defined sort_order
         const sorted = Object.entries(valueByClass)
-          .sort((a, b) => b[1] - a[1])
+          .sort((a, b) => {
+            const orderA = classSortOrder[a[0]] ?? 999
+            const orderB = classSortOrder[b[0]] ?? 999
+            return orderA - orderB
+          })
 
         this.classLabels = sorted.map(([name]) => name)
         this.classValues = sorted.map(([, value]) => value)
@@ -192,10 +214,19 @@ export default {
           <p class="text-3xl font-bold text-gray-900">{{ formatCurrency(totalValue) }}</p>
         </div>
 
-        <!-- Pie chart -->
-        <div class="bg-white shadow rounded-lg p-6">
-          <h2 class="text-lg font-medium text-gray-900 mb-4">Allocation by Asset Class</h2>
-          <AssetClassPieChart :labels="classLabels" :values="classValues" />
+        <!-- Pie charts -->
+        <div class="grid gap-6" v-bind:class="goalsAreValid ? 'grid-cols-2' : 'grid-cols-1'">
+          <!-- Current allocation -->
+          <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Current Allocation</h2>
+            <AssetClassPieChart :labels="classLabels" :values="classValues" />
+          </div>
+
+          <!-- Target allocation (only if goals sum to 100%) -->
+          <div v-if="goalsAreValid" class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Target Allocation</h2>
+            <AssetClassPieChart :labels="goalLabels" :values="goalValues" />
+          </div>
         </div>
       </div>
     </div>
