@@ -1,7 +1,21 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import * as jose from "jsr:@panva/jose@6";
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
+
+// JWT validation using jose (for asymmetric ES256 keys)
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_JWT_ISSUER = SUPABASE_URL + "/auth/v1";
+const SUPABASE_JWT_KEYS = jose.createRemoteJWKSet(
+  new URL(SUPABASE_URL + "/auth/v1/.well-known/jwks.json")
+);
+
+async function verifyJWT(token: string) {
+  return jose.jwtVerify(token, SUPABASE_JWT_KEYS, {
+    issuer: SUPABASE_JWT_ISSUER,
+  });
+}
 
 // Define the schema once - used for both API request and response validation
 const HoldingSchema = z.object({
@@ -82,19 +96,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Verify JWT using jose (asymmetric ES256 keys)
+    const token = authHeader.replace("Bearer ", "");
+    try {
+      await verifyJWT(token);
+    } catch (jwtError) {
       return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
+        JSON.stringify({ error: "Unauthorized", details: jwtError instanceof Error ? jwtError.message : "Invalid JWT" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Create Supabase client with user's auth context for RLS-protected queries
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SB_PUBLISHABLE_KEY")!;
+    const supabase = createClient(SUPABASE_URL, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
 
     // Parse request body
     const { pdf_base64 }: ParsePdfRequest = await req.json();
