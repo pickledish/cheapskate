@@ -171,7 +171,8 @@ export default {
             tag="tbody"
             handle=".drag-handle"
             v-on:end="onReorder"
-            v-bind:animation="150"
+            v-bind:animation="250"
+            v-bind:easing="'cubic-bezier(0.25, 0.1, 0.25, 1)'"
             v-bind:force-fallback="true"
             fallback-class="drag-fallback-hidden"
             ghost-class="drag-ghost"
@@ -263,15 +264,11 @@ export default {
 </style>
 
 <style scoped>
-/* Style the placeholder row in the list */
+/* Style for both chosen (on click) and ghost (placeholder) - keep consistent */
+.drag-chosen,
 .drag-ghost {
   background-color: #eff6ff;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-}
-
-/* Hide the element being dragged by cursor */
-.drag-chosen {
-  opacity: 0.4;
 }
 
 /* Active drag state */
