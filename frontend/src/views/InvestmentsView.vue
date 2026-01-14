@@ -88,9 +88,10 @@ export default {
         this.hasAnyGoals = classesWithGoals.length > 0
         this.totalGoals = classesWithGoals.reduce((sum, ac) => sum + ac.goal, 0)
 
-        // Build goal arrays for pie chart, sorted by sort_order
+        // Build goal labels for pie chart, sorted by sort_order
+        // (values computed later after we have total portfolio value)
         this.goalLabels = classesWithGoals.map(ac => ac.name)
-        this.goalValues = classesWithGoals.map(ac => ac.goal)
+        const goalRatios = classesWithGoals.map(ac => ac.goal)
 
         // Build map: get latest holding per asset-account combo, then sum by asset
         const latestHoldingByAssetAccount = {}
@@ -165,6 +166,9 @@ export default {
         this.classLabels = sorted.map(([name]) => name)
         this.classValues = sorted.map(([, value]) => value)
         this.totalValue = total
+
+        // Compute goal values as dollar amounts (ratio × total portfolio value)
+        this.goalValues = goalRatios.map(ratio => ratio * total)
 
       } catch (err) {
         this.error = err.message
