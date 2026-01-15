@@ -44,7 +44,7 @@ export default {
         },
         series: [{
           type: 'pie',
-          radius: ['0%', '60%'],
+          radius: ['30%', '60%'],
           center: ['50%', '50%'],
           data: data,
           label: {
