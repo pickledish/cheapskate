@@ -20,15 +20,14 @@ export default {
     async loadData() {
       this.loading = true
 
-      const { data: holdingsData } = await supabase
-        .from('asset_holdings')
-        .select('asset_id, account_id, holding_date, quantity')
-        .order('holding_date', { ascending: true })
+      // Load all data in parallel
+      const [holdingsResult, pricesResult] = await Promise.all([
+        supabase.from('asset_holdings').select('asset_id, account_id, holding_date, quantity').order('holding_date', { ascending: true }),
+        supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: true })
+      ])
 
-      const { data: pricesData } = await supabase
-        .from('asset_prices')
-        .select('asset_id, price_date, price')
-        .order('price_date', { ascending: true })
+      const holdingsData = holdingsResult.data
+      const pricesData = pricesResult.data
 
       const months = this.getLast12Months()
       const values = []

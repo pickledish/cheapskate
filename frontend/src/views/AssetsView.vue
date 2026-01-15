@@ -56,28 +56,20 @@ export default {
       this.loading = true
       this.error = null
       try {
-        // Load assets
-        const { data: assetsData, error: assetsError } = await supabase
-          .from('assets')
-          .select('*')
-          .order('name')
+        // Load all data in parallel
+        const [assetsResult, pricesResult, allocationsResult] = await Promise.all([
+          supabase.from('assets').select('*').order('name'),
+          supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: false }),
+          supabase.from('asset_allocations').select('asset_id, asset_classes(name, sort_order)')
+        ])
 
-        if (assetsError) throw assetsError
+        if (assetsResult.error) throw assetsResult.error
+        if (pricesResult.error) throw pricesResult.error
+        if (allocationsResult.error) throw allocationsResult.error
 
-        // Load most recent prices for each asset
-        const { data: pricesData, error: pricesError } = await supabase
-          .from('asset_prices')
-          .select('asset_id, price_date, price')
-          .order('price_date', { ascending: false })
-
-        if (pricesError) throw pricesError
-
-        // Load asset allocations with class names and sort order
-        const { data: allocationsData, error: allocationsError } = await supabase
-          .from('asset_allocations')
-          .select('asset_id, asset_classes(name, sort_order)')
-
-        if (allocationsError) throw allocationsError
+        const assetsData = assetsResult.data
+        const pricesData = pricesResult.data
+        const allocationsData = allocationsResult.data
 
         // Build map of asset_id -> { price, date }
         const latestPriceByAsset = {}

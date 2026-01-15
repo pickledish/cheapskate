@@ -33,49 +33,31 @@ export default {
       this.error = null
 
       try {
-        // 1. Load accounts with rebalancing enabled
-        const { data: accountsData, error: accountsError } = await supabase
-          .from('accounts')
-          .select('id')
-          .eq('rebalancing', true)
+        // Load all data in parallel
+        const [accountsResult, holdingsResult, pricesResult, allocationsResult, assetClassesResult] = await Promise.all([
+          supabase.from('accounts').select('id').eq('rebalancing', true),
+          supabase.from('asset_holdings').select('asset_id, account_id, quantity, holding_date').order('holding_date', { ascending: false }),
+          supabase.from('asset_prices').select('asset_id, price, price_date').order('price_date', { ascending: false }),
+          supabase.from('asset_allocations').select('asset_id, percentage, asset_classes(id, name)'),
+          supabase.from('asset_classes').select('id, name, goal, sort_order').order('sort_order')
+        ])
 
-        if (accountsError) throw accountsError
+        if (accountsResult.error) throw accountsResult.error
+        if (holdingsResult.error) throw holdingsResult.error
+        if (pricesResult.error) throw pricesResult.error
+        if (allocationsResult.error) throw allocationsResult.error
+        if (assetClassesResult.error) throw assetClassesResult.error
+
+        const accountsData = accountsResult.data
+        const holdingsData = holdingsResult.data
+        const pricesData = pricesResult.data
+        const allocationsData = allocationsResult.data
+        const assetClassesData = assetClassesResult.data
 
         const rebalancingAccountIds = new Set(accountsData.map(a => a.id))
 
-        // 2. Load all holdings (ordered by date desc to get latest first)
-        const { data: holdingsData, error: holdingsError } = await supabase
-          .from('asset_holdings')
-          .select('asset_id, account_id, quantity, holding_date')
-          .order('holding_date', { ascending: false })
-
-        if (holdingsError) throw holdingsError
-
         // Filter to only holdings from rebalancing accounts
         const filteredHoldings = holdingsData.filter(h => rebalancingAccountIds.has(h.account_id))
-
-        // 2. Load all prices (ordered by date desc to get latest first)
-        const { data: pricesData, error: pricesError } = await supabase
-          .from('asset_prices')
-          .select('asset_id, price, price_date')
-          .order('price_date', { ascending: false })
-
-        if (pricesError) throw pricesError
-
-        // 3. Load asset allocations with class info
-        const { data: allocationsData, error: allocationsError } = await supabase
-          .from('asset_allocations')
-          .select('asset_id, percentage, asset_classes(id, name)')
-
-        if (allocationsError) throw allocationsError
-
-        // 4. Load asset classes for goals and sort order
-        const { data: assetClassesData, error: assetClassesError } = await supabase
-          .from('asset_classes')
-          .select('id, name, goal, sort_order')
-          .order('sort_order')
-
-        if (assetClassesError) throw assetClassesError
 
         // Build sort order map for chart ordering
         const classSortOrder = {}

@@ -65,21 +65,23 @@ export default {
       this.loading = true
       this.error = null
       try {
-        // Load accounts
-        const { data: accountsData, error: accountsError } = await supabase
-          .from('accounts')
-          .select('*')
-          .order('created_at')
+        // Load all data in parallel
+        const [accountsResult, statementsResult, holdingsResult, pricesResult] = await Promise.all([
+          supabase.from('accounts').select('*').order('created_at'),
+          supabase.from('statements').select('account_id, statement_date').order('statement_date', { ascending: false }),
+          supabase.from('asset_holdings').select('account_id, asset_id, holding_date, quantity').order('holding_date', { ascending: false }),
+          supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: false })
+        ])
 
-        if (accountsError) throw accountsError
+        if (accountsResult.error) throw accountsResult.error
+        if (statementsResult.error) throw statementsResult.error
+        if (holdingsResult.error) throw holdingsResult.error
+        if (pricesResult.error) throw pricesResult.error
 
-        // Load most recent statement date for each account
-        const { data: statementsData, error: statementsError } = await supabase
-          .from('statements')
-          .select('account_id, statement_date')
-          .order('statement_date', { ascending: false })
-
-        if (statementsError) throw statementsError
+        const accountsData = accountsResult.data
+        const statementsData = statementsResult.data
+        const holdingsData = holdingsResult.data
+        const pricesData = pricesResult.data
 
         // Build map of account_id -> most recent statement_date
         const latestStatementByAccount = {}
@@ -88,22 +90,6 @@ export default {
             latestStatementByAccount[stmt.account_id] = stmt.statement_date
           }
         }
-
-        // Load holdings with asset info to calculate account values
-        const { data: holdingsData, error: holdingsError } = await supabase
-          .from('asset_holdings')
-          .select('account_id, asset_id, holding_date, quantity')
-          .order('holding_date', { ascending: false })
-
-        if (holdingsError) throw holdingsError
-
-        // Load all asset prices
-        const { data: pricesData, error: pricesError } = await supabase
-          .from('asset_prices')
-          .select('asset_id, price_date, price')
-          .order('price_date', { ascending: false })
-
-        if (pricesError) throw pricesError
 
         // Build map of asset_id -> latest price
         const latestPriceByAsset = {}
