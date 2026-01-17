@@ -1,11 +1,17 @@
 <script>
 import { use } from 'echarts/core'
 import { BarChart } from 'echarts/charts'
-import { GridComponent, TooltipComponent } from 'echarts/components'
+import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
 
-use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
+use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer])
+
+const COLORS = [
+  '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+  '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1',
+  '#14B8A6', '#A855F7', '#22C55E', '#E11D48', '#0EA5E9'
+]
 
 export default {
   name: 'NetWorthBarChart',
@@ -15,39 +21,59 @@ export default {
       type: Array,
       required: true
     },
-    values: {
+    series: {
       type: Array,
       required: true
     }
   },
   computed: {
+    isStacked() {
+      return this.series.length > 1
+    },
     chartOption() {
+      const formatCurrency = (value) => {
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(value)
+      }
+
       return {
         tooltip: {
           trigger: 'axis',
           formatter: (params) => {
-            const param = params[0]
-            const formatted = new Intl.NumberFormat('en-US', {
-              style: 'currency',
-              currency: 'USD',
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0
-            }).format(param.value)
-            return `${param.name}<br/>${formatted}`
+            if (!Array.isArray(params) || params.length === 0) return ''
+            let result = `<strong>${params[0].name}</strong><br/>`
+            let total = 0
+            for (const p of params) {
+              if (p.value > 0) {
+                result += `<span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${formatCurrency(p.value)}<br/>`
+                total += p.value
+              }
+            }
+            if (this.isStacked) {
+              result += `<strong>Total: ${formatCurrency(total)}</strong>`
+            }
+            return result
           }
         },
+        legend: this.isStacked ? {
+          type: 'scroll',
+          bottom: 0,
+          textStyle: { color: '#374151' }
+        } : { show: false },
         grid: {
           left: '3%',
           right: '4%',
-          bottom: '3%',
+          bottom: this.isStacked ? '15%' : '3%',
           containLabel: true
         },
         xAxis: {
           type: 'category',
           data: this.labels,
-          axisLabel: {
-            color: '#374151'
-          }
+          axisLabel: { color: '#374151' }
         },
         yAxis: {
           type: 'value',
@@ -63,17 +89,17 @@ export default {
             }
           }
         },
-        series: [{
+        series: this.series.map((s, i) => ({
+          name: s.name,
           type: 'bar',
-          data: this.values,
-          itemStyle: {
-            color: '#3B82F6'
-          }
-        }]
+          stack: this.isStacked ? 'total' : undefined,
+          data: s.data,
+          itemStyle: { color: COLORS[i % COLORS.length] }
+        }))
       }
     },
     hasData() {
-      return this.values.length > 0 && this.values.some(v => v > 0)
+      return this.series.length > 0 && this.series.some(s => s.data.some(v => v > 0))
     }
   }
 }
