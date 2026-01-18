@@ -21,6 +21,35 @@ create policy "Authenticated users can create a family"
     with check (true);
 
 -- ----------------------------------------------------------------------------
+-- PROFILES (user info visible to family members)
+-- ----------------------------------------------------------------------------
+
+create table profiles (
+    id uuid primary key references auth.users(id) on delete cascade,
+    family_id uuid not null references families(id) on delete cascade,
+    name text not null,
+    created_at timestamptz not null default now()
+);
+
+alter table profiles enable row level security;
+
+create policy "Users can insert their own profile"
+    on profiles for insert
+    to authenticated
+    with check (id = auth.uid());
+
+create policy "Family members can view profiles"
+    on profiles for select
+    using (family_id = (auth.jwt() -> 'user_metadata' ->> 'family_id')::uuid);
+
+create policy "Users can update their own profile"
+    on profiles for update
+    using (id = auth.uid())
+    with check (id = auth.uid());
+
+create index idx_profiles_family_id on profiles(family_id);
+
+-- ----------------------------------------------------------------------------
 -- CORE TABLES
 -- ----------------------------------------------------------------------------
 

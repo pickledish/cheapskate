@@ -6,6 +6,7 @@ export default {
   data() {
     return {
       mode: 'choose', // 'choose', 'create', 'join'
+      name: '',
       familyId: '',
       loading: false,
       error: null
@@ -13,10 +14,18 @@ export default {
   },
   methods: {
     async createFamily() {
+      if (!this.name.trim()) {
+        this.error = 'Please enter your name'
+        return
+      }
+
       this.error = null
       this.loading = true
 
       try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
+
         // Generate UUID client-side (we can't SELECT it back due to RLS)
         const familyId = crypto.randomUUID()
 
@@ -37,6 +46,17 @@ export default {
         // Refresh session to get new JWT with updated metadata
         await supabase.auth.refreshSession()
 
+        // Create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            family_id: familyId,
+            name: this.name.trim()
+          })
+
+        if (profileError) throw profileError
+
         // Redirect to dashboard
         this.$router.push('/')
       } catch (err) {
@@ -47,10 +67,18 @@ export default {
     },
 
     async joinFamily() {
+      if (!this.name.trim()) {
+        this.error = 'Please enter your name'
+        return
+      }
+
       this.error = null
       this.loading = true
 
       try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
+
         // Validate UUID format
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
         if (!uuidRegex.test(this.familyId)) {
@@ -68,6 +96,17 @@ export default {
 
         // Refresh session to get new JWT with updated metadata
         await supabase.auth.refreshSession()
+
+        // Create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            family_id: this.familyId,
+            name: this.name.trim()
+          })
+
+        if (profileError) throw profileError
 
         // Redirect to dashboard
         this.$router.push('/')
@@ -118,13 +157,27 @@ export default {
           Create a new family to start tracking your investments. You can share your family ID with others to let them join.
         </p>
 
+        <div>
+          <label for="createName" class="block text-sm font-medium text-gray-700 mb-1">
+            Your Name
+          </label>
+          <input
+            id="createName"
+            v-model="name"
+            type="text"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Enter your name"
+          />
+        </div>
+
         <div v-if="error" class="p-3 rounded-md bg-red-50 text-red-800">
           {{ error }}
         </div>
 
         <button
           v-on:click="createFamily"
-          v-bind:disabled="loading"
+          v-bind:disabled="loading || !name.trim()"
           class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {{ loading ? 'Creating...' : 'Create Family' }}
@@ -143,6 +196,20 @@ export default {
         <p class="text-gray-600">
           Enter the family ID shared with you to join an existing family.
         </p>
+
+        <div>
+          <label for="joinName" class="block text-sm font-medium text-gray-700 mb-1">
+            Your Name
+          </label>
+          <input
+            id="joinName"
+            v-model="name"
+            type="text"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Enter your name"
+          />
+        </div>
 
         <div>
           <label for="familyId" class="block text-sm font-medium text-gray-700 mb-1">
@@ -164,7 +231,7 @@ export default {
 
         <button
           v-on:click="joinFamily"
-          v-bind:disabled="loading || !familyId"
+          v-bind:disabled="loading || !familyId || !name.trim()"
           class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {{ loading ? 'Joining...' : 'Join Family' }}

@@ -58,6 +58,7 @@ delete from statements where account_id in (select id from accounts where family
 delete from assets where family_id = '11111111-1111-1111-1111-111111111111';
 delete from accounts where family_id = '11111111-1111-1111-1111-111111111111';
 delete from asset_classes where family_id = '11111111-1111-1111-1111-111111111111';
+delete from profiles where family_id = '11111111-1111-1111-1111-111111111111';
 delete from families where id = '11111111-1111-1111-1111-111111111111';
 
 -- ============================================================================
@@ -65,6 +66,15 @@ delete from families where id = '11111111-1111-1111-1111-111111111111';
 -- ============================================================================
 
 insert into families (id) values ('11111111-1111-1111-1111-111111111111');
+
+-- ============================================================================
+-- PROFILES
+-- ============================================================================
+
+-- Note: Profile requires a real user in auth.users. When testing manually,
+-- create a user first, then update this ID and run the insert.
+-- insert into profiles (id, family_id, name) values
+--     ('47dc6837-d952-453e-9d6e-8a211ab5a289', '11111111-1111-1111-1111-111111111111', 'Test User');
 
 -- ============================================================================
 -- ASSET CLASSES
