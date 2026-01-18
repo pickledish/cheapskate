@@ -7,6 +7,7 @@ import InvestmentsView from '@/views/InvestmentsView.vue'
 import AccountsView from '@/views/AccountsView.vue'
 import AssetsView from '@/views/AssetsView.vue'
 import AssetClassesView from '@/views/AssetClassesView.vue'
+import HistoryView from '@/views/HistoryView.vue'
 
 const routes = [
   {
@@ -43,6 +44,12 @@ const routes = [
     path: '/accounts',
     name: 'accounts',
     component: AccountsView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/history',
+    name: 'history',
+    component: HistoryView,
     meta: { requiresAuth: true }
   }
 ]
