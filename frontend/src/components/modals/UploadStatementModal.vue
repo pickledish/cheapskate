@@ -173,7 +173,8 @@ export default {
             const { data: newAsset, error: createError } = await supabase
               .from('assets')
               .insert({
-                user_id: user.id,
+                family_id: user.user_metadata.family_id,
+                created_by: user.id,
                 ticker: holding.name,
                 name: holding.name
               })

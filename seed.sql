@@ -46,49 +46,57 @@
 
 -- ============================================================================
 
--- To change the user, find and replace this UUID:
--- 47dc6837-d952-453e-9d6e-8a211ab5a289
+-- To change the user/family, find and replace these UUIDs:
+-- Family ID: 11111111-1111-1111-1111-111111111111
+-- User ID (created_by): 47dc6837-d952-453e-9d6e-8a211ab5a289
 
--- Clean existing data for this user (if re-seeding)
-delete from asset_allocations where asset_id in (select id from assets where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289');
-delete from asset_holdings where asset_id in (select id from assets where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289');
-delete from asset_prices where asset_id in (select id from assets where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289');
-delete from statements where account_id in (select id from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289');
-delete from assets where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289';
-delete from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289';
-delete from asset_classes where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289';
+-- Clean existing data for this family (if re-seeding)
+delete from asset_allocations where asset_id in (select id from assets where family_id = '11111111-1111-1111-1111-111111111111');
+delete from asset_holdings where asset_id in (select id from assets where family_id = '11111111-1111-1111-1111-111111111111');
+delete from asset_prices where asset_id in (select id from assets where family_id = '11111111-1111-1111-1111-111111111111');
+delete from statements where account_id in (select id from accounts where family_id = '11111111-1111-1111-1111-111111111111');
+delete from assets where family_id = '11111111-1111-1111-1111-111111111111';
+delete from accounts where family_id = '11111111-1111-1111-1111-111111111111';
+delete from asset_classes where family_id = '11111111-1111-1111-1111-111111111111';
+delete from families where id = '11111111-1111-1111-1111-111111111111';
+
+-- ============================================================================
+-- FAMILY
+-- ============================================================================
+
+insert into families (id) values ('11111111-1111-1111-1111-111111111111');
 
 -- ============================================================================
 -- ASSET CLASSES
 -- ============================================================================
 
-insert into asset_classes (user_id, name, goal, sort_order) values
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'US Stocks', 0.50, 1),
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'Int''l Stocks', 0.20, 2),
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'Bonds', 0.20, 3),
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'Real Estate', 0.10, 4);
+insert into asset_classes (family_id, created_by, name, goal, sort_order) values
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'US Stocks', 0.50, 1),
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'Int''l Stocks', 0.20, 2),
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'Bonds', 0.20, 3),
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'Real Estate', 0.10, 4);
 
 -- ============================================================================
 -- ACCOUNTS
 -- ============================================================================
 
-insert into accounts (user_id, name, tags, rebalancing) values
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'Acme Corp 401k', '{"type": "retirement"}', true),
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'Roth IRA', '{"type": "retirement"}', true),
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'Brokerage', '{"type": "taxable"}', true),
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'Primary Residence', '{"type": "real_estate"}', false),
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'Acme Corp Equity', '{"type": "private"}', false);
+insert into accounts (family_id, created_by, name, tags, rebalancing) values
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'Acme Corp 401k', '{"type": "retirement"}', true),
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'Roth IRA', '{"type": "retirement"}', true),
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'Brokerage', '{"type": "taxable"}', true),
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'Primary Residence', '{"type": "real_estate"}', false),
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'Acme Corp Equity', '{"type": "private"}', false);
 
 -- ============================================================================
 -- ASSETS
 -- ============================================================================
 
-insert into assets (user_id, ticker, name) values
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'VTI', 'Vanguard Total Stock Market ETF'),
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'VTTSX', 'Vanguard Target Retirement 2060'),
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', 'VMFXX', 'Vanguard Federal Money Market'),
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', null, 'Home Equity'),
-    ('47dc6837-d952-453e-9d6e-8a211ab5a289', null, 'Acme Corp Stock');
+insert into assets (family_id, created_by, ticker, name) values
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'VTI', 'Vanguard Total Stock Market ETF'),
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'VTTSX', 'Vanguard Target Retirement 2060'),
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', 'VMFXX', 'Vanguard Federal Money Market'),
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', null, 'Home Equity'),
+    ('11111111-1111-1111-1111-111111111111', '47dc6837-d952-453e-9d6e-8a211ab5a289', null, 'Acme Corp Stock');
 
 -- ============================================================================
 -- ASSET ALLOCATIONS (linking assets to asset classes)
@@ -98,48 +106,48 @@ insert into assets (user_id, ticker, name) values
 insert into asset_allocations (asset_id, asset_class_id, percentage)
 select a.id, ac.id, 1.0
 from assets a, asset_classes ac
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI'
-  and ac.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and ac.name = 'US Stocks';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI'
+  and ac.family_id = '11111111-1111-1111-1111-111111111111' and ac.name = 'US Stocks';
 
 -- VTTSX -> 50% US stocks, 30% international stocks, 20% bonds
 insert into asset_allocations (asset_id, asset_class_id, percentage)
 select a.id, ac.id, 0.5
 from assets a, asset_classes ac
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and ac.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and ac.name = 'US Stocks';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and ac.family_id = '11111111-1111-1111-1111-111111111111' and ac.name = 'US Stocks';
 
 insert into asset_allocations (asset_id, asset_class_id, percentage)
 select a.id, ac.id, 0.3
 from assets a, asset_classes ac
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and ac.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and ac.name = 'Int''l Stocks';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and ac.family_id = '11111111-1111-1111-1111-111111111111' and ac.name = 'Int''l Stocks';
 
 insert into asset_allocations (asset_id, asset_class_id, percentage)
 select a.id, ac.id, 0.2
 from assets a, asset_classes ac
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and ac.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and ac.name = 'Bonds';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and ac.family_id = '11111111-1111-1111-1111-111111111111' and ac.name = 'Bonds';
 
 -- VMFXX -> 100% Bonds (cash/money market treated as bonds)
 insert into asset_allocations (asset_id, asset_class_id, percentage)
 select a.id, ac.id, 1.0
 from assets a, asset_classes ac
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VMFXX'
-  and ac.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and ac.name = 'Bonds';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VMFXX'
+  and ac.family_id = '11111111-1111-1111-1111-111111111111' and ac.name = 'Bonds';
 
 -- Home Equity -> 100% Real Estate
 insert into asset_allocations (asset_id, asset_class_id, percentage)
 select a.id, ac.id, 1.0
 from assets a, asset_classes ac
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Home Equity'
-  and ac.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and ac.name = 'Real Estate';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.name = 'Home Equity'
+  and ac.family_id = '11111111-1111-1111-1111-111111111111' and ac.name = 'Real Estate';
 
 -- Acme Corp Stock -> 100% US Stocks
 insert into asset_allocations (asset_id, asset_class_id, percentage)
 select a.id, ac.id, 1.0
 from assets a, asset_classes ac
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Acme Corp Stock'
-  and ac.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and ac.name = 'US Stocks';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.name = 'Acme Corp Stock'
+  and ac.family_id = '11111111-1111-1111-1111-111111111111' and ac.name = 'US Stocks';
 
 -- ============================================================================
 -- STATEMENTS
@@ -151,66 +159,66 @@ where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Acme Corp
 -- Acme Corp 401k statements (monthly)
 -- created_at is 2-12 days after statement_date (realistic upload delays)
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-01-31', '2025-02-03 10:15:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-01-31', '2025-02-03 10:15:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-02-28', '2025-03-05 19:30:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-02-28', '2025-03-05 19:30:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-03-31', '2025-04-02 08:45:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-03-31', '2025-04-02 08:45:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-04-30', '2025-05-08 21:00:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-04-30', '2025-05-08 21:00:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-05-31', '2025-06-04 14:20:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-05-31', '2025-06-04 14:20:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-06-30', '2025-07-03 09:10:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-06-30', '2025-07-03 09:10:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-07-31', '2025-08-12 16:45:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-07-31', '2025-08-12 16:45:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-08-31', '2025-09-02 11:30:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-08-31', '2025-09-02 11:30:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-09-30', '2025-10-06 20:15:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-09-30', '2025-10-06 20:15:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-10-31', '2025-11-03 07:45:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-10-31', '2025-11-03 07:45:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-11-30', '2025-12-04 18:00:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-11-30', '2025-12-04 18:00:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-12-31', '2026-01-05 10:30:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Acme Corp 401k';
+select id, '2025-12-31', '2026-01-05 10:30:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Acme Corp 401k';
 
 -- Roth IRA statements (monthly)
 -- Uploaded same day as 401k statements (user does them together)
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-01-31', '2025-02-03 10:25:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-01-31', '2025-02-03 10:25:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-02-28', '2025-03-05 19:40:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-02-28', '2025-03-05 19:40:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-03-31', '2025-04-02 08:55:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-03-31', '2025-04-02 08:55:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-04-30', '2025-05-08 21:10:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-04-30', '2025-05-08 21:10:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-05-31', '2025-06-04 14:30:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-05-31', '2025-06-04 14:30:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-06-30', '2025-07-03 09:20:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-06-30', '2025-07-03 09:20:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-07-31', '2025-08-12 16:55:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-07-31', '2025-08-12 16:55:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-08-31', '2025-09-02 11:40:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-08-31', '2025-09-02 11:40:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-09-30', '2025-10-06 20:25:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-09-30', '2025-10-06 20:25:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-10-31', '2025-11-03 07:55:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-10-31', '2025-11-03 07:55:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-11-30', '2025-12-04 18:10:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-11-30', '2025-12-04 18:10:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-12-31', '2026-01-05 10:40:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Roth IRA';
+select id, '2025-12-31', '2026-01-05 10:40:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Roth IRA';
 
 -- Brokerage statements (sporadic: Jan, Mar, Jun, Oct)
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-01-31', '2025-02-03 10:35:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Brokerage';
+select id, '2025-01-31', '2025-02-03 10:35:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Brokerage';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-03-31', '2025-04-02 09:05:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Brokerage';
+select id, '2025-03-31', '2025-04-02 09:05:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Brokerage';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-06-30', '2025-07-03 09:30:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Brokerage';
+select id, '2025-06-30', '2025-07-03 09:30:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Brokerage';
 insert into statements (account_id, statement_date, created_at)
-select id, '2025-10-31', '2025-11-03 08:05:00' from accounts where user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and name = 'Brokerage';
+select id, '2025-10-31', '2025-11-03 08:05:00' from accounts where family_id = '11111111-1111-1111-1111-111111111111' and name = 'Brokerage';
 
 -- ============================================================================
 -- ASSET PRICES
@@ -226,85 +234,85 @@ select id, '2025-10-31', '2025-11-03 08:05:00' from accounts where user_id = '47
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-01-31', 45.20, s.id, '2025-02-03 10:15:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-01-31';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-02-28', 45.50, s.id, '2025-03-05 19:30:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-02-28';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-03-31', 44.80, s.id, '2025-04-02 08:45:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-03-31';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-04-30', 46.10, s.id, '2025-05-08 21:00:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-04-30';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-05-31', 46.50, s.id, '2025-06-04 14:20:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-05-31';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-06-30', 45.90, s.id, '2025-07-03 09:10:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-06-30';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-07-31', 47.20, s.id, '2025-08-12 16:45:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-07-31';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-08-31', 46.80, s.id, '2025-09-02 11:30:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-08-31';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-09-30', 45.60, s.id, '2025-10-06 20:15:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-09-30';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-10-31', 46.40, s.id, '2025-11-03 07:45:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-10-31';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-11-30', 47.50, s.id, '2025-12-04 18:00:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-11-30';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-12-31', 48.20, s.id, '2026-01-05 10:30:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-12-31';
 
 -- VTI prices (from Brokerage statements when available, manual otherwise)
@@ -312,91 +320,91 @@ where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-01-31', 271.50, s.id, '2025-02-03 10:35:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-01-31';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-02-28', 274.20, null, '2025-03-03 12:15:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-03-31', 268.80, s.id, '2025-04-02 09:05:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-03-31';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-04-30', 276.40, null, '2025-05-02 08:30:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-05-31', 280.10, null, '2025-06-03 17:45:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-06-30', 278.50, s.id, '2025-07-03 09:30:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-06-30';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-07-31', 285.30, null, '2025-08-05 19:20:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-08-31', 282.70, null, '2025-09-04 10:10:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-09-30', 275.90, null, '2025-10-03 14:30:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-10-31', 281.20, s.id, '2025-11-03 08:05:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-10-31';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-11-30', 289.60, null, '2025-12-06 11:45:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-12-31', 295.40, null, '2026-01-04 09:15:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI';
 
 -- VMFXX prices (money market, always $1.00)
 -- Only need prices for months where there are holdings (Mar-Jul)
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-03-31', 1.00, s.id, '2025-04-02 09:05:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VMFXX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VMFXX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-03-31';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-06-30', 1.00, s.id, '2025-07-03 09:30:00'
 from assets a, statements s, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VMFXX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VMFXX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-06-30';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-07-31', 1.00, null, '2025-08-05 19:25:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VMFXX';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VMFXX';
 
 -- Home Equity prices (manual updates only)
 -- Jul: Purchased at $80k equity
@@ -404,12 +412,12 @@ where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VMFXX';
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-07-31', 80000.00, null, '2025-08-03 14:00:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Home Equity';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.name = 'Home Equity';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-12-31', 90000.00, null, '2026-01-08 16:30:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Home Equity';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.name = 'Home Equity';
 
 -- Acme Corp Stock prices (manual updates only)
 -- Jan: Initial price $20/share
@@ -417,12 +425,12 @@ where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Home Equi
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-01-31', 20.00, null, '2025-02-05 11:00:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Acme Corp Stock';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.name = 'Acme Corp Stock';
 
 insert into asset_prices (asset_id, price_date, price, statement_id, created_at)
 select a.id, '2025-09-30', 30.00, null, '2025-10-10 15:45:00'
 from assets a
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Acme Corp Stock';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.name = 'Acme Corp Stock';
 
 -- ============================================================================
 -- ASSET HOLDINGS
@@ -438,85 +446,85 @@ where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Acme Corp
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-01-31', 3355.55, s.id, '2025-02-03 10:15:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-01-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-02-28', 3377.54, s.id, '2025-03-05 19:30:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-02-28';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-03-31', 3399.86, s.id, '2025-04-02 08:45:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-03-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-04-30', 3421.55, s.id, '2025-05-08 21:00:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-04-30';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-05-31', 3443.06, s.id, '2025-06-04 14:20:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-05-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-06-30', 3464.85, s.id, '2025-07-03 09:10:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-06-30';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-07-31', 3486.04, s.id, '2025-08-12 16:45:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-07-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-08-31', 3507.41, s.id, '2025-09-02 11:30:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-08-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-09-30', 3529.34, s.id, '2025-10-06 20:15:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-09-30';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-10-31', 3550.90, s.id, '2025-11-03 07:45:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-10-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-11-30', 3571.95, s.id, '2025-12-04 18:00:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-11-30';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-12-31', 3592.70, s.id, '2026-01-05 10:30:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp 401k'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp 401k'
   and s.account_id = acc.id and s.statement_date = '2025-12-31';
 
 -- ----------------------------------------------------------------------------
@@ -528,85 +536,85 @@ where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-01-31', 671.09, s.id, '2025-02-03 10:25:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-01-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-02-28', 675.49, s.id, '2025-03-05 19:40:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-02-28';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-03-31', 679.95, s.id, '2025-04-02 08:55:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-03-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-04-30', 684.29, s.id, '2025-05-08 21:10:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-04-30';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-05-31', 688.59, s.id, '2025-06-04 14:30:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-05-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-06-30', 692.95, s.id, '2025-07-03 09:20:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-06-30';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-07-31', 697.19, s.id, '2025-08-12 16:55:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-07-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-08-31', 701.46, s.id, '2025-09-02 11:40:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-08-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-09-30', 705.85, s.id, '2025-10-06 20:25:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-09-30';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-10-31', 710.16, s.id, '2025-11-03 07:55:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-10-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-11-30', 714.37, s.id, '2025-12-04 18:10:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-11-30';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-12-31', 718.52, s.id, '2026-01-05 10:40:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Roth IRA'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTTSX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Roth IRA'
   and s.account_id = acc.id and s.statement_date = '2025-12-31';
 
 -- ----------------------------------------------------------------------------
@@ -620,29 +628,29 @@ where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTTSX'
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-01-31', 685.07, s.id, '2025-02-03 10:35:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-01-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-03-31', 592.08, s.id, '2025-04-02 09:05:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-03-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-06-30', 394.60, s.id, '2025-07-03 09:30:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-06-30';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-10-31', 412.38, s.id, '2025-11-03 08:05:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VTI'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-10-31';
 
 -- ----------------------------------------------------------------------------
@@ -654,22 +662,22 @@ where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VTI'
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-03-31', 25000.00, s.id, '2025-04-02 09:05:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VMFXX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VMFXX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-03-31';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-06-30', 80000.00, s.id, '2025-07-03 09:30:00'
 from assets a, accounts acc, statements s
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VMFXX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage'
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VMFXX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage'
   and s.account_id = acc.id and s.statement_date = '2025-06-30';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-07-31', 0.00, null, '2025-08-05 19:25:00'
 from assets a, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VMFXX'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Brokerage';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.ticker = 'VMFXX'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Brokerage';
 
 -- ----------------------------------------------------------------------------
 -- Primary Residence - Home Equity holdings
@@ -679,8 +687,8 @@ where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.ticker = 'VMFXX'
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-07-31', 1.00, null, '2025-08-03 14:00:00'
 from assets a, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Home Equity'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Primary Residence';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.name = 'Home Equity'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Primary Residence';
 
 -- ----------------------------------------------------------------------------
 -- Acme Corp Equity - Private stock holdings
@@ -690,11 +698,11 @@ where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Home Equi
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-01-31', 1000.00, null, '2025-02-05 11:00:00'
 from assets a, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Acme Corp Stock'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp Equity';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.name = 'Acme Corp Stock'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp Equity';
 
 insert into asset_holdings (asset_id, account_id, holding_date, quantity, statement_id, created_at)
 select a.id, acc.id, '2025-04-30', 1500.00, null, '2025-05-06 09:30:00'
 from assets a, accounts acc
-where a.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and a.name = 'Acme Corp Stock'
-  and acc.user_id = '47dc6837-d952-453e-9d6e-8a211ab5a289' and acc.name = 'Acme Corp Equity';
+where a.family_id = '11111111-1111-1111-1111-111111111111' and a.name = 'Acme Corp Stock'
+  and acc.family_id = '11111111-1111-1111-1111-111111111111' and acc.name = 'Acme Corp Equity';

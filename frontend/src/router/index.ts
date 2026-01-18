@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 
 import LoginView from '@/views/LoginView.vue'
+import SetupView from '@/views/SetupView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import InvestmentsView from '@/views/InvestmentsView.vue'
 import AccountsView from '@/views/AccountsView.vue'
@@ -15,6 +16,12 @@ const routes = [
     name: 'login',
     component: LoginView,
     meta: { requiresAuth: false }
+  },
+  {
+    path: '/setup',
+    name: 'setup',
+    component: SetupView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/',
@@ -63,11 +70,16 @@ const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
   const { data: { session } } = await supabase.auth.getSession()
   const isAuthenticated = !!session
+  const familyId = session?.user?.user_metadata?.family_id
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')
   } else if (to.path === '/login' && isAuthenticated) {
-    next('/')
+    next(familyId ? '/' : '/setup')
+  } else if (to.path === '/setup') {
+    next()
+  } else if (isAuthenticated && !familyId) {
+    next('/setup')
   } else {
     next()
   }

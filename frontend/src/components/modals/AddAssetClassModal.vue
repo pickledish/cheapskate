@@ -26,12 +26,13 @@ export default {
 
       try {
         const { data: { user } } = await supabase.auth.getUser()
+        const familyId = user.user_metadata.family_id
 
-        // Get max sort_order for this user
+        // Get max sort_order for this family
         const { data: maxData } = await supabase
           .from('asset_classes')
           .select('sort_order')
-          .eq('user_id', user.id)
+          .eq('family_id', familyId)
           .order('sort_order', { ascending: false })
           .limit(1)
           .single()
@@ -39,7 +40,8 @@ export default {
         const nextSortOrder = (maxData?.sort_order ?? -1) + 1
 
         const { error } = await supabase.from('asset_classes').insert({
-          user_id: user.id,
+          family_id: familyId,
+          created_by: user.id,
           name: this.name.trim(),
           goal: this.goal / 100,
           sort_order: nextSortOrder

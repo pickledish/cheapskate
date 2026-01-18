@@ -103,6 +103,7 @@ VITE_SUPABASE_URL=https://xxx.supabase.co VITE_SUPABASE_ANON_KEY=xxx npm run bui
 
 | Table | Purpose |
 |-------|---------|
+| `families` | Groups of users who share data |
 | `accounts` | Investment accounts (401k, IRA, brokerage, etc.) |
 | `statements` | Uploaded PDF statements per account |
 | `assets` | Securities and private assets (stocks, real estate, etc.) |
@@ -111,7 +112,16 @@ VITE_SUPABASE_URL=https://xxx.supabase.co VITE_SUPABASE_ANON_KEY=xxx npm run bui
 | `asset_classes` | User-defined categories (stocks, bonds, cash, etc.) |
 | `asset_allocations` | Maps assets to classes with percentages |
 
-All tables use Row Level Security (RLS) — users can only access their own data.
+### Family Sharing
+
+Data is shared at the family level, allowing multiple users to view and edit the same accounts and assets. Each user belongs to exactly one family (even single-person households).
+
+- **New users** are prompted to create a new family or join an existing one by entering its UUID
+- **Family ID** is stored in Supabase `user_metadata` and included in the JWT for fast RLS checks
+- **RLS policies** use `auth.jwt() -> 'user_metadata' ->> 'family_id'` to scope data access
+- **`created_by`** column on `accounts`, `assets`, and `asset_classes` tracks which user created each record (audit trail)
+
+All tables use Row Level Security (RLS) — users can only access data belonging to their family.
 
 ## Edge Functions
 
