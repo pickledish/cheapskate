@@ -5,7 +5,6 @@ import EditAccountModal from '@/components/modals/EditAccountModal.vue'
 import UploadStatementModal from '@/components/modals/UploadStatementModal.vue'
 import UpdatePositionModal from '@/components/modals/UpdatePositionModal.vue'
 import { supabase } from '@/lib/supabase'
-import { getTagColor } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { PencilIcon, TrashIcon } from '@heroicons/vue/24/solid'
@@ -45,15 +44,7 @@ export default {
 
       return this.accounts.filter(account => {
         // Search in name
-        if (account.name.toLowerCase().includes(query)) return true
-
-        // Search in tag values
-        const tags = account.tags || {}
-        for (const value of Object.values(tags)) {
-          if (String(value).toLowerCase().includes(query)) return true
-        }
-
-        return false
+        return account.name.toLowerCase().includes(query)
       })
     }
   },
@@ -196,15 +187,6 @@ export default {
       return dayjs(dateStr).fromNow()
     },
 
-    getTagEntries(tags) {
-      if (!tags || typeof tags !== 'object') return []
-      return Object.entries(tags)
-    },
-
-    getTagColor(key) {
-      return getTagColor(key)
-    },
-
     openEditAccountModal(account) {
       this.selectedAccount = account
       this.showEditAccountModal = true
@@ -277,17 +259,6 @@ export default {
 
             <div class="flex-1 pr-6">
               <h3 class="font-semibold text-gray-900">{{ account.name }}</h3>
-              <!-- Tags -->
-              <div class="flex flex-wrap gap-1 mt-2">
-                <span
-                  v-for="[key, value] in getTagEntries(account.tags)"
-                  v-bind:key="key"
-                  class="inline-block px-2 py-0.5 text-xs font-medium rounded"
-                  v-bind:class="[getTagColor(key).bg, getTagColor(key).text]"
-                >
-                  {{ value }}
-                </span>
-              </div>
               <!-- Value and last updated -->
               <div class="mt-4">
                 <p v-if="account.totalValue != null" class="text-xs text-gray-400">

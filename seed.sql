@@ -90,12 +90,12 @@ insert into asset_classes (family_id, created_by, name, goal, sort_order) values
 -- ACCOUNTS
 -- ============================================================================
 
-insert into accounts (family_id, created_by, name, tags, rebalancing) values
-    ('11111111-1111-1111-1111-111111111111', '6c6168b8-64df-4f6a-a5b4-b635b55c957b', 'Acme Corp 401k', '{"type": "retirement"}', true),
-    ('11111111-1111-1111-1111-111111111111', '6c6168b8-64df-4f6a-a5b4-b635b55c957b', 'Roth IRA', '{"type": "retirement"}', true),
-    ('11111111-1111-1111-1111-111111111111', '6c6168b8-64df-4f6a-a5b4-b635b55c957b', 'Brokerage', '{"type": "taxable"}', true),
-    ('11111111-1111-1111-1111-111111111111', '6c6168b8-64df-4f6a-a5b4-b635b55c957b', 'Primary Residence', '{"type": "real_estate"}', false),
-    ('11111111-1111-1111-1111-111111111111', '6c6168b8-64df-4f6a-a5b4-b635b55c957b', 'Acme Corp Equity', '{"type": "private"}', false);
+insert into accounts (family_id, created_by, name, rebalancing) values
+    ('11111111-1111-1111-1111-111111111111', '6c6168b8-64df-4f6a-a5b4-b635b55c957b', 'Acme Corp 401k', true),
+    ('11111111-1111-1111-1111-111111111111', '6c6168b8-64df-4f6a-a5b4-b635b55c957b', 'Roth IRA', true),
+    ('11111111-1111-1111-1111-111111111111', '6c6168b8-64df-4f6a-a5b4-b635b55c957b', 'Brokerage', true),
+    ('11111111-1111-1111-1111-111111111111', '6c6168b8-64df-4f6a-a5b4-b635b55c957b', 'Primary Residence', false),
+    ('11111111-1111-1111-1111-111111111111', '6c6168b8-64df-4f6a-a5b4-b635b55c957b', 'Acme Corp Equity', false);
 
 -- ============================================================================
 -- ASSETS
