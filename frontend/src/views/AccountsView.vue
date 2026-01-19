@@ -25,6 +25,7 @@ export default {
   data() {
     return {
       accounts: [],
+      holdingsByAccount: {},
       loading: true,
       error: null,
       searchQuery: '',
@@ -57,22 +58,31 @@ export default {
       this.error = null
       try {
         // Load all data in parallel
-        const [accountsResult, statementsResult, holdingsResult, pricesResult] = await Promise.all([
+        const [accountsResult, statementsResult, holdingsResult, pricesResult, assetsResult] = await Promise.all([
           supabase.from('accounts').select('*').order('created_at'),
           supabase.from('statements').select('account_id, statement_date').order('statement_date', { ascending: false }),
           supabase.from('asset_holdings').select('account_id, asset_id, holding_date, quantity').order('holding_date', { ascending: false }),
-          supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: false })
+          supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: false }),
+          supabase.from('assets').select('id, ticker, name')
         ])
 
         if (accountsResult.error) throw accountsResult.error
         if (statementsResult.error) throw statementsResult.error
         if (holdingsResult.error) throw holdingsResult.error
         if (pricesResult.error) throw pricesResult.error
+        if (assetsResult.error) throw assetsResult.error
 
         const accountsData = accountsResult.data
         const statementsData = statementsResult.data
         const holdingsData = holdingsResult.data
         const pricesData = pricesResult.data
+        const assetsData = assetsResult.data
+
+        // Build map of asset_id -> asset info
+        const assetMap = {}
+        for (const a of assetsData) {
+          assetMap[a.id] = { ticker: a.ticker, name: a.name }
+        }
 
         // Build map of account_id -> most recent statement_date
         const latestStatementByAccount = {}
@@ -90,24 +100,44 @@ export default {
           }
         }
 
-        // Build map of (account_id, asset_id) -> latest quantity
+        // Build map of (account_id, asset_id) -> latest holding info
         const latestHoldingByAccountAsset = {}
         for (const h of holdingsData) {
           const key = `${h.account_id}-${h.asset_id}`
           if (!latestHoldingByAccountAsset[key]) {
-            latestHoldingByAccountAsset[key] = parseFloat(h.quantity)
+            latestHoldingByAccountAsset[key] = {
+              asset_id: h.asset_id,
+              account_id: h.account_id,
+              quantity: parseFloat(h.quantity)
+            }
           }
         }
 
-        // Calculate total value per account
+        // Calculate total value per account and build holdingsByAccount
         const accountValues = {}
+        const holdingsByAccount = {}
         for (const key in latestHoldingByAccountAsset) {
-          const [accountId, assetId] = key.split('-')
-          const quantity = latestHoldingByAccountAsset[key]
-          const price = latestPriceByAsset[assetId] || 0
-          const value = quantity * price
-          accountValues[accountId] = (accountValues[accountId] || 0) + value
+          const holding = latestHoldingByAccountAsset[key]
+          const asset = assetMap[holding.asset_id] || {}
+          const price = latestPriceByAsset[holding.asset_id] || 0
+          const value = holding.quantity * price
+
+          accountValues[holding.account_id] = (accountValues[holding.account_id] || 0) + value
+
+          // Add to holdingsByAccount (only if quantity > 0)
+          if (holding.quantity > 0) {
+            if (!holdingsByAccount[holding.account_id]) {
+              holdingsByAccount[holding.account_id] = []
+            }
+            holdingsByAccount[holding.account_id].push({
+              asset_id: holding.asset_id,
+              ticker: asset.ticker,
+              name: asset.name,
+              quantity: holding.quantity
+            })
+          }
         }
+        this.holdingsByAccount = holdingsByAccount
 
         // Merge metadata into accounts
         this.accounts = accountsData.map(account => ({
@@ -318,6 +348,7 @@ export default {
     <UploadStatementModal
       v-if="showUploadModal"
       v-bind:account="selectedAccount"
+      v-bind:existing-holdings="holdingsByAccount[selectedAccount?.id] || []"
       v-on:close="closeUploadModal"
       v-on:uploaded="onStatementUploaded"
     />

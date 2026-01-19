@@ -9,6 +9,10 @@ export default {
     account: {
       type: Object,
       required: true
+    },
+    existingHoldings: {
+      type: Array,
+      default: () => []
     }
   },
   emits: ['close', 'uploaded'],
@@ -81,6 +85,7 @@ export default {
 
         this.holdings = result.holdings || []
         this.statementDate = result.statement_date || this.todayDate
+        this.addSoldPositions()
         this.step = 'preview'
 
       } catch (err) {
@@ -105,6 +110,29 @@ export default {
 
     removeHolding(index) {
       this.holdings.splice(index, 1)
+    },
+
+    addSoldPositions() {
+      // Build set of parsed holding names (lowercase for case-insensitive matching)
+      const parsedNames = new Set(
+        this.holdings.map(h => h.name.toLowerCase())
+      )
+
+      // Check each existing holding to see if it's missing from the parsed results
+      for (const existing of this.existingHoldings) {
+        const tickerMatch = existing.ticker && parsedNames.has(existing.ticker.toLowerCase())
+        const nameMatch = existing.name && parsedNames.has(existing.name.toLowerCase())
+
+        if (!tickerMatch && !nameMatch) {
+          // Asset not in statement - add as sold (quantity=0)
+          this.holdings.push({
+            name: existing.ticker || existing.name,
+            quantity: 0,
+            total_value: null,
+            price: null
+          })
+        }
+      }
     },
 
     computePrice(holding) {
@@ -189,25 +217,27 @@ export default {
             asset = newAsset
           }
 
-          // Compute price
+          // Compute price (null for sold positions)
           const price = this.computePrice(holding)
 
-          // Insert/update price
-          const { error: priceError } = await supabase
-            .from('asset_prices')
-            .upsert({
-              asset_id: asset.id,
-              price_date: this.statementDate,
-              price: price,
-              statement_id: statement.id,
-              created_by: user.id
-            }, {
-              onConflict: 'asset_id,price_date'
-            })
+          // Insert/update price (skip for sold positions where price is null)
+          if (price != null) {
+            const { error: priceError } = await supabase
+              .from('asset_prices')
+              .upsert({
+                asset_id: asset.id,
+                price_date: this.statementDate,
+                price: price,
+                statement_id: statement.id,
+                created_by: user.id
+              }, {
+                onConflict: 'asset_id,price_date'
+              })
 
-          if (priceError) {
-            await supabase.from('statements').delete().eq('id', statement.id)
-            throw priceError
+            if (priceError) {
+              await supabase.from('statements').delete().eq('id', statement.id)
+              throw priceError
+            }
           }
 
           // Insert/update holding
