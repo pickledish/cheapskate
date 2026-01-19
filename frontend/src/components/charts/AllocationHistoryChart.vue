@@ -30,6 +30,7 @@ export default {
         animation: false,
         tooltip: {
           trigger: 'item',
+          transitionDuration: 0,
           formatter: (p) => {
             const pct = (p.value * 100).toFixed(1)
             return `<strong>${p.name}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${pct}%`

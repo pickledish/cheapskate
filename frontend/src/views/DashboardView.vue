@@ -95,7 +95,7 @@ export default {
     getLast12Months() {
       const months = []
       const now = new Date()
-      for (let i = 12; i >= 1; i--) {
+      for (let i = 11; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
         months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
       }

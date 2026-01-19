@@ -26,6 +26,38 @@ export default {
       required: true
     }
   },
+  data() {
+    return {
+      selectedSingle: null // null = show all, string = show only this series
+    }
+  },
+  methods: {
+    onLegendSelectChanged(params) {
+      const chart = this.$refs.chart
+      if (!chart) return
+
+      const clickedName = params.name
+      const allNames = this.series.map(s => s.name)
+
+      if (this.selectedSingle === clickedName) {
+        // Clicking the same one again - show all
+        this.selectedSingle = null
+        allNames.forEach(name => {
+          chart.dispatchAction({ type: 'legendSelect', name })
+        })
+      } else {
+        // Show only the clicked one
+        this.selectedSingle = clickedName
+        allNames.forEach(name => {
+          if (name === clickedName) {
+            chart.dispatchAction({ type: 'legendSelect', name })
+          } else {
+            chart.dispatchAction({ type: 'legendUnSelect', name })
+          }
+        })
+      }
+    }
+  },
   computed: {
     isStacked() {
       return this.series.length > 1
@@ -44,6 +76,7 @@ export default {
         animation: false,
         tooltip: {
           trigger: 'item',
+          transitionDuration: 0,
           formatter: (p) => {
             if (!p.name || p.value == null) return ''
             return `<strong>${p.name}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${formatCurrency(p.value)}`
@@ -104,7 +137,7 @@ export default {
 <template>
   <div>
     <div v-if="hasData" class="w-full" style="height: 500px;">
-      <VChart :option="chartOption" autoresize />
+      <VChart ref="chart" :option="chartOption" autoresize @legendselectchanged="onLegendSelectChanged" />
     </div>
     <div v-else class="text-center text-gray-500 py-8">
       No net worth data to display.
