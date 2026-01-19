@@ -127,6 +127,7 @@ export default {
               createdAt: stmt?.createdAt || h.created_at,
               effectiveDate: stmt?.effectiveDate || h.holding_date,
               accountName: accountMap[stmt?.accountId] || 'Unknown',
+              creatorName: h.created_by ? profileMap[h.created_by] : null,
               priceUpdates: [],
               holdingUpdates: []
             }
