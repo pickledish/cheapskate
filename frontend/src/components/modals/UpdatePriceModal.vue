@@ -41,11 +41,15 @@ export default {
       this.error = null
 
       try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
+
         const { error } = await supabase.from('asset_prices').upsert({
           asset_id: this.asset.id,
           price_date: this.date,
           price: priceNum,
-          statement_id: null  // manual update
+          statement_id: null,  // manual update
+          created_by: user.id
         }, {
           onConflict: 'asset_id,price_date'
         })

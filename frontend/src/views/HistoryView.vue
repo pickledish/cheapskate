@@ -26,12 +26,12 @@ export default {
       this.error = null
 
       try {
-        const [pricesResult, holdingsResult, statementsResult, accountsResult, assetsResult] = await Promise.all([
+        const [pricesResult, holdingsResult, statementsResult, accountsResult, assetsResult, profilesResult] = await Promise.all([
           supabase.from('asset_prices')
-            .select('asset_id, price_date, price, statement_id, created_at')
+            .select('asset_id, price_date, price, statement_id, created_by, created_at')
             .order('created_at', { ascending: false }),
           supabase.from('asset_holdings')
-            .select('asset_id, account_id, holding_date, quantity, statement_id, created_at')
+            .select('asset_id, account_id, holding_date, quantity, statement_id, created_by, created_at')
             .order('created_at', { ascending: false }),
           supabase.from('statements')
             .select('id, account_id, statement_date, created_at')
@@ -39,7 +39,9 @@ export default {
           supabase.from('accounts')
             .select('id, name'),
           supabase.from('assets')
-            .select('id, ticker, name')
+            .select('id, ticker, name'),
+          supabase.from('profiles')
+            .select('id, name')
         ])
 
         if (pricesResult.error) throw pricesResult.error
@@ -47,13 +49,15 @@ export default {
         if (statementsResult.error) throw statementsResult.error
         if (accountsResult.error) throw accountsResult.error
         if (assetsResult.error) throw assetsResult.error
+        if (profilesResult.error) throw profilesResult.error
 
         this.processEvents(
           pricesResult.data || [],
           holdingsResult.data || [],
           statementsResult.data || [],
           accountsResult.data || [],
-          assetsResult.data || []
+          assetsResult.data || [],
+          profilesResult.data || []
         )
       } catch (err) {
         this.error = err.message
@@ -62,11 +66,12 @@ export default {
       }
     },
 
-    processEvents(prices, holdings, statements, accounts, assets) {
+    processEvents(prices, holdings, statements, accounts, assets, profiles) {
       // Build lookup maps
       const accountMap = Object.fromEntries(accounts.map(a => [a.id, a.name]))
       const assetMap = Object.fromEntries(assets.map(a => [a.id, { ticker: a.ticker, name: a.name }]))
       const statementMap = Object.fromEntries(statements.map(s => [s.id, { accountId: s.account_id, effectiveDate: s.statement_date, createdAt: s.created_at }]))
+      const profileMap = Object.fromEntries(profiles.map(p => [p.id, p.name]))
 
       const events = []
       const statementEvents = {} // statement_id -> event object
@@ -85,6 +90,7 @@ export default {
               createdAt: stmt?.createdAt || p.created_at,
               effectiveDate: stmt?.effectiveDate || p.price_date,
               accountName: accountMap[stmt?.accountId] || 'Unknown',
+              creatorName: p.created_by ? profileMap[p.created_by] : null,
               priceUpdates: [],
               holdingUpdates: []
             }
@@ -101,7 +107,8 @@ export default {
             createdAt: p.created_at,
             effectiveDate: p.price_date,
             assetName: asset.ticker || asset.name || 'Unknown',
-            price: p.price
+            price: p.price,
+            creatorName: p.created_by ? profileMap[p.created_by] : null
           })
         }
       }
@@ -138,7 +145,8 @@ export default {
             effectiveDate: h.holding_date,
             assetName: asset.ticker || asset.name || 'Unknown',
             quantity: h.quantity,
-            accountName: accountMap[h.account_id] || 'Unknown'
+            accountName: accountMap[h.account_id] || 'Unknown',
+            creatorName: h.created_by ? profileMap[h.created_by] : null
           })
         }
       }
@@ -218,7 +226,7 @@ export default {
                 <span class="text-gray-400">-</span>
                 <span class="font-medium text-gray-900">{{ event.accountName }}</span>
               </div>
-              <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}</span>
+              <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
             </div>
             <hr class="my-3 border-gray-200" />
             <div class="text-sm text-gray-700">
@@ -242,7 +250,7 @@ export default {
                 <CurrencyDollarIcon class="h-5 w-5 text-green-500" />
                 <span class="font-medium text-gray-900">Price Update</span>
               </div>
-              <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}</span>
+              <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
             </div>
             <hr class="my-3 border-gray-200" />
             <div class="text-sm text-gray-700">
@@ -262,7 +270,7 @@ export default {
                 <span class="text-gray-400">-</span>
                 <span class="font-medium text-gray-900">{{ event.accountName }}</span>
               </div>
-              <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}</span>
+              <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
             </div>
             <hr class="my-3 border-gray-200" />
             <div class="text-sm text-gray-700">

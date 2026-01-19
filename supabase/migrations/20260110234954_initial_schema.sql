@@ -174,6 +174,7 @@ create table asset_prices (
     price_date date not null,
     price numeric not null,
     statement_id bigint references statements(id) on delete set null,
+    created_by uuid references auth.users(id) on delete set null,
     created_at timestamptz not null default now(),
     primary key (asset_id, price_date)
 );
@@ -224,6 +225,7 @@ create table asset_holdings (
     holding_date date not null,
     quantity numeric not null,
     statement_id bigint references statements(id) on delete set null,
+    created_by uuid references auth.users(id) on delete set null,
     created_at timestamptz not null default now(),
     primary key (asset_id, account_id, holding_date)
 );

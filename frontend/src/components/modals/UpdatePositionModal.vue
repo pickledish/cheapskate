@@ -47,6 +47,9 @@ export default {
       this.error = null
 
       try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
+
         // Look up asset by ticker OR name (exact match)
         const assetNameTrimmed = this.assetName.trim()
         const { data: asset, error: lookupError } = await supabase
@@ -64,7 +67,8 @@ export default {
           account_id: this.account.id,
           holding_date: this.date,
           quantity: quantityNum,
-          statement_id: null  // manual update
+          statement_id: null,  // manual update
+          created_by: user.id
         }, {
           onConflict: 'asset_id,account_id,holding_date'
         })

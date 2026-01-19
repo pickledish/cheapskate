@@ -199,7 +199,8 @@ export default {
               asset_id: asset.id,
               price_date: this.statementDate,
               price: price,
-              statement_id: statement.id
+              statement_id: statement.id,
+              created_by: user.id
             }, {
               onConflict: 'asset_id,price_date'
             })
@@ -217,7 +218,8 @@ export default {
               account_id: this.account.id,
               holding_date: this.statementDate,
               quantity: holding.quantity,
-              statement_id: statement.id
+              statement_id: statement.id,
+              created_by: user.id
             }, {
               onConflict: 'asset_id,account_id,holding_date'
             })
