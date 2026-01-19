@@ -4,7 +4,7 @@ import { PieChart } from 'echarts/charts'
 import { LegendComponent, TooltipComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
-import { getHexColor } from '@/lib/tagColors'
+import { getHexForColor } from '@/lib/tagColors'
 
 use([PieChart, LegendComponent, TooltipComponent, CanvasRenderer])
 
@@ -19,6 +19,10 @@ export default {
     values: {
       type: Array,
       required: true
+    },
+    colors: {
+      type: Array,
+      default: () => []
     }
   },
   computed: {
@@ -26,7 +30,7 @@ export default {
       const data = this.labels.map((label, i) => ({
         name: label,
         value: this.values[i],
-        itemStyle: { color: getHexColor(label) }
+        itemStyle: { color: this.colors[i] ? getHexForColor(this.colors[i]) : getHexForColor('red') }
       }))
 
       return {

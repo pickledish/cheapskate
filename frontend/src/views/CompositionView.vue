@@ -36,7 +36,7 @@ export default {
           supabase.from('asset_holdings').select('asset_id, account_id, holding_date, quantity').order('holding_date', { ascending: true }),
           supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: true }),
           supabase.from('accounts').select('id, name, rebalancing'),
-          supabase.from('asset_classes').select('id, name, sort_order, goal').order('sort_order'),
+          supabase.from('asset_classes').select('id, name, color, sort_order, goal').order('sort_order'),
           supabase.from('asset_allocations').select('asset_id, asset_class_id, percentage')
         ])
 
@@ -94,8 +94,8 @@ export default {
 
       this.monthLabels = monthsWithData.map(m => this.formatMonth(m))
 
-      // Build class map for names
-      const classMap = Object.fromEntries(this.assetClassesData.map(c => [c.id, c.name]))
+      // Build class map for names and colors
+      const classMap = Object.fromEntries(this.assetClassesData.map(c => [c.id, { name: c.name, color: c.color }]))
       const classIds = this.assetClassesData.map(c => c.id)
 
       // Compute values by class for each month (only months with data)
@@ -122,13 +122,15 @@ export default {
           // Return percentage (will be normalized after)
           return { classValue, totalValue }
         })
-        return { classId, name: classMap[classId] || `Class ${classId}`, data }
+        const classInfo = classMap[classId] || { name: `Class ${classId}`, color: 'red' }
+        return { classId, name: classInfo.name, color: classInfo.color, data }
       })
 
       // Normalize: convert to percentages of total for each month
       this.chartSeries = seriesData
         .map(s => ({
           name: s.name,
+          color: s.color,
           data: s.data.map(d => d.totalValue > 0 ? d.classValue / d.totalValue : 0)
         }))
         .filter(s => s.data.some(v => v > 0))
@@ -158,6 +160,7 @@ export default {
       // Build comparison data for all asset classes (respecting sort_order)
       this.comparisonAllocations = this.assetClassesData.map(ac => ({
         name: ac.name,
+        color: ac.color,
         current: currentTotal > 0 ? (currentValueByClass[ac.id] || 0) / currentTotal : 0,
         goal: ac.goal || 0
       }))

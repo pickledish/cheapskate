@@ -4,7 +4,7 @@ import AddAssetClassModal from '@/components/modals/AddAssetClassModal.vue'
 import EditAssetClassModal from '@/components/modals/EditAssetClassModal.vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { supabase } from '@/lib/supabase'
-import { getTagColor } from '@/lib/tagColors'
+import { getColorClasses } from '@/lib/tagColors'
 
 export default {
   name: 'GoalsView',
@@ -92,8 +92,8 @@ export default {
       await this.loadData()
     },
 
-    getClassColor(name) {
-      return getTagColor(name)
+    getClassColor(colorName) {
+      return getColorClasses(colorName)
     },
 
     async onReorder() {
@@ -189,7 +189,7 @@ export default {
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   class="inline-block px-2 py-0.5 text-xs font-medium rounded"
-                  v-bind:class="[getClassColor(assetClass.name).bg, getClassColor(assetClass.name).text]"
+                  v-bind:class="[getClassColor(assetClass.color).bg, getClassColor(assetClass.color).text]"
                 >
                   {{ assetClass.name }}
                 </span>

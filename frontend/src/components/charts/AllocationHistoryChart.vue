@@ -4,7 +4,7 @@ import { BarChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
-import { getHexColor } from '@/lib/tagColors'
+import { getHexForColor } from '@/lib/tagColors'
 
 use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer])
 
@@ -62,7 +62,7 @@ export default {
           stack: 'total',
           barWidth: 14,
           data: s.data,
-          itemStyle: { color: getHexColor(s.name) },
+          itemStyle: { color: getHexForColor(s.color) },
           emphasis: { focus: 'series' },
           cursor: 'crosshair'
         }))

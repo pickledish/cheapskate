@@ -4,7 +4,7 @@ import AddAssetModal from '@/components/modals/AddAssetModal.vue'
 import EditAssetModal from '@/components/modals/EditAssetModal.vue'
 import UpdatePriceModal from '@/components/modals/UpdatePriceModal.vue'
 import { supabase } from '@/lib/supabase'
-import { getTagColor } from '@/lib/tagColors'
+import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
@@ -61,7 +61,7 @@ export default {
         const [assetsResult, pricesResult, allocationsResult, classesResult] = await Promise.all([
           supabase.from('assets').select('*').order('name'),
           supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: false }),
-          supabase.from('asset_allocations').select('asset_id, asset_class_id, percentage, asset_classes(name, sort_order)'),
+          supabase.from('asset_allocations').select('asset_id, asset_class_id, percentage, asset_classes(name, color, sort_order)'),
           supabase.from('asset_classes').select('id, name').order('name')
         ])
 
@@ -86,7 +86,7 @@ export default {
           }
         }
 
-        // Build map of asset_id -> [class names], sorted by sort_order (for display)
+        // Build map of asset_id -> [{ name, color }], sorted by sort_order (for display)
         // Also build map of asset_id -> [{asset_class_id, percentage}] (for editing)
         const classesByAsset = {}
         const allocationsByAsset = {}
@@ -96,6 +96,7 @@ export default {
           }
           classesByAsset[a.asset_id].push({
             name: a.asset_classes.name,
+            color: a.asset_classes.color,
             sort_order: a.asset_classes.sort_order
           })
 
@@ -107,11 +108,11 @@ export default {
             percentage: Math.round(a.percentage * 100)
           })
         }
-        // Sort each asset's classes by sort_order and extract names
+        // Sort each asset's classes by sort_order and keep name + color
         for (const assetId in classesByAsset) {
           classesByAsset[assetId] = classesByAsset[assetId]
             .sort((a, b) => a.sort_order - b.sort_order)
-            .map(c => c.name)
+            .map(c => ({ name: c.name, color: c.color }))
         }
 
         // Merge metadata into assets
@@ -174,8 +175,8 @@ export default {
       return dayjs(dateStr).fromNow()
     },
 
-    getClassColor(className) {
-      return getTagColor(className)
+    getClassColor(colorName) {
+      return getColorClasses(colorName)
     }
   }
 }
@@ -240,12 +241,12 @@ export default {
                 <td class="px-6 py-4">
                   <div v-if="asset.assetClasses.length" class="flex flex-wrap gap-1">
                     <span
-                      v-for="className in asset.assetClasses"
-                      v-bind:key="className"
+                      v-for="ac in asset.assetClasses"
+                      v-bind:key="ac.name"
                       class="inline-block px-2 py-0.5 text-xs font-medium rounded"
-                      v-bind:class="[getClassColor(className).bg, getClassColor(className).text]"
+                      v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
                     >
-                      {{ className }}
+                      {{ ac.name }}
                     </span>
                   </div>
                   <span v-else class="text-sm text-gray-400">-</span>

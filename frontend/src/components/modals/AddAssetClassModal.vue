@@ -1,14 +1,16 @@
 <script>
 import BaseModal from './BaseModal.vue'
+import ColorPicker from '@/components/ColorPicker.vue'
 import { supabase } from '@/lib/supabase'
 
 export default {
   name: 'AddAssetClassModal',
-  components: { BaseModal },
+  components: { BaseModal, ColorPicker },
   emits: ['close', 'created'],
   data() {
     return {
       name: '',
+      color: 'red',
       goal: 0,
       loading: false,
       error: null
@@ -43,6 +45,7 @@ export default {
           family_id: familyId,
           created_by: user.id,
           name: this.name.trim(),
+          color: this.color,
           goal: this.goal / 100,
           sort_order: nextSortOrder
         })
@@ -77,12 +80,15 @@ export default {
         <label class="block text-sm font-medium text-gray-700 mb-1">
           Name
         </label>
-        <input
-          v-model="name"
-          type="text"
-          placeholder="e.g., Stocks, Bonds, Cash"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <div class="flex items-center gap-2">
+          <input
+            v-model="name"
+            type="text"
+            placeholder="e.g., Stocks, Bonds, Cash"
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <ColorPicker v-model="color" />
+        </div>
       </div>
 
       <div>

@@ -1,5 +1,5 @@
 <script>
-import { getHexColor } from '@/lib/tagColors'
+import { getHexForColor } from '@/lib/tagColors'
 
 const BAR_MAX_HEIGHT = 60 // pixels
 
@@ -18,8 +18,8 @@ export default {
     }
   },
   methods: {
-    getColor(name) {
-      return getHexColor(name)
+    getColor(colorName) {
+      return getHexForColor(colorName)
     },
     formatCurrency(value) {
       return new Intl.NumberFormat('en-US', {
@@ -65,7 +65,7 @@ export default {
           class="w-8 rounded-t transition-all"
           :style="{
             height: barHeightPx(currentDollars(alloc), Math.max(currentDollars(alloc), goalDollars(alloc))),
-            backgroundColor: getColor(alloc.name)
+            backgroundColor: getColor(alloc.color)
           }"
         ></div>
 
@@ -74,7 +74,7 @@ export default {
           class="w-8 rounded-t transition-all"
           :style="{
             height: barHeightPx(goalDollars(alloc), Math.max(currentDollars(alloc), goalDollars(alloc))),
-            backgroundColor: getColor(alloc.name),
+            backgroundColor: getColor(alloc.color),
             opacity: 0.4
           }"
         ></div>

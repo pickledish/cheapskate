@@ -1,10 +1,11 @@
 <script>
 import BaseModal from './BaseModal.vue'
+import ColorPicker from '@/components/ColorPicker.vue'
 import { supabase } from '@/lib/supabase'
 
 export default {
   name: 'EditAssetClassModal',
-  components: { BaseModal },
+  components: { BaseModal, ColorPicker },
   props: {
     assetClass: {
       type: Object,
@@ -15,6 +16,7 @@ export default {
   data() {
     return {
       name: '',
+      color: 'red',
       goal: 0,
       loading: false,
       error: null
@@ -22,6 +24,7 @@ export default {
   },
   mounted() {
     this.name = this.assetClass.name || ''
+    this.color = this.assetClass.color || 'red'
     this.goal = (this.assetClass.goal || 0) * 100
   },
   methods: {
@@ -37,6 +40,7 @@ export default {
       try {
         const { error } = await supabase.from('asset_classes').update({
           name: this.name.trim(),
+          color: this.color,
           goal: this.goal / 100
         }).eq('id', this.assetClass.id)
 
@@ -66,11 +70,14 @@ export default {
         <label class="block text-sm font-medium text-gray-700 mb-1">
           Name
         </label>
-        <input
-          v-model="name"
-          type="text"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <div class="flex items-center gap-2">
+          <input
+            v-model="name"
+            type="text"
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <ColorPicker v-model="color" />
+        </div>
       </div>
 
       <div>
