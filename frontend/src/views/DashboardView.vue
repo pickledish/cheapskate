@@ -17,6 +17,7 @@ export default {
       groupByOptions: [
         { value: 'none', label: 'None' },
         { value: 'account', label: 'Account' },
+        { value: 'owner', label: 'Owner' },
         { value: 'asset', label: 'Asset' },
         { value: 'assetClass', label: 'Asset Class' }
       ],
@@ -24,6 +25,7 @@ export default {
       holdingsData: [],
       pricesData: [],
       accountsData: [],
+      profilesData: [],
       assetsData: [],
       assetClassesData: [],
       allocationsData: []
@@ -47,10 +49,11 @@ export default {
     async loadData() {
       this.loading = true
 
-      const [holdingsResult, pricesResult, accountsResult, assetsResult, assetClassesResult, allocationsResult] = await Promise.all([
+      const [holdingsResult, pricesResult, accountsResult, profilesResult, assetsResult, assetClassesResult, allocationsResult] = await Promise.all([
         supabase.from('asset_holdings').select('asset_id, account_id, holding_date, quantity').order('holding_date', { ascending: true }),
         supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: true }),
-        supabase.from('accounts').select('id, name'),
+        supabase.from('accounts').select('id, name, created_by'),
+        supabase.from('profiles').select('id, name'),
         supabase.from('assets').select('id, name, ticker'),
         supabase.from('asset_classes').select('id, name'),
         supabase.from('asset_allocations').select('asset_id, asset_class_id, percentage')
@@ -59,6 +62,7 @@ export default {
       this.holdingsData = holdingsResult.data || []
       this.pricesData = pricesResult.data || []
       this.accountsData = accountsResult.data || []
+      this.profilesData = profilesResult.data || []
       this.assetsData = assetsResult.data || []
       this.assetClassesData = assetClassesResult.data || []
       this.allocationsData = allocationsResult.data || []
@@ -79,6 +83,8 @@ export default {
         this.chartSeries = [{ name: 'Net Worth', data: values }]
       } else if (this.groupBy === 'account') {
         this.chartSeries = this.computeGroupedByAccount(months)
+      } else if (this.groupBy === 'owner') {
+        this.chartSeries = this.computeGroupedByOwner(months)
       } else if (this.groupBy === 'asset') {
         this.chartSeries = this.computeGroupedByAsset(months)
       } else if (this.groupBy === 'assetClass') {
@@ -167,6 +173,35 @@ export default {
           return total
         })
         return { name: accountMap[accountId] || `Account ${accountId}`, data }
+      }).filter(s => s.data.some(v => v > 0))
+    },
+
+    computeGroupedByOwner(months) {
+      // Map profile id -> name
+      const profileMap = Object.fromEntries(this.profilesData.map(p => [p.id, p.name]))
+      // Map account id -> owner id
+      const accountOwnerMap = Object.fromEntries(this.accountsData.map(a => [a.id, a.created_by]))
+      // Get unique owner ids
+      const ownerIds = [...new Set(this.accountsData.map(a => a.created_by))]
+
+      return ownerIds.map(ownerId => {
+        // Get all account ids belonging to this owner
+        const ownerAccountIds = this.accountsData
+          .filter(a => a.created_by === ownerId)
+          .map(a => a.id)
+
+        const data = months.map(month => {
+          const monthEnd = this.getMonthEnd(month)
+          const holdings = this.getLatestHoldings(monthEnd).filter(h => ownerAccountIds.includes(h.account_id))
+          const prices = this.getLatestPrices(monthEnd)
+
+          let total = 0
+          for (const h of holdings) {
+            total += h.quantity * (prices[h.asset_id] || 0)
+          }
+          return total
+        })
+        return { name: profileMap[ownerId] || 'Unknown', data }
       }).filter(s => s.data.some(v => v > 0))
     },
 
