@@ -4,10 +4,10 @@ import { supabase } from '@/lib/supabase'
 import LoginView from '@/views/LoginView.vue'
 import SetupView from '@/views/SetupView.vue'
 import DashboardView from '@/views/DashboardView.vue'
-import InvestmentsView from '@/views/InvestmentsView.vue'
+import CompositionView from '@/views/CompositionView.vue'
 import AccountsView from '@/views/AccountsView.vue'
 import AssetsView from '@/views/AssetsView.vue'
-import AssetClassesView from '@/views/AssetClassesView.vue'
+import GoalsView from '@/views/GoalsView.vue'
 import HistoryView from '@/views/HistoryView.vue'
 
 const routes = [
@@ -30,9 +30,9 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/rebalancing',
-    name: 'rebalancing',
-    component: InvestmentsView,
+    path: '/composition',
+    name: 'composition',
+    component: CompositionView,
     meta: { requiresAuth: true }
   },
   {
@@ -42,9 +42,9 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/asset-classes',
-    name: 'asset-classes',
-    component: AssetClassesView,
+    path: '/goals',
+    name: 'goals',
+    component: GoalsView,
     meta: { requiresAuth: true }
   },
   {

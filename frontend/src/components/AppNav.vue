@@ -47,18 +47,18 @@ export default {
               Assets
             </router-link>
             <router-link
-              to="/asset-classes"
+              to="/goals"
               class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              v-bind:class="$route.path === '/asset-classes' ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+              v-bind:class="$route.path === '/goals' ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
             >
-              Asset Classes
+              Goals
             </router-link>
             <router-link
-              to="/rebalancing"
+              to="/composition"
               class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              v-bind:class="$route.path === '/rebalancing' ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+              v-bind:class="$route.path === '/composition' ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
             >
-              Rebalancing
+              Composition
             </router-link>
             <router-link
               to="/"

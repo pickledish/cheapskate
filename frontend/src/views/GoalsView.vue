@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { getTagColor } from '@/lib/tagColors'
 
 export default {
-  name: 'AssetClassesView',
+  name: 'GoalsView',
   components: {
     AppLayout,
     AddAssetClassModal,
