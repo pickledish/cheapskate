@@ -366,7 +366,7 @@ export default {
               <!-- Value and last updated -->
               <div class="mt-3">
                 <p v-if="account.totalValue != null" class="text-xs text-gray-400">
-                  Value - {{ formatCurrency(account.totalValue) }}
+                  Total value - {{ formatCurrency(account.totalValue) }}
                 </p>
                 <p class="text-xs text-gray-400">
                   <span v-if="account.latestStatementDate">
