@@ -29,20 +29,10 @@ export default {
       return {
         animation: false,
         tooltip: {
-          trigger: 'axis',
-          axisPointer: { type: 'shadow' },
-          formatter: (params) => {
-            if (!Array.isArray(params) || params.length === 0) return ''
-            let result = `<strong>${params[0].name}</strong><br/>`
-            // Sort by value descending for tooltip
-            const sorted = [...params].sort((a, b) => b.value - a.value)
-            for (const p of sorted) {
-              if (p.value > 0) {
-                const pct = (p.value * 100).toFixed(1)
-                result += `<span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${pct}%<br/>`
-              }
-            }
-            return result
+          trigger: 'item',
+          formatter: (p) => {
+            const pct = (p.value * 100).toFixed(1)
+            return `<strong>${p.name}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${pct}%`
           }
         },
         legend: { show: false },
@@ -73,9 +63,8 @@ export default {
           barWidth: 14,
           data: s.data,
           itemStyle: { color: getHexColor(s.name) },
-          emphasis: {
-            focus: 'series'
-          }
+          emphasis: { focus: 'series' },
+          cursor: 'crosshair'
         }))
       }
     },

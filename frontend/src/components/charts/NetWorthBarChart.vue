@@ -43,21 +43,10 @@ export default {
       return {
         animation: false,
         tooltip: {
-          trigger: 'axis',
-          formatter: (params) => {
-            if (!Array.isArray(params) || params.length === 0) return ''
-            let result = `<strong>${params[0].name}</strong><br/>`
-            let total = 0
-            for (const p of params) {
-              if (p.value > 0) {
-                result += `<span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${formatCurrency(p.value)}<br/>`
-                total += p.value
-              }
-            }
-            if (this.isStacked) {
-              result += `<strong>Total: ${formatCurrency(total)}</strong>`
-            }
-            return result
+          trigger: 'item',
+          formatter: (p) => {
+            if (!p.name || p.value == null) return ''
+            return `<strong>${p.name}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${formatCurrency(p.value)}`
           }
         },
         legend: this.isStacked ? {
@@ -74,7 +63,11 @@ export default {
         xAxis: {
           type: 'category',
           data: this.labels,
-          axisLabel: { color: '#374151' }
+          axisLabel: { color: '#374151' },
+          axisPointer: {
+            show: true,
+            type: 'shadow'
+          }
         },
         yAxis: {
           type: 'value',
@@ -95,7 +88,9 @@ export default {
           type: 'bar',
           stack: this.isStacked ? 'total' : undefined,
           data: s.data,
-          itemStyle: { color: COLORS[i % COLORS.length] }
+          itemStyle: { color: COLORS[i % COLORS.length] },
+          emphasis: { focus: 'series' },
+          cursor: 'crosshair'
         }))
       }
     },
@@ -108,7 +103,7 @@ export default {
 
 <template>
   <div>
-    <div v-if="hasData" class="w-full" style="height: 350px;">
+    <div v-if="hasData" class="w-full" style="height: 500px;">
       <VChart :option="chartOption" autoresize />
     </div>
     <div v-else class="text-center text-gray-500 py-8">
