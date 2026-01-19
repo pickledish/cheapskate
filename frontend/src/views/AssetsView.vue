@@ -21,6 +21,7 @@ export default {
   data() {
     return {
       assets: [],
+      assetClasses: [],
       loading: true,
       error: null,
       searchQuery: '',
@@ -57,19 +58,22 @@ export default {
       this.error = null
       try {
         // Load all data in parallel
-        const [assetsResult, pricesResult, allocationsResult] = await Promise.all([
+        const [assetsResult, pricesResult, allocationsResult, classesResult] = await Promise.all([
           supabase.from('assets').select('*').order('name'),
           supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: false }),
-          supabase.from('asset_allocations').select('asset_id, asset_classes(name, sort_order)')
+          supabase.from('asset_allocations').select('asset_id, asset_class_id, percentage, asset_classes(name, sort_order)'),
+          supabase.from('asset_classes').select('id, name').order('name')
         ])
 
         if (assetsResult.error) throw assetsResult.error
         if (pricesResult.error) throw pricesResult.error
         if (allocationsResult.error) throw allocationsResult.error
+        if (classesResult.error) throw classesResult.error
 
         const assetsData = assetsResult.data
         const pricesData = pricesResult.data
         const allocationsData = allocationsResult.data
+        this.assetClasses = classesResult.data || []
 
         // Build map of asset_id -> { price, date }
         const latestPriceByAsset = {}
@@ -82,8 +86,10 @@ export default {
           }
         }
 
-        // Build map of asset_id -> [class names], sorted by sort_order
+        // Build map of asset_id -> [class names], sorted by sort_order (for display)
+        // Also build map of asset_id -> [{asset_class_id, percentage}] (for editing)
         const classesByAsset = {}
+        const allocationsByAsset = {}
         for (const a of allocationsData) {
           if (!classesByAsset[a.asset_id]) {
             classesByAsset[a.asset_id] = []
@@ -91,6 +97,14 @@ export default {
           classesByAsset[a.asset_id].push({
             name: a.asset_classes.name,
             sort_order: a.asset_classes.sort_order
+          })
+
+          if (!allocationsByAsset[a.asset_id]) {
+            allocationsByAsset[a.asset_id] = []
+          }
+          allocationsByAsset[a.asset_id].push({
+            asset_class_id: a.asset_class_id,
+            percentage: Math.round(a.percentage * 100)
           })
         }
         // Sort each asset's classes by sort_order and extract names
@@ -105,7 +119,8 @@ export default {
           ...asset,
           latestPrice: latestPriceByAsset[asset.id]?.price || null,
           latestPriceDate: latestPriceByAsset[asset.id]?.date || null,
-          assetClasses: classesByAsset[asset.id] || []
+          assetClasses: classesByAsset[asset.id] || [],
+          allocations: allocationsByAsset[asset.id] || []
         }))
 
       } catch (err) {
@@ -281,6 +296,7 @@ export default {
     <EditAssetModal
       v-if="showEditAssetModal"
       v-bind:asset="selectedAsset"
+      v-bind:asset-classes="assetClasses"
       v-on:close="closeEditModal"
       v-on:updated="onAssetUpdated"
     />

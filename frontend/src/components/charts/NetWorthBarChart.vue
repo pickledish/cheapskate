@@ -41,9 +41,6 @@ export default {
       }
 
       return {
-        animation: true,
-        animationDuration: 200,
-        animationEasing: 'linear',
         tooltip: {
           trigger: 'axis',
           formatter: (params) => {
@@ -97,8 +94,7 @@ export default {
           type: 'bar',
           stack: this.isStacked ? 'total' : undefined,
           data: s.data,
-          itemStyle: { color: COLORS[i % COLORS.length] },
-          animationDelay: i * 200
+          itemStyle: { color: COLORS[i % COLORS.length] }
         }))
       }
     },
