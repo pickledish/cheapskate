@@ -1,5 +1,6 @@
 // Color palette keyed by color name for easy lookup
 export const TAG_COLORS: Record<string, { bg: string; text: string; hex: string }> = {
+  gray: { bg: 'bg-gray-100', text: 'text-gray-800', hex: '#6B7280' },
   red: { bg: 'bg-red-100', text: 'text-red-800', hex: '#EF4444' },
   orange: { bg: 'bg-orange-100', text: 'text-orange-800', hex: '#F97316' },
   amber: { bg: 'bg-amber-100', text: 'text-amber-800', hex: '#F59E0B' },

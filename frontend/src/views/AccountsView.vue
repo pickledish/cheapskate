@@ -5,6 +5,7 @@ import EditAccountModal from '@/components/modals/EditAccountModal.vue'
 import UploadStatementModal from '@/components/modals/UploadStatementModal.vue'
 import UpdatePositionModal from '@/components/modals/UpdatePositionModal.vue'
 import { supabase } from '@/lib/supabase'
+import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { PencilIcon, TrashIcon } from '@heroicons/vue/24/solid'
@@ -58,12 +59,13 @@ export default {
       this.error = null
       try {
         // Load all data in parallel
-        const [accountsResult, statementsResult, holdingsResult, pricesResult, assetsResult] = await Promise.all([
+        const [accountsResult, statementsResult, holdingsResult, pricesResult, assetsResult, allocationsResult] = await Promise.all([
           supabase.from('accounts').select('*').order('created_at'),
           supabase.from('statements').select('account_id, statement_date').order('statement_date', { ascending: false }),
           supabase.from('asset_holdings').select('account_id, asset_id, holding_date, quantity').order('holding_date', { ascending: false }),
           supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: false }),
-          supabase.from('assets').select('id, ticker, name')
+          supabase.from('assets').select('id, ticker, name'),
+          supabase.from('asset_allocations').select('asset_id, asset_class_id, percentage, asset_classes(name, color, sort_order)')
         ])
 
         if (accountsResult.error) throw accountsResult.error
@@ -71,17 +73,33 @@ export default {
         if (holdingsResult.error) throw holdingsResult.error
         if (pricesResult.error) throw pricesResult.error
         if (assetsResult.error) throw assetsResult.error
+        if (allocationsResult.error) throw allocationsResult.error
 
         const accountsData = accountsResult.data
         const statementsData = statementsResult.data
         const holdingsData = holdingsResult.data
         const pricesData = pricesResult.data
         const assetsData = assetsResult.data
+        const allocationsData = allocationsResult.data
 
         // Build map of asset_id -> asset info
         const assetMap = {}
         for (const a of assetsData) {
           assetMap[a.id] = { ticker: a.ticker, name: a.name }
+        }
+
+        // Build map of asset_id -> allocations (class info)
+        const allocationsByAsset = {}
+        for (const a of allocationsData) {
+          if (!allocationsByAsset[a.asset_id]) {
+            allocationsByAsset[a.asset_id] = []
+          }
+          allocationsByAsset[a.asset_id].push({
+            name: a.asset_classes.name,
+            color: a.asset_classes.color,
+            sort_order: a.asset_classes.sort_order,
+            percentage: parseFloat(a.percentage)
+          })
         }
 
         // Build map of account_id -> most recent statement_date
@@ -133,17 +151,58 @@ export default {
               asset_id: holding.asset_id,
               ticker: asset.ticker,
               name: asset.name,
-              quantity: holding.quantity
+              quantity: holding.quantity,
+              value: value
             })
           }
         }
         this.holdingsByAccount = holdingsByAccount
 
+        // Calculate asset classes per account
+        const assetClassesByAccount = {}
+        for (const accountId in holdingsByAccount) {
+          const holdings = holdingsByAccount[accountId]
+          const totalValue = accountValues[accountId] || 0
+
+          // Aggregate value by class, track unclassified value
+          const classValues = {}
+          let unclassifiedValue = 0
+          for (const h of holdings) {
+            const allocations = allocationsByAsset[h.asset_id] || []
+            if (allocations.length === 0) {
+              // Asset has no allocations - fully unclassified
+              unclassifiedValue += h.value
+            } else {
+              for (const alloc of allocations) {
+                const classValue = h.value * alloc.percentage
+                if (!classValues[alloc.name]) {
+                  classValues[alloc.name] = { value: 0, color: alloc.color, sort_order: alloc.sort_order }
+                }
+                classValues[alloc.name].value += classValue
+              }
+            }
+          }
+
+          // Convert to array, filter out classes <10% of account value, sort by sort_order
+          const classes = Object.entries(classValues)
+            .filter(([name, data]) => totalValue > 0 && data.value / totalValue >= 0.10)
+            .map(([name, data]) => ({ name, color: data.color, sort_order: data.sort_order }))
+            .sort((a, b) => a.sort_order - b.sort_order)
+
+          // Add "Unclassified" tag if >= 10% of account value
+          if (totalValue > 0 && unclassifiedValue / totalValue >= 0.10) {
+            classes.push({ name: 'Unclassified', color: 'gray', sort_order: 9999 })
+          }
+
+          assetClassesByAccount[accountId] = classes
+        }
+
         // Merge metadata into accounts
         this.accounts = accountsData.map(account => ({
           ...account,
           latestStatementDate: latestStatementByAccount[account.id] || null,
-          totalValue: accountValues[account.id] || null
+          totalValue: accountValues[account.id] || null,
+          assetClasses: assetClassesByAccount[account.id] || []
         }))
 
       } catch (err) {
@@ -215,6 +274,10 @@ export default {
     relativeDate(dateStr) {
       if (!dateStr) return null
       return dayjs(dateStr).fromNow()
+    },
+
+    getClassColor(colorName) {
+      return getColorClasses(colorName)
     },
 
     openEditAccountModal(account) {
@@ -289,8 +352,19 @@ export default {
 
             <div class="flex-1 pr-6">
               <h3 class="font-semibold text-gray-900">{{ account.name }}</h3>
+              <!-- Asset class tags -->
+              <div v-if="account.assetClasses.length" class="flex flex-wrap gap-1 mt-3">
+                <span
+                  v-for="ac in account.assetClasses"
+                  v-bind:key="ac.name"
+                  class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                  v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
+                >
+                  {{ ac.name }}
+                </span>
+              </div>
               <!-- Value and last updated -->
-              <div class="mt-4">
+              <div class="mt-3">
                 <p v-if="account.totalValue != null" class="text-xs text-gray-400">
                   Value - {{ formatCurrency(account.totalValue) }}
                 </p>
