@@ -1,8 +1,0 @@
-# Copy this file to terraform.tfvars and fill in actual values
-# DO NOT commit terraform.tfvars to version control
-
-supabase_access_token    = "sbp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-supabase_organization_id = "your-org-id-here"
-supabase_db_password     = "your-secure-database-password"
-project_name             = "cheapskate"
-region                   = "us-west-1"
