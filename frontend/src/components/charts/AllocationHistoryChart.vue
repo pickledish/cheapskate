@@ -27,6 +27,7 @@ export default {
   computed: {
     chartOption() {
       return {
+        animation: false,
         tooltip: {
           trigger: 'axis',
           axisPointer: { type: 'shadow' },
@@ -44,16 +45,12 @@ export default {
             return result
           }
         },
-        legend: {
-          type: 'scroll',
-          bottom: 0,
-          textStyle: { color: '#374151' }
-        },
+        legend: { show: false },
         grid: {
           left: '3%',
-          right: '4%',
+          right: '3%',
           top: '3%',
-          bottom: '15%',
+          bottom: '3%',
           containLabel: true
         },
         xAxis: {
@@ -73,6 +70,7 @@ export default {
           name: s.name,
           type: 'bar',
           stack: 'total',
+          barWidth: 14,
           data: s.data,
           itemStyle: { color: getHexColor(s.name) },
           emphasis: {
@@ -83,6 +81,12 @@ export default {
     },
     hasData() {
       return this.series.length > 0 && this.series.some(s => s.data.some(v => v > 0))
+    },
+    chartHeight() {
+      // 60px base padding (for axis labels) + 32px per row
+      const rowHeight = 32
+      const basePadding = 60
+      return Math.max(basePadding + this.labels.length * rowHeight, 100)
     }
   }
 }
@@ -90,7 +94,7 @@ export default {
 
 <template>
   <div>
-    <div v-if="hasData" class="w-full" style="height: 400px;">
+    <div v-if="hasData" class="w-full" :style="{ height: chartHeight + 'px' }">
       <VChart :option="chartOption" autoresize />
     </div>
     <div v-else class="text-center text-gray-500 py-8">

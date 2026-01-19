@@ -61,8 +61,7 @@ export default {
     },
 
     computeChartData() {
-      const months = this.getLast12Months()
-      this.monthLabels = months.map(m => this.formatMonth(m))
+      const allMonths = this.getLast12Months()
 
       // Get rebalancing account IDs
       const rebalancingAccountIds = new Set(
@@ -81,13 +80,27 @@ export default {
         })
       }
 
+      // First pass: find which months have data
+      const monthsWithData = allMonths.filter(month => {
+        const monthEnd = this.getMonthEnd(month)
+        const holdings = this.getLatestHoldings(monthEnd, rebalancingAccountIds)
+        const prices = this.getLatestPrices(monthEnd)
+        let totalValue = 0
+        for (const h of holdings) {
+          totalValue += h.quantity * (prices[h.asset_id] || 0)
+        }
+        return totalValue > 0
+      })
+
+      this.monthLabels = monthsWithData.map(m => this.formatMonth(m))
+
       // Build class map for names
       const classMap = Object.fromEntries(this.assetClassesData.map(c => [c.id, c.name]))
       const classIds = this.assetClassesData.map(c => c.id)
 
-      // Compute values by class for each month
+      // Compute values by class for each month (only months with data)
       const seriesData = classIds.map(classId => {
-        const data = months.map(month => {
+        const data = monthsWithData.map(month => {
           const monthEnd = this.getMonthEnd(month)
           const holdings = this.getLatestHoldings(monthEnd, rebalancingAccountIds)
           const prices = this.getLatestPrices(monthEnd)
