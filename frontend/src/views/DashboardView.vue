@@ -110,9 +110,14 @@ export default {
     },
 
     formatMonth(monthStr) {
+      const now = new Date()
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      if (monthStr === currentMonth) {
+        return 'Current'
+      }
       const [year, month] = monthStr.split('-')
       const date = new Date(year, month - 1)
-      return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     },
 
     getLatestHoldings(asOfDate) {
