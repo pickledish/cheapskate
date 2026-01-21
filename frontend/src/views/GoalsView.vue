@@ -17,6 +17,7 @@ export default {
   data() {
     return {
       assetClasses: [],
+      assetCountByClass: {},
       loading: true,
       error: null,
 
@@ -42,14 +43,29 @@ export default {
       this.loading = true
       this.error = null
       try {
-        const { data, error } = await supabase
-          .from('asset_classes')
-          .select('*')
-          .order('sort_order')
+        const [classesResult, allocationsResult] = await Promise.all([
+          supabase.from('asset_classes').select('*').order('sort_order'),
+          supabase.from('asset_allocations').select('asset_id, asset_class_id')
+        ])
 
-        if (error) throw error
+        if (classesResult.error) throw classesResult.error
+        if (allocationsResult.error) throw allocationsResult.error
 
-        this.assetClasses = data
+        this.assetClasses = classesResult.data
+
+        // Count unique assets per class
+        const countByClass = {}
+        for (const alloc of allocationsResult.data) {
+          if (!countByClass[alloc.asset_class_id]) {
+            countByClass[alloc.asset_class_id] = new Set()
+          }
+          countByClass[alloc.asset_class_id].add(alloc.asset_id)
+        }
+        // Convert Sets to counts
+        this.assetCountByClass = {}
+        for (const classId in countByClass) {
+          this.assetCountByClass[classId] = countByClass[classId].size
+        }
 
       } catch (err) {
         this.error = err.message
@@ -159,6 +175,9 @@ export default {
                 Name
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Assets
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Goal
               </th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -194,6 +213,9 @@ export default {
                   {{ assetClass.name }}
                 </span>
               </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ assetCountByClass[assetClass.id] || 0 }}
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ assetClass.goal > 0 ? (assetClass.goal * 100) + '%' : '-' }}
               </td>
@@ -219,6 +241,7 @@ export default {
               <td class="px-6 py-3 text-sm font-medium text-gray-900">
                 Total
               </td>
+              <td></td>
               <td class="px-6 py-3 text-sm font-medium" v-bind:class="Math.abs(totalGoals - 1) < 0.001 ? 'text-green-600' : 'text-amber-600'">
                 {{ totalGoals * 100 }}%
               </td>
