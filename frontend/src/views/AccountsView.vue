@@ -26,6 +26,7 @@ export default {
   data() {
     return {
       accounts: [],
+      assets: [],
       holdingsByAccount: {},
       loading: true,
       error: null,
@@ -81,6 +82,9 @@ export default {
         const pricesData = pricesResult.data
         const assetsData = assetsResult.data
         const allocationsData = allocationsResult.data
+
+        // Store assets list for modal usage
+        this.assets = assetsData
 
         // Build map of asset_id -> asset info
         const assetMap = {}
@@ -430,6 +434,7 @@ export default {
     <UpdatePositionModal
       v-if="showUpdatePositionModal"
       v-bind:account="selectedAccount"
+      v-bind:assets="assets"
       v-on:close="closeUpdatePositionModal"
       v-on:updated="onPositionUpdated"
     />

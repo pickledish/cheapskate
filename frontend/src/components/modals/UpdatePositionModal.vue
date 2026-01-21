@@ -1,24 +1,41 @@
 <script>
 import BaseModal from './BaseModal.vue'
 import { supabase } from '@/lib/supabase'
+import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/vue'
+import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
 
 export default {
   name: 'UpdatePositionModal',
-  components: { BaseModal },
+  components: { BaseModal, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, ChevronUpDownIcon, CheckIcon },
   props: {
     account: {
       type: Object,
+      required: true
+    },
+    assets: {
+      type: Array,
       required: true
     }
   },
   emits: ['close', 'updated'],
   data() {
     return {
-      assetName: '',
+      selectedAsset: null,
+      assetQuery: '',
       date: '',
       quantity: '',
       loading: false,
       error: null
+    }
+  },
+  computed: {
+    filteredAssets() {
+      const query = this.assetQuery.toLowerCase().trim()
+      if (!query) return this.assets
+      return this.assets.filter(asset =>
+        asset.ticker.toLowerCase().includes(query) ||
+        asset.name.toLowerCase().includes(query)
+      )
     }
   },
   mounted() {
@@ -27,8 +44,8 @@ export default {
   },
   methods: {
     async save() {
-      if (!this.assetName.trim()) {
-        this.error = 'Please enter an asset name or ticker'
+      if (!this.selectedAsset) {
+        this.error = 'Please select an asset'
         return
       }
 
@@ -50,20 +67,8 @@ export default {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Not authenticated')
 
-        // Look up asset by ticker OR name (exact match)
-        const assetNameTrimmed = this.assetName.trim()
-        const { data: asset, error: lookupError } = await supabase
-          .from('assets')
-          .select('id')
-          .or(`ticker.eq.${assetNameTrimmed},name.eq.${assetNameTrimmed}`)
-          .single()
-
-        if (lookupError || !asset) {
-          throw new Error(`No asset found matching "${assetNameTrimmed}". Create it in the Assets tab first.`)
-        }
-
         const { error } = await supabase.from('asset_holdings').upsert({
-          asset_id: asset.id,
+          asset_id: this.selectedAsset.id,
           account_id: this.account.id,
           holding_date: this.date,
           quantity: quantityNum,
@@ -81,6 +86,10 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    displayAsset(asset) {
+      if (!asset) return ''
+      return `${asset.ticker} - ${asset.name}`
     }
   }
 }
@@ -101,22 +110,57 @@ export default {
     <div class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">
-          Asset Name or Ticker
+          Asset
         </label>
-        <input
-          v-model="assetName"
-          type="text"
-          placeholder="e.g., VTI or Vanguard Total Stock"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <p class="mt-1 text-xs text-gray-500">
-          Must match an existing asset exactly. Create new assets in the Assets tab.
-        </p>
+        <Combobox v-model="selectedAsset" as="div" class="relative">
+          <div class="relative">
+            <ComboboxInput
+              v-bind:display-value="displayAsset"
+              v-on:change="assetQuery = $event.target.value"
+              placeholder="Search assets..."
+              class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
+              <ChevronUpDownIcon class="w-5 h-5 text-gray-400" />
+            </ComboboxButton>
+          </div>
+          <transition
+            enter-active-class="transition duration-100 ease-out"
+            enter-from-class="transform scale-95 opacity-0"
+            enter-to-class="transform scale-100 opacity-100"
+            leave-active-class="transition duration-75 ease-in"
+            leave-from-class="transform scale-100 opacity-100"
+            leave-to-class="transform scale-95 opacity-0"
+          >
+            <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white border border-gray-200 rounded-md shadow-lg focus:outline-none">
+              <div v-if="filteredAssets.length === 0" class="px-3 py-2 text-sm text-gray-500">
+                No assets found
+              </div>
+              <ComboboxOption
+                v-for="asset in filteredAssets"
+                v-bind:key="asset.id"
+                v-bind:value="asset"
+                v-slot="{ active, selected }"
+              >
+                <div
+                  v-bind:class="[
+                    'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
+                    active ? 'bg-gray-100' : '',
+                    selected ? 'text-blue-600 font-medium' : 'text-gray-700'
+                  ]"
+                >
+                  <span>{{ asset.ticker }} - {{ asset.name }}</span>
+                  <CheckIcon v-if="selected" class="w-4 h-4" />
+                </div>
+              </ComboboxOption>
+            </ComboboxOptions>
+          </transition>
+        </Combobox>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">
-          Date
+          Effective Date
         </label>
         <input
           v-model="date"
