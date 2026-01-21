@@ -180,6 +180,9 @@ export default {
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Goal
               </th>
+              <th class="w-28 px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Graph
+              </th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
@@ -219,6 +222,14 @@ export default {
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ assetClass.goal > 0 ? (assetClass.goal * 100) + '%' : '-' }}
               </td>
+              <td class="w-28 px-2 py-4 whitespace-nowrap">
+                <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-gray-400 rounded-full"
+                    v-bind:style="{ width: (assetClass.goal * 100) + '%' }"
+                  ></div>
+                </div>
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                 <button
                   v-on:click="openEditModal(assetClass)"
@@ -245,6 +256,7 @@ export default {
               <td class="px-6 py-3 text-sm font-medium" v-bind:class="Math.abs(totalGoals - 1) < 0.001 ? 'text-green-600' : 'text-amber-600'">
                 {{ totalGoals * 100 }}%
               </td>
+              <td></td>
               <td></td>
             </tr>
           </tfoot>
