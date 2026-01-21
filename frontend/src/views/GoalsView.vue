@@ -36,6 +36,17 @@ export default {
     },
     hasAnyGoals() {
       return this.assetClasses.some(ac => ac.goal > 0)
+    },
+    // For footer: compute cumulative ranges for stacked visualization
+    stackedAllocations() {
+      let cumulative = 0
+      return this.assetClasses
+        .filter(ac => ac.goal > 0)
+        .map(ac => {
+          const start = cumulative
+          cumulative += ac.goal
+          return { ...ac, start, end: cumulative }
+        })
     }
   },
   methods: {
@@ -112,6 +123,86 @@ export default {
       return getColorClasses(colorName)
     },
 
+    // Returns fill width for a single circle in a row
+    // circleIndex is 1-10, goal is 0-1
+    // Snaps to 0%, 50%, or 100% for readability
+    //
+    // NOTE: This snapping means individual rows "inflate" slightly (e.g., 12.5% shows
+    // as 1.5 circles instead of 1.25). When summed across all rows, this exceeds 10
+    // circles. However, the footer's stacking algorithm compresses this back to exactly
+    // 10 by having partial circles at boundaries share space (e.g., two 50% halves
+    // from adjacent classes fill one circle). This is intentional.
+    getCircleFill(circleIndex, goal) {
+      const filledCircles = goal * 10
+      if (circleIndex <= Math.floor(filledCircles)) return '100%'
+      if (circleIndex > Math.ceil(filledCircles)) return '0%'
+      // Partial circle - show as half
+      return '50%'
+    },
+
+    // Returns the background style for a footer circle (stacked colors)
+    // Uses same 0/50/100% snapping as per-row circles
+    // circleIndex is 1-10
+    getFooterCircleStyle(circleIndex) {
+      const circleStart = (circleIndex - 1) / 10
+      const circleEnd = circleIndex / 10
+
+      // Find all classes that overlap with this circle's range
+      const overlapping = this.stackedAllocations.filter(
+        ac => ac.start < circleEnd && ac.end > circleStart
+      )
+
+      if (overlapping.length === 0) {
+        return { background: '#e5e7eb' } // gray-200
+      }
+
+      // Calculate snapped coverage for each class
+      const segments = []
+      for (const ac of overlapping) {
+        const colors = getColorClasses(ac.color)
+        // Raw coverage as fraction of this circle (0-1)
+        const coverageStart = Math.max(0, (ac.start - circleStart) / 0.1)
+        const coverageEnd = Math.min(1, (ac.end - circleStart) / 0.1)
+        const rawCoverage = coverageEnd - coverageStart
+
+        // Snap to 0, 0.5, or 1 (with epsilon for floating point)
+        let snapped
+        if (rawCoverage < 0.01) snapped = 0
+        else if (rawCoverage > 0.99) snapped = 1
+        else snapped = 0.5
+
+        if (snapped > 0) {
+          segments.push({ color: colors.hex, coverage: snapped })
+        }
+      }
+
+      if (segments.length === 0) {
+        return { background: '#e5e7eb' }
+      }
+
+      if (segments.length === 1 && segments[0].coverage >= 1) {
+        return { background: segments[0].color }
+      }
+
+      // Build gradient from segments
+      const stops = []
+      let position = 0
+      for (const seg of segments) {
+        const width = seg.coverage * 100
+        stops.push(`${seg.color} ${position}%`)
+        position += width
+        stops.push(`${seg.color} ${position}%`)
+      }
+
+      // Fill remainder with gray if not full
+      if (position < 100) {
+        stops.push(`#e5e7eb ${position}%`)
+        stops.push(`#e5e7eb 100%`)
+      }
+
+      return { background: `linear-gradient(to right, ${stops.join(', ')})` }
+    },
+
     async onReorder() {
       // Update sort_order for all items based on new array positions
       try {
@@ -180,7 +271,7 @@ export default {
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Goal
               </th>
-              <th class="w-28 px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="w-32 px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Graph
               </th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -222,12 +313,21 @@ export default {
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ assetClass.goal > 0 ? (assetClass.goal * 100) + '%' : '-' }}
               </td>
-              <td class="w-28 px-2 py-4 whitespace-nowrap">
-                <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <td class="w-32 px-2 py-4 whitespace-nowrap">
+                <div class="flex gap-1">
                   <div
-                    class="h-full bg-gray-400 rounded-full"
-                    v-bind:style="{ width: (assetClass.goal * 100) + '%' }"
-                  ></div>
+                    v-for="i in 10"
+                    v-bind:key="i"
+                    class="w-[9px] h-[9px] rounded-full overflow-hidden bg-gray-200"
+                  >
+                    <div
+                      class="h-full"
+                      v-bind:style="{
+                        width: getCircleFill(i, assetClass.goal),
+                        backgroundColor: getClassColor(assetClass.color).hex
+                      }"
+                    ></div>
+                  </div>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
@@ -254,9 +354,18 @@ export default {
               </td>
               <td></td>
               <td class="px-6 py-3 text-sm font-medium" v-bind:class="Math.abs(totalGoals - 1) < 0.001 ? 'text-green-600' : 'text-amber-600'">
-                {{ totalGoals * 100 }}%
+                {{ Math.round(totalGoals * 100) }}%
               </td>
-              <td></td>
+              <td class="w-32 px-2 py-3">
+                <div class="flex gap-1">
+                  <div
+                    v-for="i in 10"
+                    v-bind:key="i"
+                    class="w-[9px] h-[9px] rounded-full overflow-hidden"
+                    v-bind:style="getFooterCircleStyle(i)"
+                  ></div>
+                </div>
+              </td>
               <td></td>
             </tr>
           </tfoot>

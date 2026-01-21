@@ -386,13 +386,13 @@ export default {
                 v-on:click="openUploadModal(account)"
                 class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-blue-600 hover:text-white transition-colors"
               >
-                Statement Upload
+                Upload Statement
               </button>
               <button
                 v-on:click="openUpdatePositionModal(account)"
                 class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-blue-600 hover:text-white transition-colors"
               >
-                Manual Update
+                Update Holdings
               </button>
             </div>
           </div>
