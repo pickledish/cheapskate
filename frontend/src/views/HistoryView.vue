@@ -4,12 +4,13 @@ import { supabase } from '@/lib/supabase'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon } from '@heroicons/vue/24/outline'
+import { BackspaceIcon } from '@heroicons/vue/24/solid'
 
 dayjs.extend(relativeTime)
 
 export default {
   name: 'HistoryView',
-  components: { AppLayout, DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon },
+  components: { AppLayout, DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, BackspaceIcon },
   data() {
     return {
       events: [],
@@ -104,6 +105,7 @@ export default {
           // Manual price update
           events.push({
             type: 'manual_price',
+            assetId: p.asset_id,
             createdAt: p.created_at,
             effectiveDate: p.price_date,
             assetName: asset.ticker || asset.name || 'Unknown',
@@ -142,6 +144,8 @@ export default {
           // Manual holdings update
           events.push({
             type: 'manual_holding',
+            assetId: h.asset_id,
+            accountId: h.account_id,
             createdAt: h.created_at,
             effectiveDate: h.holding_date,
             assetName: asset.ticker || asset.name || 'Unknown',
@@ -184,6 +188,44 @@ export default {
     getPriceForAsset(event, assetName) {
       const priceUpdate = event.priceUpdates.find(p => p.assetName === assetName)
       return priceUpdate ? priceUpdate.price : null
+    },
+
+    async deleteStatement(statementId) {
+      if (!confirm('Undo this statement upload?')) return
+      try {
+        const { error } = await supabase.from('statements').delete().eq('id', statementId)
+        if (error) throw error
+        await this.loadData()
+      } catch (err) {
+        this.error = err.message
+      }
+    },
+
+    async deletePrice(assetId, priceDate) {
+      if (!confirm('Undo this price update?')) return
+      try {
+        const { error } = await supabase.from('asset_prices').delete()
+          .eq('asset_id', assetId)
+          .eq('price_date', priceDate)
+        if (error) throw error
+        await this.loadData()
+      } catch (err) {
+        this.error = err.message
+      }
+    },
+
+    async deleteHolding(assetId, accountId, holdingDate) {
+      if (!confirm('Undo this shares update?')) return
+      try {
+        const { error } = await supabase.from('asset_holdings').delete()
+          .eq('asset_id', assetId)
+          .eq('account_id', accountId)
+          .eq('holding_date', holdingDate)
+        if (error) throw error
+        await this.loadData()
+      } catch (err) {
+        this.error = err.message
+      }
     }
   }
 }
@@ -227,7 +269,16 @@ export default {
                 <span class="text-gray-400">-</span>
                 <span class="font-medium text-gray-900">{{ event.accountName }}</span>
               </div>
-              <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
+                <button
+                  @click="deleteStatement(event.statementId)"
+                  class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                  title="Undo statement upload"
+                >
+                  <BackspaceIcon class="w-4 h-4" />
+                </button>
+              </div>
             </div>
             <hr class="my-3 border-gray-200" />
             <div class="text-sm text-gray-700">
@@ -251,7 +302,16 @@ export default {
                 <CurrencyDollarIcon class="h-5 w-5 text-green-500" />
                 <span class="font-medium text-gray-900">Price Update</span>
               </div>
-              <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
+                <button
+                  @click="deletePrice(event.assetId, event.effectiveDate)"
+                  class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                  title="Undo price update"
+                >
+                  <BackspaceIcon class="w-4 h-4" />
+                </button>
+              </div>
             </div>
             <hr class="my-3 border-gray-200" />
             <div class="text-sm text-gray-700">
@@ -271,7 +331,16 @@ export default {
                 <span class="text-gray-400">-</span>
                 <span class="font-medium text-gray-900">{{ event.accountName }}</span>
               </div>
-              <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
+                <button
+                  @click="deleteHolding(event.assetId, event.accountId, event.effectiveDate)"
+                  class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                  title="Undo shares update"
+                >
+                  <BackspaceIcon class="w-4 h-4" />
+                </button>
+              </div>
             </div>
             <hr class="my-3 border-gray-200" />
             <div class="text-sm text-gray-700">
