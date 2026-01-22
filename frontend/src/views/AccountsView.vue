@@ -337,20 +337,20 @@ export default {
             class="bg-white rounded-lg shadow p-4 flex flex-col relative"
           >
             <!-- Edit and Delete buttons in upper right -->
-            <div class="absolute top-4 right-4 flex gap-1">
+            <div class="absolute top-3 right-3 flex gap-1">
               <button
                 v-on:click="openEditAccountModal(account)"
-                class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded cursor-pointer"
                 title="Edit account"
               >
-                <PencilIcon class="w-4 h-4" />
+                <PencilIcon class="w-5 h-5" />
               </button>
               <button
                 v-on:click="deleteAccount(account)"
-                class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
                 title="Delete account"
               >
-                <TrashIcon class="w-4 h-4" />
+                <TrashIcon class="w-5 h-5" />
               </button>
             </div>
 

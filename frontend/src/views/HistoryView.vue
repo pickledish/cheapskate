@@ -4,13 +4,13 @@ import { supabase } from '@/lib/supabase'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon } from '@heroicons/vue/24/outline'
-import { BackspaceIcon } from '@heroicons/vue/24/solid'
+import { TrashIcon } from '@heroicons/vue/24/solid'
 
 dayjs.extend(relativeTime)
 
 export default {
   name: 'HistoryView',
-  components: { AppLayout, DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, BackspaceIcon },
+  components: { AppLayout, DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, TrashIcon },
   data() {
     return {
       events: [],
@@ -273,10 +273,10 @@ export default {
                 <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
                 <button
                   @click="deleteStatement(event.statementId)"
-                  class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                  class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
                   title="Undo statement upload"
                 >
-                  <BackspaceIcon class="w-4 h-4" />
+                  <TrashIcon class="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -306,10 +306,10 @@ export default {
                 <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
                 <button
                   @click="deletePrice(event.assetId, event.effectiveDate)"
-                  class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                  class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
                   title="Undo price update"
                 >
-                  <BackspaceIcon class="w-4 h-4" />
+                  <TrashIcon class="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -335,10 +335,10 @@ export default {
                 <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
                 <button
                   @click="deleteHolding(event.assetId, event.accountId, event.effectiveDate)"
-                  class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                  class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
                   title="Undo shares update"
                 >
-                  <BackspaceIcon class="w-4 h-4" />
+                  <TrashIcon class="w-5 h-5" />
                 </button>
               </div>
             </div>
