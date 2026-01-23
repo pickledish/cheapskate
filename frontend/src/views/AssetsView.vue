@@ -186,8 +186,13 @@ export default {
   <AppLayout>
     <div class="space-y-6">
       <!-- Header -->
-      <div class="flex items-center justify-between mb-0.5">
-        <h2 class="text-2xl font-bold text-gray-900">Assets</h2>
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Assets</h2>
+          <p class="mt-1 text-sm text-gray-600">
+            All your securities and assets. Edit metadata or update prices here.
+          </p>
+        </div>
         <input
           v-model="searchQuery"
           type="text"
@@ -195,10 +200,6 @@ export default {
           class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
         />
       </div>
-      <p class="text-sm text-gray-600 mb-4">
-        All your securities and assets. Edit metadata or update prices here.
-      </p>
-
       <!-- Error display -->
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">
         {{ error }}

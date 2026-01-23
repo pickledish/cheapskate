@@ -145,10 +145,10 @@ export default {
 
 <template>
   <AppLayout>
-    <div class="max-w-2xl mx-auto space-y-8">
+    <div class="max-w-2xl mx-auto space-y-6">
       <!-- Page Header -->
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Profile & Settings</h1>
+        <h2 class="text-2xl font-bold text-gray-900">Profile & Settings</h2>
         <p class="text-sm text-gray-600 mt-1">Manage your account and family settings</p>
       </div>
 

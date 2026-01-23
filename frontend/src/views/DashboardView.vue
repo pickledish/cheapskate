@@ -272,43 +272,57 @@ export default {
 
 <template>
   <AppLayout>
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-gray-900">Net Worth</h1>
-      <Menu as="div" class="relative">
-        <MenuButton class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
-          Group by: {{ selectedGroupByLabel }}
-          <ChevronDownIcon class="w-4 h-4 text-gray-500" />
-        </MenuButton>
-        <transition
-          enter-active-class="transition duration-100 ease-out"
-          enter-from-class="transform scale-95 opacity-0"
-          enter-to-class="transform scale-100 opacity-100"
-          leave-active-class="transition duration-75 ease-in"
-          leave-from-class="transform scale-100 opacity-100"
-          leave-to-class="transform scale-95 opacity-0"
-        >
-          <MenuItems class="absolute right-0 z-10 mt-1 w-40 origin-top-right bg-white border border-gray-200 rounded-md shadow-lg focus:outline-none">
-            <div class="py-1">
-              <MenuItem v-for="option in groupByOptions" :key="option.value" v-slot="{ active }">
-                <button
-                  type="button"
-                  :class="[
-                    'flex items-center justify-between w-full px-3 py-2 text-sm text-left',
-                    active ? 'bg-gray-100' : '',
-                    groupBy === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'
-                  ]"
-                  @click="groupBy = option.value"
-                >
-                  {{ option.label }}
-                  <CheckIcon v-if="groupBy === option.value" class="w-4 h-4" />
-                </button>
-              </MenuItem>
-            </div>
-          </MenuItems>
-        </transition>
-      </Menu>
+    <div class="space-y-6">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Net Worth</h2>
+          <p class="mt-1 text-sm text-gray-600">
+            Track your total net worth over time, grouped by account, owner, asset, or asset class.
+          </p>
+        </div>
+        <Menu as="div" class="relative">
+          <MenuButton class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+            Group by: {{ selectedGroupByLabel }}
+            <ChevronDownIcon class="w-4 h-4 text-gray-500" />
+          </MenuButton>
+          <transition
+            enter-active-class="transition duration-100 ease-out"
+            enter-from-class="transform scale-95 opacity-0"
+            enter-to-class="transform scale-100 opacity-100"
+            leave-active-class="transition duration-75 ease-in"
+            leave-from-class="transform scale-100 opacity-100"
+            leave-to-class="transform scale-95 opacity-0"
+          >
+            <MenuItems class="absolute right-0 z-10 mt-1 w-40 origin-top-right bg-white border border-gray-200 rounded-md shadow-lg focus:outline-none">
+              <div class="py-1">
+                <MenuItem v-for="option in groupByOptions" :key="option.value" v-slot="{ active }">
+                  <button
+                    type="button"
+                    :class="[
+                      'flex items-center justify-between w-full px-3 py-2 text-sm text-left',
+                      active ? 'bg-gray-100' : '',
+                      groupBy === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'
+                    ]"
+                    @click="groupBy = option.value"
+                  >
+                    {{ option.label }}
+                    <CheckIcon v-if="groupBy === option.value" class="w-4 h-4" />
+                  </button>
+                </MenuItem>
+              </div>
+            </MenuItems>
+          </transition>
+        </Menu>
+      </div>
+
+      <!-- Loading state -->
+      <div v-if="loading" class="text-gray-500">Loading...</div>
+
+      <!-- Chart card -->
+      <div v-else class="bg-white shadow rounded-lg p-6">
+        <NetWorthBarChart :labels="monthLabels" :series="chartSeries" />
+      </div>
     </div>
-    <div v-if="loading" class="text-gray-600">Loading...</div>
-    <NetWorthBarChart v-else :labels="monthLabels" :series="chartSeries" />
   </AppLayout>
 </template>

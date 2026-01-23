@@ -226,7 +226,7 @@ export default {
   <AppLayout>
     <div class="space-y-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Portfolio Composition</h1>
+        <h2 class="text-2xl font-bold text-gray-900">Portfolio Composition</h2>
         <p class="text-sm text-gray-600 mt-1">Asset class allocation over time (rebalancing accounts only)</p>
       </div>
 

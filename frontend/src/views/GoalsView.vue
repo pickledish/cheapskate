@@ -152,8 +152,8 @@ export default {
       <!-- Header -->
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Asset Classes</h1>
-          <p class="text-sm text-gray-600">
+          <h2 class="text-2xl font-bold text-gray-900">Asset Classes</h2>
+          <p class="mt-1 text-sm text-gray-600">
             Define asset classes for portfolio allocation tracking (e.g., stocks, bonds, cash).
           </p>
         </div>
