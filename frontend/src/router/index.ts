@@ -9,6 +9,7 @@ import AccountsView from '@/views/AccountsView.vue'
 import AssetsView from '@/views/AssetsView.vue'
 import GoalsView from '@/views/GoalsView.vue'
 import HistoryView from '@/views/HistoryView.vue'
+import ProfileView from '@/views/ProfileView.vue'
 
 const routes = [
   {
@@ -57,6 +58,12 @@ const routes = [
     path: '/history',
     name: 'history',
     component: HistoryView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: ProfileView,
     meta: { requiresAuth: true }
   }
 ]

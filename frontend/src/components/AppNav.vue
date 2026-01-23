@@ -1,8 +1,12 @@
 <script>
 import { supabase } from '@/lib/supabase'
+import { UserCircleIcon } from '@heroicons/vue/24/solid'
 
 export default {
   name: 'AppNav',
+  components: {
+    UserCircleIcon
+  },
   data() {
     return {
       userEmail: null
@@ -12,12 +16,6 @@ export default {
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
       this.userEmail = session.user.email
-    }
-  },
-  methods: {
-    async logout() {
-      await supabase.auth.signOut()
-      this.$router.push('/login')
     }
   }
 }
@@ -76,14 +74,15 @@ export default {
             </router-link>
           </div>
         </div>
-        <div class="flex items-center">
-          <span v-if="userEmail" class="text-sm text-gray-500 mr-4">{{ userEmail }}</span>
-          <button
-            v-on:click="logout"
-            class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+        <div class="flex">
+          <router-link
+            to="/profile"
+            class="inline-flex items-center gap-2 px-1 pt-1 border-b-2 text-sm font-medium"
+            v-bind:class="$route.path === '/profile' ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
           >
-            Sign Out
-          </button>
+            <UserCircleIcon class="w-5 h-5" />
+            <span v-if="userEmail" class="hidden sm:inline">{{ userEmail }}</span>
+          </router-link>
         </div>
       </div>
     </div>
