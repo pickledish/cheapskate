@@ -8,7 +8,8 @@ import { supabase } from '@/lib/supabase'
 import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { PencilIcon, TrashIcon } from '@heroicons/vue/24/solid'
+import { Bars3Icon } from '@heroicons/vue/24/solid'
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 
 dayjs.extend(relativeTime)
 
@@ -20,8 +21,11 @@ export default {
     EditAccountModal,
     UploadStatementModal,
     UpdatePositionModal,
-    PencilIcon,
-    TrashIcon
+    Bars3Icon,
+    Menu,
+    MenuButton,
+    MenuItems,
+    MenuItem
   },
   data() {
     return {
@@ -337,23 +341,30 @@ export default {
             v-bind:key="account.id"
             class="bg-white rounded-lg shadow p-4 flex flex-col relative"
           >
-            <!-- Edit and Delete buttons in upper right -->
-            <div class="absolute top-3 right-3 flex gap-1">
-              <button
-                v-on:click="openEditAccountModal(account)"
-                class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded cursor-pointer"
-                title="Edit account"
-              >
-                <PencilIcon class="w-5 h-5" />
-              </button>
-              <button
-                v-on:click="deleteAccount(account)"
-                class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
-                title="Delete account"
-              >
-                <TrashIcon class="w-5 h-5" />
-              </button>
-            </div>
+            <!-- Menu in upper right -->
+            <Menu as="div" class="absolute top-3 right-3">
+              <MenuButton class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded cursor-pointer">
+                <Bars3Icon class="w-5 h-5" />
+              </MenuButton>
+              <MenuItems class="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg focus:outline-none z-10 py-1">
+                <MenuItem v-slot="{ active }">
+                  <button
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                    v-on:click="openEditAccountModal(account)"
+                  >
+                    Edit
+                  </button>
+                </MenuItem>
+                <MenuItem v-slot="{ active }">
+                  <button
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
+                    v-on:click="deleteAccount(account)"
+                  >
+                    Delete
+                  </button>
+                </MenuItem>
+              </MenuItems>
+            </Menu>
 
             <div class="flex-1 pr-6">
               <h3 class="font-semibold text-gray-900">{{ account.name }}</h3>
