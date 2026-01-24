@@ -182,19 +182,19 @@ export default {
         <!-- Asset classes table -->
         <div class="w-7/12 bg-white shadow rounded-lg overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+          <thead class="bg-gray-600">
             <tr>
               <th class="w-10"></th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
                 Name
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
                 Assets
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
                 Goal
               </th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -260,14 +260,14 @@ export default {
               </td>
             </tr>
           </VueDraggable>
-          <tfoot v-if="hasAnyGoals" class="bg-gray-50">
+          <tfoot v-if="hasAnyGoals" class="bg-white">
             <tr>
               <td></td>
-              <td class="px-6 py-3 text-sm font-medium text-gray-900">
+              <td class="px-6 py-4 text-sm font-medium text-gray-900">
                 Total
               </td>
               <td></td>
-              <td class="px-6 py-3 text-sm font-medium" v-bind:class="goalsAreValid ? 'text-green-600' : 'text-amber-600'">
+              <td class="px-6 py-4 text-sm font-medium" v-bind:class="goalsAreValid ? 'text-green-600' : 'text-amber-600'">
                 {{ Math.round(totalGoals * 100) }}%
               </td>
               <td></td>
@@ -278,8 +278,8 @@ export default {
 
         <!-- Right side panel -->
         <div class="w-5/12 bg-white shadow rounded-lg overflow-hidden self-start">
-          <div class="bg-gray-50 px-6 py-3">
-            <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wider">Target Allocation</h3>
+          <div class="bg-gray-600 px-6 py-3">
+            <h3 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Target Allocation</h3>
           </div>
           <div v-if="goalsAreValid" class="p-4 h-72">
             <GoalAllocationChart v-bind:asset-classes="assetClasses" />
