@@ -90,6 +90,7 @@ export default {
         grid: {
           left: '3%',
           right: '4%',
+          top: '3%',
           bottom: this.isStacked ? '15%' : '3%',
           containLabel: true
         },

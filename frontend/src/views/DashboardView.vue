@@ -320,8 +320,13 @@ export default {
       <div v-if="loading" class="text-gray-500">Loading...</div>
 
       <!-- Chart card -->
-      <div v-else class="bg-white shadow rounded-lg p-6">
-        <NetWorthBarChart :labels="monthLabels" :series="chartSeries" />
+      <div v-else class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="bg-gray-600 px-6 py-3">
+          <h3 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Net Worth Over Time</h3>
+        </div>
+        <div class="p-6">
+          <NetWorthBarChart :labels="monthLabels" :series="chartSeries" />
+        </div>
       </div>
     </div>
   </AppLayout>

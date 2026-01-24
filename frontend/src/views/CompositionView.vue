@@ -238,15 +238,23 @@ export default {
 
       <template v-if="!loading && !error">
         <!-- Current vs Goal comparison grid -->
-        <div class="bg-white shadow rounded-lg p-6">
-          <h2 class="text-lg font-medium text-gray-900 mb-4">Current vs Target Allocation</h2>
-          <AllocationComparisonGrid :allocations="comparisonAllocations" :totalValue="currentTotalValue" />
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="bg-gray-600 px-6 py-3">
+            <h3 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Current vs Target Allocation</h3>
+          </div>
+          <div class="p-6">
+            <AllocationComparisonGrid :allocations="comparisonAllocations" :totalValue="currentTotalValue" />
+          </div>
         </div>
 
         <!-- Allocation history chart -->
-        <div class="bg-white shadow rounded-lg p-6">
-          <h2 class="text-lg font-medium text-gray-900 mb-4">Allocation Over Time</h2>
-          <AllocationHistoryChart :labels="monthLabels" :series="chartSeries" />
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="bg-gray-600 px-6 py-3">
+            <h3 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Allocation Over Time</h3>
+          </div>
+          <div class="p-6">
+            <AllocationHistoryChart :labels="monthLabels" :series="chartSeries" />
+          </div>
         </div>
       </template>
     </div>
