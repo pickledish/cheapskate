@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase'
 import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import { Bars3Icon } from '@heroicons/vue/24/solid'
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 
 dayjs.extend(relativeTime)
 
@@ -16,7 +18,12 @@ export default {
     AppLayout,
     AddAssetModal,
     EditAssetModal,
-    UpdatePriceModal
+    UpdatePriceModal,
+    Bars3Icon,
+    Menu,
+    MenuButton,
+    MenuItems,
+    MenuItem
   },
   data() {
     return {
@@ -177,6 +184,20 @@ export default {
 
     getClassColor(colorName) {
       return getColorClasses(colorName)
+    },
+
+    async deleteAsset(asset) {
+      if (!confirm(`Delete "${asset.name}"? This will also delete all price history and holdings for this asset.`)) {
+        return
+      }
+
+      try {
+        const { error } = await supabase.from('assets').delete().eq('id', asset.id)
+        if (error) throw error
+        await this.loadData()
+      } catch (err) {
+        this.error = err.message
+      }
     }
   }
 }
@@ -258,19 +279,38 @@ export default {
                     {{ relativeDate(asset.latestPriceDate) }}
                   </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                  <button
-                    v-on:click="openEditModal(asset)"
-                    class="text-blue-600 hover:text-blue-900"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    v-on:click="openUpdatePriceModal(asset)"
-                    class="text-blue-600 hover:text-blue-900"
-                  >
-                    Update Price
-                  </button>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                  <Menu as="div" class="relative inline-block text-left">
+                    <MenuButton class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded cursor-pointer">
+                      <Bars3Icon class="w-5 h-5" />
+                    </MenuButton>
+                    <MenuItems class="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg focus:outline-none z-10 py-1 flex flex-col">
+                      <MenuItem v-slot="{ active }">
+                        <button
+                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                          v-on:click="openEditModal(asset)"
+                        >
+                          Edit
+                        </button>
+                      </MenuItem>
+                      <MenuItem v-slot="{ active }">
+                        <button
+                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                          v-on:click="openUpdatePriceModal(asset)"
+                        >
+                          Update Price
+                        </button>
+                      </MenuItem>
+                      <MenuItem v-slot="{ active }">
+                        <button
+                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
+                          v-on:click="deleteAsset(asset)"
+                        >
+                          Delete
+                        </button>
+                      </MenuItem>
+                    </MenuItems>
+                  </Menu>
                 </td>
               </tr>
             </tbody>
