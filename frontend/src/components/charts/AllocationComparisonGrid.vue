@@ -22,12 +22,8 @@ export default {
       return getHexForColor(colorName)
     },
     formatCurrency(value) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(value)
+      const rounded = Math.round(value / 1000)
+      return rounded === 0 ? '$0' : `$${rounded}k`
     },
     currentDollars(alloc) {
       return alloc.current * this.totalValue
