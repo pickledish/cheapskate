@@ -45,7 +45,7 @@ export default {
           // Validate UUID format
           const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
           if (!uuidRegex.test(this.familyId)) {
-            throw new Error('Invalid family ID format')
+            throw new Error('Invalid family secret format')
           }
           familyId = this.familyId
         }
@@ -144,7 +144,7 @@ export default {
               type="text"
               v-bind:disabled="mode !== 'join'"
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm disabled:bg-gray-100 disabled:text-gray-400"
-              placeholder="Enter family ID"
+              placeholder="Enter family secret"
               v-on:click.stop
             />
           </div>

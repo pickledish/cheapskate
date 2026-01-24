@@ -192,7 +192,7 @@ export default {
           <div class="space-y-4">
             <!-- Family ID row -->
             <div>
-              <dt class="text-sm text-gray-500 mb-1">Family ID</dt>
+              <dt class="text-sm text-gray-500 mb-1">Family Secret</dt>
               <div class="relative h-10">
                 <!-- Input with family ID -->
                 <input
@@ -224,7 +224,7 @@ export default {
                 class="text-amber-600 text-sm mt-2 flex items-start gap-1"
               >
                 <span class="shrink-0">&#9888;</span>
-                <span>Be careful - anyone with this ID can view and edit your family's data.</span>
+                <span>Be careful - anyone with this value can view and edit your family's data.</span>
               </p>
             </div>
 

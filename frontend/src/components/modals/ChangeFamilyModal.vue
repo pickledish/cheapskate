@@ -82,7 +82,7 @@ export default {
             type="text"
             v-bind:disabled="mode !== 'join'"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm disabled:bg-gray-100 disabled:text-gray-400"
-            placeholder="Enter family ID"
+            placeholder="Enter family secret"
             v-on:click.stop
           />
         </div>
