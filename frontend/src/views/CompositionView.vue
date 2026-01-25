@@ -243,7 +243,8 @@ export default {
             <h3 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Current vs Target Allocation</h3>
           </div>
           <div class="p-6">
-            <AllocationComparisonGrid :allocations="comparisonAllocations" :totalValue="currentTotalValue" />
+            <AllocationComparisonGrid v-if="comparisonAllocations.length > 0 && comparisonAllocations.some(a => a.current > 0)" :allocations="comparisonAllocations" :totalValue="currentTotalValue" />
+            <div v-else class="text-center text-gray-500 py-7">No allocation history to display.</div>
           </div>
         </div>
 
