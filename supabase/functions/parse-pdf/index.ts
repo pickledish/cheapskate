@@ -1,21 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import * as jose from "jsr:@panva/jose@6";
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 
-// JWT validation using jose (for asymmetric ES256 keys)
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_JWT_ISSUER = SUPABASE_URL + "/auth/v1";
-const SUPABASE_JWT_KEYS = jose.createRemoteJWKSet(
-  new URL(SUPABASE_URL + "/auth/v1/.well-known/jwks.json")
-);
-
-async function verifyJWT(token: string) {
-  return jose.jwtVerify(token, SUPABASE_JWT_KEYS, {
-    issuer: SUPABASE_JWT_ISSUER,
-  });
-}
 
 // Define the schema once - used for both API request and response validation
 const HoldingSchema = z.object({
@@ -96,22 +84,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify JWT using jose (asymmetric ES256 keys)
-    const token = authHeader.replace("Bearer ", "");
-    try {
-      await verifyJWT(token);
-    } catch (jwtError) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized", details: jwtError instanceof Error ? jwtError.message : "Invalid JWT" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // Create Supabase client with user's auth context for RLS-protected queries
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SB_PUBLISHABLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, supabaseKey, {
       global: { headers: { Authorization: authHeader } }
     });
+
+    // Verify JWT via Auth service - requires a real user session, not just anon key
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", details: authError?.message ?? "Invalid or missing user session" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Parse request body
     const { pdf_base64 }: ParsePdfRequest = await req.json();
@@ -149,8 +136,13 @@ Known assets: ${knownAssets}
 If you are reasonably confident that a holding in this statement represents the same asset as one listed above, use that exact name from the list.`;
     }
 
-    // Initialize Gemini client (uses GEMINI_API_KEY env var)
-    const ai = new GoogleGenAI({ apiKey: Deno.env.get("GEMINI_API_KEY") });
+    // Initialize Gemini client with API key (works for both AI Studio and Vertex AI)
+    // For Vertex AI: set GOOGLE_GENAI_USE_VERTEXAI=true (API key includes project info)
+    const apiKey = Deno.env.get("GOOGLE_API_KEY");
+    const useVertexAI = Deno.env.get("GOOGLE_GENAI_USE_VERTEXAI") === "true";
+    const ai = new GoogleGenAI(useVertexAI
+      ? { apiKey, vertexai: true }
+      : { apiKey });
 
     // Call Gemini with the PDF and structured output schema
     const response = await ai.models.generateContent({

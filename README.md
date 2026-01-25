@@ -5,7 +5,7 @@ Track your net worth and portfolio composition across brokerage accounts, retire
 ## External Services Required
 
 - **Supabase** - Database, auth, and edge functions ([supabase.com](https://supabase.com))
-- **Gemini API** - PDF statement parsing ([aistudio.google.com/apikey](https://aistudio.google.com/apikey))
+- **Google Gemini** - PDF statement parsing via [AI Studio](https://aistudio.google.com/apikey) or [Vertex AI](https://console.cloud.google.com/vertex-ai)
 - **Bunny CDN** - Frontend hosting ([bunny.net](https://bunny.net)) — or any static host
 
 ## Project Structure
@@ -33,12 +33,17 @@ This starts local Postgres, Auth, and Edge Functions at `http://127.0.0.1:54321`
 ### 2. Configure Edge Functions
 
 ```bash
-# Create env file with your Gemini API key
-echo "GEMINI_API_KEY=your-gemini-api-key" > supabase/.env
+# Copy env template and fill in your API key
+cp supabase/.env.example supabase/.env
+# Edit supabase/.env with your API key
 
 # Start edge functions
 supabase functions serve --env-file ./supabase/.env
 ```
+
+**AI Studio** (default): Get an API key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey), set `GOOGLE_API_KEY`.
+
+**Vertex AI** (optional): Get an API key from [Google Cloud Console](https://console.cloud.google.com/apis/credentials), set `GOOGLE_API_KEY` and `GOOGLE_GENAI_USE_VERTEXAI=true`.
 
 ### 3. Start Frontend
 
@@ -73,8 +78,8 @@ Frontend runs at `http://localhost:5173`.
 ### 2. Deploy Edge Functions
 
 ```bash
-# Set production secrets
-supabase secrets set GEMINI_API_KEY=your-gemini-api-key
+# Set production secrets from your env file
+supabase secrets set --env-file supabase/.env
 
 # Deploy
 supabase functions deploy parse-pdf
