@@ -287,6 +287,16 @@ export default {
         Select a PDF statement to upload. It will be parsed using AI to extract holdings.
       </p>
 
+      <div class="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h4 class="text-sm font-medium text-blue-900 mb-2">Privacy Notice</h4>
+        <p class="text-sm text-blue-800 mb-2">
+          Cheapskate extracts and stores only ticker symbols and share quantities from your statement — no account numbers, addresses, or other personal information.
+        </p>
+        <p class="text-sm text-blue-800">
+          Gemini is also configured in <a href="https://docs.cloud.google.com/vertex-ai/generative-ai/docs/vertex-ai-zero-data-retention" class="font-semibold underline hover:text-blue-900">zero-retention mode</a>, so your document is deleted from Google's servers as soon as the parsing is completed.
+        </p>
+      </div>
+
       <input
         type="file"
         accept=".pdf"

@@ -122,7 +122,7 @@ Rules:
 - Extract every holding/position with its name, quantity (shares/units), and total market value
 - For the name field, use the ticker symbol if one is shown (e.g., AAPL, VTI), otherwise use a descriptive name
 - For each holding, also extract the per-share price if it's explicitly shown
-- For cash balances, use name "$CASH" with quantity AND total_value both equal to the dollar amount
+- For cash or money-market balances, use name "$CASH" with quantity AND total_value both equal to the dollar amount
 - Only include actual holdings, not transaction history
 - Extract the statement date if visible`;
 
@@ -152,6 +152,7 @@ If you are reasonably confident that a holding in this statement represents the 
           role: "user",
           parts: [
             {
+              // be sure to pass data inline, not files API (stored)
               inlineData: {
                 mimeType: "application/pdf",
                 data: pdf_base64,
@@ -167,6 +168,7 @@ If you are reasonably confident that a holding in this statement represents the 
         responseMimeType: "application/json",
         responseSchema: geminiSchema,
       },
+      // be sure to use no tools like grounding with google search
     });
 
     // Parse and validate the response using the same schema
