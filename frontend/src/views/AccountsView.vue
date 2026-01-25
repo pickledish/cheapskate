@@ -32,6 +32,7 @@ export default {
       accounts: [],
       assets: [],
       holdingsByAccount: {},
+      hasAnyStatements: false,
       loading: true,
       error: null,
       searchQuery: '',
@@ -89,6 +90,9 @@ export default {
 
         // Store assets list for modal usage
         this.assets = assetsData
+
+        // Track if any statements exist (for privacy notice default state)
+        this.hasAnyStatements = statementsData.length > 0
 
         // Build map of asset_id -> asset info
         const assetMap = {}
@@ -439,6 +443,7 @@ export default {
       v-if="showUploadModal"
       v-bind:account="selectedAccount"
       v-bind:existing-holdings="holdingsByAccount[selectedAccount?.id] || []"
+      v-bind:has-existing-statements="hasAnyStatements"
       v-on:close="closeUploadModal"
       v-on:uploaded="onStatementUploaded"
     />

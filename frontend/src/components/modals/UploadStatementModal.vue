@@ -1,10 +1,11 @@
 <script>
 import BaseModal from './BaseModal.vue'
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 import { supabase } from '@/lib/supabase'
 
 export default {
   name: 'UploadStatementModal',
-  components: { BaseModal },
+  components: { BaseModal, Disclosure, DisclosureButton, DisclosurePanel },
   props: {
     account: {
       type: Object,
@@ -13,6 +14,10 @@ export default {
     existingHoldings: {
       type: Array,
       default: () => []
+    },
+    hasExistingStatements: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['close', 'uploaded'],
@@ -287,15 +292,35 @@ export default {
         Select a PDF statement to upload. It will be parsed using AI to extract holdings.
       </p>
 
-      <div class="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h4 class="text-sm font-medium text-blue-900 mb-2">Privacy Notice</h4>
-        <p class="text-sm text-blue-800 mb-2">
-          Cheapskate extracts and stores only ticker symbols and share quantities from your statement — no account numbers, addresses, or other personal information.
-        </p>
-        <p class="text-sm text-blue-800">
-          Gemini is also configured in <a href="https://docs.cloud.google.com/vertex-ai/generative-ai/docs/vertex-ai-zero-data-retention" class="font-semibold underline hover:text-blue-900">zero-retention mode</a>, so your document is deleted from Google's servers as soon as the parsing is completed.
-        </p>
-      </div>
+      <Disclosure v-slot="{ open }" v-bind:default-open="!hasExistingStatements" as="div" class="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <DisclosureButton class="w-full flex items-center justify-between text-left">
+          <h4 class="text-sm font-medium text-blue-900">Privacy Notice</h4>
+          <svg
+            class="w-4 h-4 text-blue-700 transition-transform duration-200"
+            v-bind:class="{ '-rotate-90': !open }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </DisclosureButton>
+        <div
+          class="grid transition-all duration-200 ease-out"
+          v-bind:class="open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'"
+        >
+          <DisclosurePanel static class="overflow-hidden">
+            <div class="mt-2">
+              <p class="text-sm text-blue-800 mb-2">
+                Cheapskate extracts and stores only ticker symbols and share quantities from your statement — no account numbers, addresses, or other personal information.
+              </p>
+              <p class="text-sm text-blue-800">
+                Gemini is also configured in <a href="https://docs.cloud.google.com/vertex-ai/generative-ai/docs/vertex-ai-zero-data-retention" class="font-semibold underline hover:text-blue-900">zero-retention mode</a>, so your document is deleted from Google's servers as soon as the parsing is completed.
+              </p>
+            </div>
+          </DisclosurePanel>
+        </div>
+      </Disclosure>
 
       <input
         type="file"
