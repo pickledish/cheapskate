@@ -162,9 +162,11 @@ export default {
 
       <template v-if="!loading">
         <!-- Profile Section -->
-        <section class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Profile</h2>
-          <div class="space-y-4">
+        <section class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="bg-gray-600 px-6 py-3">
+            <h2 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Profile</h2>
+          </div>
+          <div class="p-6 space-y-4">
             <!-- Name row -->
             <div class="flex items-center justify-between">
               <div>
@@ -187,9 +189,11 @@ export default {
         </section>
 
         <!-- Family Section -->
-        <section class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Family</h2>
-          <div class="space-y-4">
+        <section class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="bg-gray-600 px-6 py-3">
+            <h2 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Family</h2>
+          </div>
+          <div class="p-6 space-y-4">
             <!-- Family ID row -->
             <div>
               <dt class="text-sm text-gray-500 mb-1">Family Secret</dt>
@@ -268,9 +272,11 @@ export default {
         </section>
 
         <!-- Danger Zone -->
-        <section class="bg-white rounded-lg shadow p-6 border-2 border-red-100">
-          <h2 class="text-lg font-semibold text-red-600 mb-4">Danger Zone</h2>
-          <div class="space-y-4">
+        <section class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="bg-red-600 px-6 py-3">
+            <h2 class="text-xs font-medium text-white uppercase tracking-wider">Danger Zone</h2>
+          </div>
+          <div class="p-6 space-y-4">
             <!-- Sign Out -->
             <div class="flex items-center justify-between">
               <div>
