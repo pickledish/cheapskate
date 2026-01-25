@@ -5,7 +5,7 @@ import AllocationComparisonGrid from '@/components/charts/AllocationComparisonGr
 import { supabase } from '@/lib/supabase'
 
 export default {
-  name: 'CompositionView',
+  name: 'RebalancingView',
   components: { AppLayout, AllocationHistoryChart, AllocationComparisonGrid },
   data() {
     return {
