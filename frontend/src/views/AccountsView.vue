@@ -4,6 +4,8 @@ import AddAccountModal from '@/components/modals/AddAccountModal.vue'
 import EditAccountModal from '@/components/modals/EditAccountModal.vue'
 import UploadStatementModal from '@/components/modals/UploadStatementModal.vue'
 import UpdatePositionModal from '@/components/modals/UpdatePositionModal.vue'
+import OnboardingModal from '@/components/modals/OnboardingModal.vue'
+import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import { supabase } from '@/lib/supabase'
 import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
@@ -21,6 +23,8 @@ export default {
     EditAccountModal,
     UploadStatementModal,
     UpdatePositionModal,
+    OnboardingModal,
+    OnboardingContinueCard,
     Bars3Icon,
     Menu,
     MenuButton,
@@ -42,7 +46,11 @@ export default {
       showEditAccountModal: false,
       showUploadModal: false,
       showUpdatePositionModal: false,
-      selectedAccount: null
+      selectedAccount: null,
+
+      // Onboarding state
+      showOnboardingModal: false,
+      accountsCompleted: false
     }
   },
   computed: {
@@ -54,9 +62,20 @@ export default {
         // Search in name
         return account.name.toLowerCase().includes(query)
       })
+    },
+    showContinueCard() {
+      // Show continue card if: has at least 1 account, has at least 1 statement, and not yet completed
+      return this.accounts.length > 0 && this.hasAnyStatements && !this.accountsCompleted
     }
   },
   async mounted() {
+    // Check onboarding state
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      this.accountsCompleted = session.user.user_metadata?.accounts_completed ?? false
+      // Show onboarding modal if accounts not yet completed
+      this.showOnboardingModal = !this.accountsCompleted
+    }
     await this.loadData()
   },
   methods: {
@@ -422,6 +441,15 @@ export default {
             <span class="text-sm font-medium">Add Account</span>
           </button>
         </div>
+
+        <!-- Onboarding continue card -->
+        <OnboardingContinueCard
+          v-if="showContinueCard"
+          step="accounts"
+          message="You've added an account and uploaded a statement. Now let's categorize your assets!"
+          next-step-label="Continue to Assets"
+          next-route="/assets"
+        />
       </section>
     </div>
 
@@ -455,5 +483,26 @@ export default {
       v-on:close="closeUpdatePositionModal"
       v-on:updated="onPositionUpdated"
     />
+
+    <!-- Onboarding modal -->
+    <OnboardingModal
+      v-if="showOnboardingModal"
+      title="Add Your Investment Accounts"
+      v-bind:step-number="2"
+      v-on:close="showOnboardingModal = false"
+    >
+      <div class="space-y-4 text-gray-600">
+        <p>
+          Now let's add your <strong>investment accounts</strong>.
+        </p>
+        <p>
+          Create at least one account (e.g., "401k", "Brokerage", "IRA") and upload a statement
+          to import your holdings.
+        </p>
+        <p>
+          The statement will be automatically parsed to extract your assets and their current values.
+        </p>
+      </div>
+    </OnboardingModal>
   </AppLayout>
 </template>

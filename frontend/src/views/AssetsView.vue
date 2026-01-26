@@ -3,6 +3,8 @@ import AppLayout from '@/components/AppLayout.vue'
 import AddAssetModal from '@/components/modals/AddAssetModal.vue'
 import EditAssetModal from '@/components/modals/EditAssetModal.vue'
 import UpdatePriceModal from '@/components/modals/UpdatePriceModal.vue'
+import OnboardingModal from '@/components/modals/OnboardingModal.vue'
+import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import { supabase } from '@/lib/supabase'
 import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
@@ -19,6 +21,8 @@ export default {
     AddAssetModal,
     EditAssetModal,
     UpdatePriceModal,
+    OnboardingModal,
+    OnboardingContinueCard,
     Bars3Icon,
     Menu,
     MenuButton,
@@ -37,7 +41,11 @@ export default {
       showAddAssetModal: false,
       showEditAssetModal: false,
       showUpdatePriceModal: false,
-      selectedAsset: null
+      selectedAsset: null,
+
+      // Onboarding state
+      showOnboardingModal: false,
+      assetsCompleted: false
     }
   },
   computed: {
@@ -54,9 +62,23 @@ export default {
 
         return false
       })
+    },
+    allAssetsCategorized() {
+      // All assets must have at least one allocation
+      return this.assets.length > 0 && this.assets.every(a => a.allocations.length > 0)
+    },
+    showContinueCard() {
+      return this.allAssetsCategorized && !this.assetsCompleted
     }
   },
   async mounted() {
+    // Check onboarding state
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      this.assetsCompleted = session.user.user_metadata?.assets_completed ?? false
+      // Show onboarding modal if assets not yet completed
+      this.showOnboardingModal = !this.assetsCompleted
+    }
     await this.loadData()
   },
   methods: {
@@ -325,6 +347,16 @@ export default {
           <span class="text-xl mr-2">+</span>
           <span class="text-sm font-medium">Add Asset</span>
         </button>
+
+        <!-- Onboarding continue card -->
+        <OnboardingContinueCard
+          v-if="showContinueCard"
+          step="assets"
+          message="All your assets are categorized. You're all set to start tracking your portfolio!"
+          next-step-label="Go to Dashboard"
+          next-route="/"
+          class="mt-4"
+        />
       </div>
     </div>
 
@@ -349,5 +381,26 @@ export default {
       v-on:close="closeUpdatePriceModal"
       v-on:updated="onAssetUpdated"
     />
+
+    <!-- Onboarding modal -->
+    <OnboardingModal
+      v-if="showOnboardingModal"
+      title="Categorize Your Assets"
+      v-bind:step-number="3"
+      v-on:close="showOnboardingModal = false"
+    >
+      <div class="space-y-4 text-gray-600">
+        <p>
+          Almost done! Now let's <strong>categorize your assets</strong>.
+        </p>
+        <p>
+          Each asset needs to be assigned to one or more of the asset classes you created earlier.
+          This allows Cheapskate to track your actual vs. target allocation.
+        </p>
+        <p>
+          Click <strong>Edit</strong> on each asset to assign it to asset classes.
+        </p>
+      </div>
+    </OnboardingModal>
   </AppLayout>
 </template>

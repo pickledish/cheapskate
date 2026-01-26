@@ -51,8 +51,17 @@ export default {
         }
 
         // Update user metadata with the family_id
+        // If joining an existing family, skip onboarding - the family already has data set up,
+        // so there's no need to walk them through goals/accounts/assets setup.
+        const metadata = { family_id: familyId }
+        if (this.mode === 'join') {
+          metadata.goals_completed = true
+          metadata.accounts_completed = true
+          metadata.assets_completed = true
+        }
+
         const { error: updateError } = await supabase.auth.updateUser({
-          data: { family_id: familyId }
+          data: metadata
         })
 
         if (updateError) throw updateError
@@ -71,8 +80,8 @@ export default {
 
         if (profileError) throw profileError
 
-        // Redirect to dashboard
-        this.$router.push('/')
+        // Redirect: new families start onboarding, joining families go straight to dashboard
+        this.$router.push(this.mode === 'create' ? '/goals' : '/')
       } catch (err) {
         this.error = err.message
       } finally {

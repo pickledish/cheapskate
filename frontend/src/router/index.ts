@@ -28,19 +28,19 @@ const routes = [
     path: '/',
     name: 'dashboard',
     component: DashboardView,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresOnboardingComplete: true }
   },
   {
     path: '/rebalancing',
     name: 'rebalancing',
     component: RebalancingView,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresOnboardingComplete: true }
   },
   {
     path: '/assets',
     name: 'assets',
     component: AssetsView,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresAccountsComplete: true }
   },
   {
     path: '/goals',
@@ -52,13 +52,13 @@ const routes = [
     path: '/accounts',
     name: 'accounts',
     component: AccountsView,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresGoalsComplete: true }
   },
   {
     path: '/history',
     name: 'history',
     component: HistoryView,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresOnboardingComplete: true }
   },
   {
     path: '/profile',
@@ -73,23 +73,55 @@ const router = createRouter({
   routes
 })
 
-// Auth guard
+// Auth and onboarding guard
 router.beforeEach(async (to, _from, next) => {
   const { data: { session } } = await supabase.auth.getSession()
   const isAuthenticated = !!session
-  const familyId = session?.user?.user_metadata?.family_id
+  const metadata = session?.user?.user_metadata || {}
+  const familyId = metadata.family_id
+  const goalsCompleted = metadata.goals_completed ?? false
+  const accountsCompleted = metadata.accounts_completed ?? false
+  const assetsCompleted = metadata.assets_completed ?? false
 
+  // Not authenticated - redirect to login
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login')
-  } else if (to.path === '/login' && isAuthenticated) {
-    next(familyId ? '/' : '/setup')
-  } else if (to.path === '/setup') {
-    next()
-  } else if (isAuthenticated && !familyId) {
-    next('/setup')
-  } else {
-    next()
+    return next('/login')
   }
+
+  // Already logged in at login page - redirect appropriately
+  if (to.path === '/login' && isAuthenticated) {
+    if (!familyId) return next('/setup')
+    if (!assetsCompleted) return next('/goals')
+    return next('/')
+  }
+
+  // Setup page - always allow
+  if (to.path === '/setup') {
+    return next()
+  }
+
+  // No family yet - force setup
+  if (isAuthenticated && !familyId) {
+    return next('/setup')
+  }
+
+  // Onboarding guards
+  if (to.meta.requiresGoalsComplete && !goalsCompleted) {
+    return next('/goals')
+  }
+
+  if (to.meta.requiresAccountsComplete && !accountsCompleted) {
+    if (!goalsCompleted) return next('/goals')
+    return next('/accounts')
+  }
+
+  if (to.meta.requiresOnboardingComplete && !assetsCompleted) {
+    if (!goalsCompleted) return next('/goals')
+    if (!accountsCompleted) return next('/accounts')
+    return next('/assets')
+  }
+
+  next()
 })
 
 export default router

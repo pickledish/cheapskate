@@ -2,6 +2,8 @@
 import AppLayout from '@/components/AppLayout.vue'
 import AddAssetClassModal from '@/components/modals/AddAssetClassModal.vue'
 import EditAssetClassModal from '@/components/modals/EditAssetClassModal.vue'
+import OnboardingModal from '@/components/modals/OnboardingModal.vue'
+import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import GoalAllocationChart from '@/components/charts/GoalAllocationChart.vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { supabase } from '@/lib/supabase'
@@ -15,6 +17,8 @@ export default {
     AppLayout,
     AddAssetClassModal,
     EditAssetClassModal,
+    OnboardingModal,
+    OnboardingContinueCard,
     GoalAllocationChart,
     VueDraggable,
     Bars3Icon,
@@ -33,10 +37,21 @@ export default {
       // Modal state
       showAddModal: false,
       showEditModal: false,
-      selectedAssetClass: null
+      selectedAssetClass: null,
+
+      // Onboarding state
+      showOnboardingModal: false,
+      goalsCompleted: false
     }
   },
   async mounted() {
+    // Check onboarding state
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      this.goalsCompleted = session.user.user_metadata?.goals_completed ?? false
+      // Show onboarding modal if goals not yet completed
+      this.showOnboardingModal = !this.goalsCompleted
+    }
     await this.loadData()
   },
   computed: {
@@ -48,6 +63,9 @@ export default {
     },
     goalsAreValid() {
       return Math.abs(this.totalGoals - 1) < 0.001
+    },
+    showContinueCard() {
+      return this.goalsAreValid && !this.goalsCompleted
     }
   },
   methods: {
@@ -290,6 +308,15 @@ export default {
         </div>
       </div>
 
+      <!-- Onboarding continue card -->
+      <OnboardingContinueCard
+        v-if="showContinueCard"
+        step="goals"
+        message="Your asset classes are set up with a complete allocation. Ready to add your investment accounts!"
+        next-step-label="Continue to Accounts"
+        next-route="/accounts"
+      />
+
       <!-- Empty state -->
       <div v-if="!loading && assetClasses.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
         <p class="text-gray-500 mb-4">No asset classes yet. Add your first to categorize your assets.</p>
@@ -315,6 +342,27 @@ export default {
       v-on:close="closeEditModal"
       v-on:updated="onUpdated"
     />
+
+    <!-- Onboarding modal -->
+    <OnboardingModal
+      v-if="showOnboardingModal"
+      title="Set Your Investment Goals"
+      v-bind:step-number="1"
+      v-on:close="showOnboardingModal = false"
+    >
+      <div class="space-y-4 text-gray-600">
+        <p>
+          <strong>Welcome to Cheapskate!</strong> Let's set up your portfolio tracking in three simple steps.
+        </p>
+        <p>
+          First, define your <strong>asset classes</strong> — these are categories like stocks, bonds,
+          and cash that help you track your portfolio allocation.
+        </p>
+        <p>
+          Set a target percentage for each class. Your goals should add up to <strong>100%</strong>.
+        </p>
+      </div>
+    </OnboardingModal>
   </AppLayout>
 </template>
 

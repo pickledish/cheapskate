@@ -228,7 +228,7 @@ export default {
       <div>
         <h2 class="text-2xl font-bold text-gray-900">Rebalancing</h2>
         <p class="text-sm text-gray-600 mt-1">
-          Compare "current" and "goal" asset class allocations. Visualize portfolio composition over time.
+          Compare "current" and "goal" allocations to each asset class. Visualize portfolio composition over time.
         </p>
       </div>
 
