@@ -237,7 +237,7 @@ export default {
       <div>
         <h2 class="text-2xl font-bold text-gray-900">Update History</h2>
         <p class="mt-1 text-sm text-gray-600">
-          A log of all price and position updates, from statement uploads and manual entries.
+          View all price and position updates, from statement uploads and manual entries. Undo mistakes.
         </p>
       </div>
 

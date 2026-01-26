@@ -325,9 +325,9 @@ export default {
       <section v-if="!loading" class="space-y-6">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-2xl font-bold text-gray-900">Investment Accounts</h2>
+            <h2 class="text-2xl font-bold text-gray-900">Accounts</h2>
             <p class="mt-1 text-sm text-gray-600">
-              Brokerage accounts, 401(k)s, IRAs, HSAs, etc. Upload PDF statements or manually update shares.
+              Create and manage accounts. Update holdings manually, or upload statements to be parsed automatically.
             </p>
           </div>
           <input

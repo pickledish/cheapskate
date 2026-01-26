@@ -149,7 +149,7 @@ export default {
       <!-- Page Header -->
       <div>
         <h2 class="text-2xl font-bold text-gray-900">Profile & Settings</h2>
-        <p class="text-sm text-gray-600 mt-1">Manage your account and family settings</p>
+        <p class="text-sm text-gray-600 mt-1">Manage account and family settings. Sign out or delete your account.</p>
       </div>
 
       <!-- Error display -->

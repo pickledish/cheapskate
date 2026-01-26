@@ -226,8 +226,10 @@ export default {
   <AppLayout>
     <div class="space-y-6">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Portfolio Composition</h2>
-        <p class="text-sm text-gray-600 mt-1">Asset class allocation over time (rebalancing accounts only)</p>
+        <h2 class="text-2xl font-bold text-gray-900">Rebalancing</h2>
+        <p class="text-sm text-gray-600 mt-1">
+          Compare "current" and "goal" asset class allocations. Visualize portfolio composition over time.
+        </p>
       </div>
 
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">

@@ -278,7 +278,7 @@ export default {
         <div>
           <h2 class="text-2xl font-bold text-gray-900">Net Worth</h2>
           <p class="mt-1 text-sm text-gray-600">
-            Track your total net worth over time, grouped by account, owner, asset, or asset class.
+            Track your total net worth over time. Group by account, owner, asset, or asset class.
           </p>
         </div>
         <Menu as="div" class="relative">

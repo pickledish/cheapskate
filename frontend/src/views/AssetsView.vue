@@ -211,7 +211,7 @@ export default {
         <div>
           <h2 class="text-2xl font-bold text-gray-900">Assets</h2>
           <p class="mt-1 text-sm text-gray-600">
-            All your securities and assets. Edit metadata or update prices here.
+            Manage distinct assets and update metadata, like asset class. Manually update individual asset prices.
           </p>
         </div>
         <input

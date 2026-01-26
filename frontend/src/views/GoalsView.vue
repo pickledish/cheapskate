@@ -156,9 +156,9 @@ export default {
       <!-- Header -->
       <div class="flex justify-between items-center">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">Asset Classes</h2>
+          <h2 class="text-2xl font-bold text-gray-900">Goals</h2>
           <p class="mt-1 text-sm text-gray-600">
-            Define asset classes for portfolio allocation tracking (e.g., stocks, bonds, cash).
+            Create and manage asset classes. Define a "goal" portfolio allocation for the rebalancing view.
           </p>
         </div>
         <button
