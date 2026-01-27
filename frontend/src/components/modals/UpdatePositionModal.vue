@@ -33,8 +33,8 @@ export default {
       const query = this.assetQuery.toLowerCase().trim()
       if (!query) return this.assets
       return this.assets.filter(asset =>
-        asset.ticker.toLowerCase().includes(query) ||
-        asset.name.toLowerCase().includes(query)
+        (asset.ticker && asset.ticker.toLowerCase().includes(query)) ||
+        (asset.name && asset.name.toLowerCase().includes(query))
       )
     }
   },
@@ -89,6 +89,7 @@ export default {
     },
     displayAsset(asset) {
       if (!asset) return ''
+      if (!asset.ticker) return asset.name
       return `${asset.ticker} - ${asset.name}`
     }
   }
@@ -149,7 +150,7 @@ export default {
                     selected ? 'text-blue-600 font-medium' : 'text-gray-700'
                   ]"
                 >
-                  <span>{{ asset.ticker }} - {{ asset.name }}</span>
+                  <span>{{ asset.ticker ? `${asset.ticker} - ${asset.name}` : asset.name }}</span>
                   <CheckIcon v-if="selected" class="w-4 h-4" />
                 </div>
               </ComboboxOption>
