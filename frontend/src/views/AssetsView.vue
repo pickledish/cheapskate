@@ -253,36 +253,39 @@ export default {
 
       <!-- Assets table -->
       <div v-if="!loading">
-        <div v-if="assets.length > 0" class="bg-white shadow rounded-lg overflow-hidden">
+        <div v-if="assets.length > 0" class="bg-white shadow rounded-lg">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-600">
+            <thead>
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
                   Name
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
                   Ticker
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
                   Asset Class
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
                   Latest Price
                 </th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="asset in filteredAssets" v-bind:key="asset.id">
-                <td class="px-6 py-4 whitespace-nowrap">
+            <tbody class="divide-y divide-gray-200">
+              <tr v-for="(asset, index) in filteredAssets" v-bind:key="asset.id">
+                <td
+                  class="px-6 py-4 whitespace-nowrap bg-white"
+                  v-bind:class="{ 'rounded-bl-lg': index === filteredAssets.length - 1 }"
+                >
                   <div class="text-sm font-medium text-gray-900">{{ asset.name }}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap bg-white">
                   <div class="text-sm text-gray-500">{{ asset.ticker || '-' }}</div>
                 </td>
-                <td class="px-6 py-4">
+                <td class="px-6 py-4 bg-white">
                   <div v-if="asset.assetClasses.length" class="flex flex-wrap gap-1">
                     <span
                       v-for="ac in asset.assetClasses"
@@ -295,18 +298,21 @@ export default {
                   </div>
                   <span v-else class="text-sm text-gray-400">-</span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap bg-white">
                   <div class="text-sm text-gray-900">{{ formatPrice(asset.latestPrice) }}</div>
                   <div v-if="asset.latestPriceDate" class="text-xs text-gray-400">
                     {{ relativeDate(asset.latestPriceDate) }}
                   </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-right text-sm bg-white"
+                  v-bind:class="{ 'rounded-br-lg': index === filteredAssets.length - 1 }"
+                >
                   <Menu as="div" class="relative inline-block text-left">
                     <MenuButton class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded cursor-pointer">
                       <Bars3Icon class="w-5 h-5" />
                     </MenuButton>
-                    <MenuItems class="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg focus:outline-none z-10 py-1 flex flex-col">
+                    <MenuItems class="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg focus:outline-none z-50 py-1 flex flex-col">
                       <MenuItem v-slot="{ active }">
                         <button
                           v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
