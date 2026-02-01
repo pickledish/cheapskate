@@ -17,8 +17,8 @@ begin
   end if;
 
   -- Delete old family if no profiles remain (CASCADE cleans up all data)
-  if not exists (select 1 from profiles where family_id = OLD.family_id) then
-    delete from families where id = OLD.family_id;
+  if not exists (select 1 from public.profiles where family_id = OLD.family_id) then
+    delete from public.families where id = OLD.family_id;
   end if;
 
   return null;  -- Return value is ignored for AFTER triggers
