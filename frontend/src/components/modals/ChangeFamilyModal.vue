@@ -1,5 +1,6 @@
 <script>
 import BaseModal from './BaseModal.vue'
+import { supabase } from '@/lib/supabase'
 
 export default {
   name: 'ChangeFamilyModal',
@@ -21,15 +22,61 @@ export default {
   },
   methods: {
     async executeChange() {
-      // TODO: Implement family change logic
-      // 1. If mode === 'create': generate UUID, insert into families table
-      // 2. If mode === 'join': validate UUID format
-      // 3. Update user metadata with new family_id
-      // 4. Refresh session
-      // 5. Update profiles table with new family_id
-      // 6. Emit 'changed' event
+      if (!this.canSubmit) return
 
-      this.error = 'Family change is not yet implemented. Coming soon!'
+      this.loading = true
+      this.error = null
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
+
+        let newFamilyId
+
+        if (this.mode === 'create') {
+          // Generate UUID client-side (same pattern as SetupView)
+          newFamilyId = crypto.randomUUID()
+
+          const { error: insertError } = await supabase
+            .from('families')
+            .insert({ id: newFamilyId })
+
+          if (insertError) throw insertError
+
+        } else {
+          // Validate UUID format
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+          if (!uuidRegex.test(this.familyId.trim())) {
+            throw new Error('Invalid family ID format. Please enter a valid UUID.')
+          }
+          newFamilyId = this.familyId.trim()
+        }
+
+        // Update profile first (trigger cleanup_empty_family() handles deleting old family if empty)
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ family_id: newFamilyId })
+          .eq('id', user.id)
+
+        if (profileError) throw profileError
+
+        // Now update user_metadata to match
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: { family_id: newFamilyId }
+        })
+        if (updateError) throw updateError
+
+        // Refresh session to get new JWT with updated metadata
+        const { error: refreshError } = await supabase.auth.refreshSession()
+        if (refreshError) throw refreshError
+
+        this.$emit('changed')
+
+      } catch (err) {
+        this.error = err.message
+      } finally {
+        this.loading = false
+      }
     }
   }
 }

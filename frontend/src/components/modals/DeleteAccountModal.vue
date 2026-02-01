@@ -1,5 +1,6 @@
 <script>
 import BaseModal from './BaseModal.vue'
+import { supabase } from '@/lib/supabase'
 
 export default {
   name: 'DeleteAccountModal',
@@ -21,13 +22,40 @@ export default {
     async deleteAccount() {
       if (!this.canDelete) return
 
-      // TODO: Implement account deletion logic
-      // 1. Delete profile from profiles table
-      // 2. Sign out user
-      // 3. Redirect to login
-      // Note: Full auth user deletion requires server-side function
+      this.loading = true
+      this.error = null
 
-      this.error = 'Account deletion is not yet implemented. Coming soon!'
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          throw new Error('Not authenticated')
+        }
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || `HTTP ${response.status}`)
+        }
+
+        // Account deleted - sign out locally and redirect
+        await supabase.auth.signOut()
+        this.$router.push('/login')
+
+      } catch (err) {
+        this.error = err.message
+      } finally {
+        this.loading = false
+      }
     }
   }
 }
