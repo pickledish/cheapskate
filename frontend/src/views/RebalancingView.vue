@@ -127,13 +127,30 @@ export default {
       })
 
       // Normalize: convert to percentages of total for each month
-      this.chartSeries = seriesData
+      const normalizedSeries = seriesData
         .map(s => ({
           name: s.name,
           color: s.color,
           data: s.data.map(d => d.totalValue > 0 ? d.classValue / d.totalValue : 0)
         }))
         .filter(s => s.data.some(v => v > 0))
+
+      // Compute unclassified portion for each month (assets with no/incomplete allocations)
+      const unclassifiedData = monthsWithData.map((month, monthIndex) => {
+        const classifiedTotal = normalizedSeries.reduce((sum, s) => sum + s.data[monthIndex], 0)
+        return Math.max(0, 1 - classifiedTotal)
+      })
+
+      // Add unclassified series if any month has unclassified value
+      if (unclassifiedData.some(v => v > 0.001)) {
+        normalizedSeries.push({
+          name: 'Unclassified',
+          color: 'gray',
+          data: unclassifiedData
+        })
+      }
+
+      this.chartSeries = normalizedSeries
 
       // Compute current vs goal comparison for the grid
       // Use the most recent holdings (today) for current allocation
