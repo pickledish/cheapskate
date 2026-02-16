@@ -26,26 +26,8 @@ export default {
       this.error = null
 
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
-          throw new Error('Not authenticated')
-        }
-
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        )
-
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || `HTTP ${response.status}`)
-        }
+        const { error: invokeError } = await supabase.functions.invoke('delete-account')
+        if (invokeError) throw invokeError
 
         // Account deleted - sign out locally and redirect
         await supabase.auth.signOut()

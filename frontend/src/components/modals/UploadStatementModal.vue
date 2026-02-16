@@ -65,28 +65,11 @@ export default {
         // Convert file to base64
         const base64 = await this.fileToBase64(this.file)
 
-        // Get auth token
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
-          throw new Error('Not authenticated')
-        }
-
         // Call parse-pdf edge function
-        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-pdf`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ pdf_base64: base64 })
+        const { data: result, error: invokeError } = await supabase.functions.invoke('parse-pdf', {
+          body: { pdf_base64: base64 }
         })
-
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || `HTTP ${response.status}`)
-        }
-
-        const result = await response.json()
+        if (invokeError) throw invokeError
 
         this.holdings = result.holdings || []
         this.statementDate = result.statement_date || this.todayDate
