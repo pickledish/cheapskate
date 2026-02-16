@@ -543,7 +543,7 @@ export default {
           Now let's add your <strong>investment accounts</strong>.
         </p>
         <p>
-          Create at least one account (e.g., "401k", "Brokerage", "IRA") and upload a statement
+          Create at least one account (for example "401k" or "Brokerage") and upload a statement
           to import your holdings.
         </p>
         <p>

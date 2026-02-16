@@ -400,11 +400,14 @@ export default {
           Almost done! Now let's <strong>categorize your assets</strong>.
         </p>
         <p>
-          Each asset needs to be assigned to one or more of the asset classes you created earlier.
-          This allows Cheapskate to track your actual vs. target allocation.
+          Each asset needs to be assigned an asset class.
+          This is what allows Cheapskate to compare your <strong>actual portfolio allocation</strong> to the goal you specified.
         </p>
         <p>
-          Click <strong>Edit</strong> on each asset to assign it to asset classes.
+          You can also assign multiple classes to a single asset, good for Target Date funds for example!
+        </p>
+        <p>
+          Click <strong>Edit</strong> on each asset to assign its asset classes.
         </p>
       </div>
     </OnboardingModal>

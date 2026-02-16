@@ -358,15 +358,31 @@ export default {
     >
       <div class="space-y-4 text-gray-600">
         <p>
-          <strong>Welcome to Cheapskate!</strong> Let's set up your portfolio tracking in three simple steps.
+          <strong>Welcome to Cheapskate!</strong>
         </p>
         <p>
-          First, define your <strong>asset classes</strong> — these are categories like stocks, bonds,
-          and cash that help you track your portfolio allocation.
+          Let's set up your portfolio tracking in three simple steps.
         </p>
         <p>
-          Set a target percentage for each class. Your goals should add up to <strong>100%</strong>.
+          First, create some <strong>asset classes</strong> (like stocks, bonds, and cash), then set a <strong>goal percentage</strong> for each class, totaling to 100%.
         </p>
+        <p>
+          For example, a <a href="https://www.bogleheads.org/wiki/Three-fund_portfolio" class="text-blue-600 underline">Boglehead-style</a> composition might look like this:
+        </p>
+        <table class="mx-auto text-sm mt-5 mb-3">
+          <tr class="border-b border-gray-200">
+            <td class="py-1 pr-12">US Stocks</td>
+            <td class="py-1 text-right font-bold">60%</td>
+          </tr>
+          <tr class="border-b border-gray-200">
+            <td class="py-1 pr-12">International Stocks</td>
+            <td class="py-1 text-right font-bold">20%</td>
+          </tr>
+          <tr>
+            <td class="py-1 pr-12">Bonds</td>
+            <td class="py-1 text-right font-bold">20%</td>
+          </tr>
+        </table>
       </div>
     </OnboardingModal>
   </AppLayout>

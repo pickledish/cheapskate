@@ -84,7 +84,7 @@ export default {
           </span>
         </label>
         <p class="mt-1 text-xs text-gray-500">
-          Uncheck for accounts you don't want included in portfolio rebalancing calculations (e.g., illiquid assets, HSAs you're not actively managing).
+          Uncheck for accounts you don't want included in the portfolio rebalancing dashboard (this is for illiquid assets, like home equity).
         </p>
       </div>
     </div>
