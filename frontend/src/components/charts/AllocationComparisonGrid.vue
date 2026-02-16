@@ -17,6 +17,15 @@ export default {
       required: true
     }
   },
+  computed: {
+    globalMax() {
+      let max = 0
+      for (const alloc of this.allocations) {
+        max = Math.max(max, alloc.current * this.totalValue, alloc.goal * this.totalValue)
+      }
+      return max
+    }
+  },
   methods: {
     getColor(colorName) {
       return getHexForColor(colorName)
@@ -60,7 +69,7 @@ export default {
         <div
           class="w-8 rounded-t transition-all"
           :style="{
-            height: barHeightPx(currentDollars(alloc), Math.max(currentDollars(alloc), goalDollars(alloc))),
+            height: barHeightPx(currentDollars(alloc), globalMax),
             backgroundColor: getColor(alloc.color)
           }"
         ></div>
@@ -69,7 +78,7 @@ export default {
         <div
           class="w-8 rounded-t transition-all"
           :style="{
-            height: barHeightPx(goalDollars(alloc), Math.max(currentDollars(alloc), goalDollars(alloc))),
+            height: barHeightPx(goalDollars(alloc), globalMax),
             backgroundColor: getColor(alloc.color),
             opacity: 0.4
           }"
