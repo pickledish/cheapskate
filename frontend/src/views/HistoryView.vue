@@ -163,7 +163,7 @@ export default {
         const account = accountMap[evt.accountId]
         const allZero = evt.holdingUpdates.length > 0 && evt.holdingUpdates.every(h => Number(h.quantity) === 0)
         if (allZero && account?.archived_at === evt.effectiveDate) {
-          evt.type = 'archive'
+          evt.type = 'closed'
         }
       }
 
@@ -201,8 +201,8 @@ export default {
       return priceUpdate ? priceUpdate.price : null
     },
 
-    async undoArchive(event) {
-      if (!confirm(`Unarchive "${event.accountName}"? This will restore the account and undo the zeroed-out holdings.`)) return
+    async undoClose(event) {
+      if (!confirm(`Undo close of "${event.accountName}"? This will restore the account and undo the zeroed-out holdings.`)) return
       try {
         const { error: stmtError } = await supabase.from('statements').delete().eq('id', event.statementId)
         if (stmtError) throw stmtError
@@ -280,7 +280,7 @@ export default {
           class="bg-white rounded-lg shadow p-4"
           :class="{
             'border-l-4 border-blue-500': event.type === 'statement',
-            'border-l-4 border-gray-400': event.type === 'archive',
+            'border-l-4 border-gray-400': event.type === 'closed',
             'border-l-4 border-green-500': event.type === 'manual_price',
             'border-l-4 border-purple-500': event.type === 'manual_holding'
           }"
@@ -320,21 +320,21 @@ export default {
             </div>
           </template>
 
-          <!-- Account Archived -->
-          <template v-else-if="event.type === 'archive'">
+          <!-- Account Closed -->
+          <template v-else-if="event.type === 'closed'">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <ArchiveBoxIcon class="h-5 w-5 text-gray-400" />
-                <span class="font-medium text-gray-900">Account Archived</span>
+                <span class="font-medium text-gray-900">Account Marked as Closed</span>
                 <span class="text-gray-400">-</span>
                 <span class="font-medium text-gray-900">{{ event.accountName }}</span>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
                 <button
-                  @click="undoArchive(event)"
+                  @click="undoClose(event)"
                   class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
-                  title="Undo archive"
+                  title="Undo close"
                 >
                   <TrashIcon class="w-5 h-5" />
                 </button>

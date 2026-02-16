@@ -252,8 +252,8 @@ export default {
       }).format(value)
     },
 
-    async archiveAccount(account) {
-      if (!confirm(`Archive "${account.name}"? All holdings will be set to zero and the account will be hidden from this view. Historical data is preserved. You can undo this from the History page.`)) {
+    async closeAccount(account) {
+      if (!confirm(`Mark "${account.name}" as closed? All holdings will be set to zero and the account will be hidden from this view. Historical data is preserved. You can undo this from the History page.`)) {
         return
       }
 
@@ -420,9 +420,9 @@ export default {
                 <MenuItem v-slot="{ active }">
                   <button
                     v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
-                    v-on:click="archiveAccount(account)"
+                    v-on:click="closeAccount(account)"
                   >
-                    Archive
+                    Mark as Closed
                   </button>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
