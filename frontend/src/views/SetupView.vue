@@ -19,6 +19,13 @@ export default {
       return true
     }
   },
+  async mounted() {
+    // Pre-fill name from OAuth provider profile (e.g. Google sign-in)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.user_metadata?.full_name) {
+      this.name = user.user_metadata.full_name
+    }
+  },
   methods: {
     async submit() {
       if (!this.canSubmit) return

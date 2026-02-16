@@ -8,6 +8,19 @@
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      // Extract OAuth tokens from hash before Vue Router normalizes it.
+      // Hash routing and Supabase OAuth both use the URL fragment, so we
+      // stash the tokens in sessionStorage and clean the hash first.
+      if (location.hash.match(/[#/]access_token=/)) {
+        var p = new URLSearchParams(location.hash.replace(/^#\/?/, ''))
+        sessionStorage.setItem('oauth_tokens', JSON.stringify({
+          access_token: p.get('access_token'),
+          refresh_token: p.get('refresh_token')
+        }))
+        history.replaceState(null, '', location.pathname + '#/')
+      }
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
