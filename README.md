@@ -5,6 +5,7 @@ Track your net worth and portfolio composition across brokerage accounts, retire
 ## External Services Required
 
 - **Supabase** - Database, auth, and edge functions ([supabase.com](https://supabase.com))
+- **Google Cloud** - OAuth for "Sign in with Google" ([console.cloud.google.com](https://console.cloud.google.com))
 - **Google Gemini** - PDF statement parsing via [AI Studio](https://aistudio.google.com/apikey) or [Vertex AI](https://console.cloud.google.com/vertex-ai)
 - **Bunny CDN** - Frontend hosting ([bunny.net](https://bunny.net)) — or any static host
 
@@ -45,7 +46,31 @@ supabase functions serve --env-file ./supabase/.env
 
 **Vertex AI** (optional): Get an API key from [Google Cloud Console](https://console.cloud.google.com/apis/credentials), set `GOOGLE_API_KEY` and `GOOGLE_GENAI_USE_VERTEXAI=true`.
 
-### 3. Start Frontend
+### 3. Set Up Google Sign-In
+
+The app uses Google OAuth for sign-in. You need to create an OAuth client in Google Cloud Console and register it with Supabase.
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com) and create a project (or use an existing one).
+
+2. Navigate to **Google Auth Platform → Branding** and fill in your app name and contact email.
+
+3. Under **Audience**, select **External** and save. The app starts in testing mode — you can add test users manually, or publish to allow any Google account. Only `email` and `profile` scopes are needed, which are non-sensitive and don't require Google's verification process.
+
+4. Go to **Clients** → **Create Client** → **Web application**. Add:
+   - **Authorized JavaScript origins:**
+     - `http://127.0.0.1:54321` (local Supabase)
+     - Your production Supabase URL (e.g. `https://xxxxx.supabase.co`)
+   - **Authorized redirect URIs:**
+     - `http://127.0.0.1:54321/auth/v1/callback` (local)
+     - `https://xxxxx.supabase.co/auth/v1/callback` (production)
+
+5. Copy the **Client ID** and **Client Secret**.
+
+6. In the Supabase Dashboard, go to **Authentication → Providers → Google**, toggle it on, and paste the Client ID and Secret.
+
+7. Still in Supabase **Authentication → URL Configuration**, add your frontend URLs to the **Redirect URLs** allowlist (e.g. `http://localhost:5173/**` for local dev, `https://yourdomain.com/**` for production).
+
+### 4. Start Frontend
 
 ```bash
 cd frontend
