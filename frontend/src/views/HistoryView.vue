@@ -3,14 +3,14 @@ import AppLayout from '@/components/AppLayout.vue'
 import { supabase } from '@/lib/supabase'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon } from '@heroicons/vue/24/outline'
+import { DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon } from '@heroicons/vue/24/outline'
 import { TrashIcon } from '@heroicons/vue/24/solid'
 
 dayjs.extend(relativeTime)
 
 export default {
   name: 'HistoryView',
-  components: { AppLayout, DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, TrashIcon },
+  components: { AppLayout, DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon, TrashIcon },
   data() {
     return {
       events: [],
@@ -38,7 +38,7 @@ export default {
             .select('id, account_id, statement_date, created_at')
             .order('created_at', { ascending: false }),
           supabase.from('accounts')
-            .select('id, name'),
+            .select('id, name, archived_at'),
           supabase.from('assets')
             .select('id, ticker, name'),
           supabase.from('profiles')
@@ -69,7 +69,7 @@ export default {
 
     processEvents(prices, holdings, statements, accounts, assets, profiles) {
       // Build lookup maps
-      const accountMap = Object.fromEntries(accounts.map(a => [a.id, a.name]))
+      const accountMap = Object.fromEntries(accounts.map(a => [a.id, { name: a.name, archived_at: a.archived_at }]))
       const assetMap = Object.fromEntries(assets.map(a => [a.id, { ticker: a.ticker, name: a.name }]))
       const statementMap = Object.fromEntries(statements.map(s => [s.id, { accountId: s.account_id, effectiveDate: s.statement_date, createdAt: s.created_at }]))
       const profileMap = Object.fromEntries(profiles.map(p => [p.id, p.name]))
@@ -88,9 +88,10 @@ export default {
             statementEvents[p.statement_id] = {
               type: 'statement',
               statementId: p.statement_id,
+              accountId: stmt?.accountId,
               createdAt: stmt?.createdAt || p.created_at,
               effectiveDate: stmt?.effectiveDate || p.price_date,
-              accountName: accountMap[stmt?.accountId] || 'Unknown',
+              accountName: accountMap[stmt?.accountId]?.name || 'Unknown',
               creatorName: p.created_by ? profileMap[p.created_by] : null,
               priceUpdates: [],
               holdingUpdates: []
@@ -126,9 +127,10 @@ export default {
             statementEvents[h.statement_id] = {
               type: 'statement',
               statementId: h.statement_id,
+              accountId: stmt?.accountId,
               createdAt: stmt?.createdAt || h.created_at,
               effectiveDate: stmt?.effectiveDate || h.holding_date,
-              accountName: accountMap[stmt?.accountId] || 'Unknown',
+              accountName: accountMap[stmt?.accountId]?.name || 'Unknown',
               creatorName: h.created_by ? profileMap[h.created_by] : null,
               priceUpdates: [],
               holdingUpdates: []
@@ -138,7 +140,7 @@ export default {
             assetName: asset.ticker || asset.name || 'Unknown',
             quantity: h.quantity,
             effectiveDate: h.holding_date,
-            accountName: accountMap[h.account_id] || 'Unknown'
+            accountName: accountMap[h.account_id]?.name || 'Unknown'
           })
         } else {
           // Manual holdings update
@@ -150,9 +152,18 @@ export default {
             effectiveDate: h.holding_date,
             assetName: asset.ticker || asset.name || 'Unknown',
             quantity: h.quantity,
-            accountName: accountMap[h.account_id] || 'Unknown',
+            accountName: accountMap[h.account_id]?.name || 'Unknown',
             creatorName: h.created_by ? profileMap[h.created_by] : null
           })
+        }
+      }
+
+      // Detect archive events: all holdings zeroed + account archived on same date
+      for (const evt of Object.values(statementEvents)) {
+        const account = accountMap[evt.accountId]
+        const allZero = evt.holdingUpdates.length > 0 && evt.holdingUpdates.every(h => Number(h.quantity) === 0)
+        if (allZero && account?.archived_at === evt.effectiveDate) {
+          evt.type = 'archive'
         }
       }
 
@@ -256,6 +267,7 @@ export default {
           class="bg-white rounded-lg shadow p-4"
           :class="{
             'border-l-4 border-blue-500': event.type === 'statement',
+            'border-l-4 border-gray-400': event.type === 'archive',
             'border-l-4 border-green-500': event.type === 'manual_price',
             'border-l-4 border-purple-500': event.type === 'manual_holding'
           }"
@@ -292,6 +304,25 @@ export default {
                   {{ price.assetName }} is now {{ formatCurrency(price.price) }} per share
                 </li>
               </ul>
+            </div>
+          </template>
+
+          <!-- Account Archived -->
+          <template v-else-if="event.type === 'archive'">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <ArchiveBoxIcon class="h-5 w-5 text-gray-400" />
+                <span class="font-medium text-gray-900">Account Archived</span>
+                <span class="text-gray-400">-</span>
+                <span class="font-medium text-gray-900">{{ event.accountName }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
+              </div>
+            </div>
+            <hr class="my-3 border-gray-200" />
+            <div class="text-sm text-gray-600">
+              All holdings set to zero on {{ formatEffectiveDate(event.effectiveDate) }}.
             </div>
           </template>
 

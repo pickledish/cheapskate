@@ -56,10 +56,9 @@ export default {
   computed: {
     filteredAccounts() {
       const query = this.searchQuery.toLowerCase().trim()
-      if (!query) return this.accounts
-
       return this.accounts.filter(account => {
-        // Search in name
+        if (account.archived_at) return false
+        if (!query) return true
         return account.name.toLowerCase().includes(query)
       })
     },
@@ -253,6 +252,46 @@ export default {
       }).format(value)
     },
 
+    async archiveAccount(account) {
+      if (!confirm(`Archive "${account.name}"? All holdings will be set to zero and the account will be hidden from this view. Historical data is preserved, but you won't be able to see or update this account until we add an unarchive option.`)) {
+        return
+      }
+
+      try {
+        const holdings = this.holdingsByAccount[account.id] || []
+        const today = new Date().toISOString().split('T')[0]
+
+        if (holdings.length > 0) {
+          const { data: { session } } = await supabase.auth.getSession()
+
+          // Create a statement to group the zero-out holdings
+          const { data: statement, error: stmtError } = await supabase
+            .from('statements')
+            .insert({ account_id: account.id, statement_date: today })
+            .select('id')
+            .single()
+          if (stmtError) throw stmtError
+
+          const zeroRows = holdings.map(h => ({
+            asset_id: h.asset_id,
+            account_id: account.id,
+            holding_date: today,
+            quantity: 0,
+            statement_id: statement.id,
+            created_by: session.user.id
+          }))
+          const { error: holdingsError } = await supabase.from('asset_holdings').upsert(zeroRows)
+          if (holdingsError) throw holdingsError
+        }
+
+        const { error } = await supabase.from('accounts').update({ archived_at: today }).eq('id', account.id)
+        if (error) throw error
+        await this.loadData()
+      } catch (err) {
+        this.error = err.message
+      }
+    },
+
     async deleteAccount(account) {
       if (!confirm(`Delete "${account.name}"? This will also delete all statements for this account.`)) {
         return
@@ -376,6 +415,14 @@ export default {
                     v-on:click="openEditAccountModal(account)"
                   >
                     Edit
+                  </button>
+                </MenuItem>
+                <MenuItem v-slot="{ active }">
+                  <button
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                    v-on:click="archiveAccount(account)"
+                  >
+                    Archive
                   </button>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
