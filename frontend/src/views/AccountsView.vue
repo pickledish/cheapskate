@@ -253,7 +253,7 @@ export default {
     },
 
     async archiveAccount(account) {
-      if (!confirm(`Archive "${account.name}"? All holdings will be set to zero and the account will be hidden from this view. Historical data is preserved, but you won't be able to see or update this account until we add an unarchive option.`)) {
+      if (!confirm(`Archive "${account.name}"? All holdings will be set to zero and the account will be hidden from this view. Historical data is preserved. You can undo this from the History page.`)) {
         return
       }
 

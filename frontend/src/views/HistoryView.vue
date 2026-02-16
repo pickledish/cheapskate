@@ -201,6 +201,19 @@ export default {
       return priceUpdate ? priceUpdate.price : null
     },
 
+    async undoArchive(event) {
+      if (!confirm(`Unarchive "${event.accountName}"? This will restore the account and undo the zeroed-out holdings.`)) return
+      try {
+        const { error: stmtError } = await supabase.from('statements').delete().eq('id', event.statementId)
+        if (stmtError) throw stmtError
+        const { error: accountError } = await supabase.from('accounts').update({ archived_at: null }).eq('id', event.accountId)
+        if (accountError) throw accountError
+        await this.loadData()
+      } catch (err) {
+        this.error = err.message
+      }
+    },
+
     async deleteStatement(statementId) {
       if (!confirm('Undo this statement upload?')) return
       try {
@@ -318,6 +331,13 @@ export default {
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
+                <button
+                  @click="undoArchive(event)"
+                  class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
+                  title="Undo archive"
+                >
+                  <TrashIcon class="w-5 h-5" />
+                </button>
               </div>
             </div>
             <hr class="my-3 border-gray-200" />
