@@ -1,6 +1,7 @@
 <script>
 import BaseModal from './BaseModal.vue'
 import { supabase } from '@/lib/supabase'
+import { updateProfile } from '@/lib/data'
 
 export default {
   name: 'EditNameModal',
@@ -36,12 +37,7 @@ export default {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Not authenticated')
 
-        const { error } = await supabase
-          .from('profiles')
-          .update({ name: this.name.trim() })
-          .eq('id', user.id)
-
-        if (error) throw error
+        await updateProfile(user.id, { name: this.name.trim() })
 
         this.$emit('updated')
       } catch (err) {

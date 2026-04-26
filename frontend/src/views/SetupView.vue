@@ -1,5 +1,6 @@
 <script>
 import { supabase } from '@/lib/supabase'
+import { insertFamily, insertProfile } from '@/lib/data'
 
 export default {
   name: 'SetupView',
@@ -42,12 +43,7 @@ export default {
         if (this.mode === 'create') {
           // Generate UUID client-side (we can't SELECT it back due to RLS)
           familyId = crypto.randomUUID()
-
-          const { error: insertError } = await supabase
-            .from('families')
-            .insert({ id: familyId })
-
-          if (insertError) throw insertError
+          await insertFamily(familyId)
         } else {
           // Validate UUID format
           const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -77,15 +73,11 @@ export default {
         await supabase.auth.refreshSession()
 
         // Create profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            family_id: familyId,
-            name: this.name.trim()
-          })
-
-        if (profileError) throw profileError
+        await insertProfile({
+          id: user.id,
+          family_id: familyId,
+          name: this.name.trim()
+        })
 
         // Redirect: new families start onboarding, joining families go straight to dashboard
         this.$router.push(this.mode === 'create' ? '/goals' : '/')

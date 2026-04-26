@@ -1,6 +1,6 @@
 <script>
 import BaseModal from './BaseModal.vue'
-import { supabase } from '@/lib/supabase'
+import { updateAsset, deleteAssetAllocationsByAsset, insertAssetAllocation } from '@/lib/data'
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 import { TrashIcon } from '@heroicons/vue/24/solid'
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
@@ -103,30 +103,21 @@ export default {
 
       try {
         // Update asset
-        const { error } = await supabase.from('assets').update({
+        await updateAsset(this.asset.id, {
           name: this.name.trim(),
           ticker: this.ticker.trim() || null
-        }).eq('id', this.asset.id)
-
-        if (error) throw error
+        })
 
         // Delete old allocations
-        await supabase
-          .from('asset_allocations')
-          .delete()
-          .eq('asset_id', this.asset.id)
+        await deleteAssetAllocationsByAsset(this.asset.id)
 
         // Insert new allocations (only valid ones)
-        if (validAllocations.length > 0) {
-          const { error: allocError } = await supabase
-            .from('asset_allocations')
-            .insert(validAllocations.map(a => ({
-              asset_id: this.asset.id,
-              asset_class_id: a.asset_class_id,
-              percentage: a.percentage / 100
-            })))
-
-          if (allocError) throw allocError
+        for (const a of validAllocations) {
+          await insertAssetAllocation({
+            asset_id: this.asset.id,
+            asset_class_id: a.asset_class_id,
+            percentage: a.percentage / 100
+          })
         }
 
         this.$emit('updated')

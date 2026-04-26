@@ -6,6 +6,7 @@ import UpdatePriceModal from '@/components/modals/UpdatePriceModal.vue'
 import OnboardingModal from '@/components/modals/OnboardingModal.vue'
 import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import { supabase } from '@/lib/supabase'
+import { listAssets, listAssetPrices, listAssetAllocationsWithClass, listAssetClasses, deleteAsset } from '@/lib/data'
 import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -87,22 +88,17 @@ export default {
       this.error = null
       try {
         // Load all data in parallel
-        const [assetsResult, pricesResult, allocationsResult, classesResult] = await Promise.all([
-          supabase.from('assets').select('*').order('name'),
-          supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: false }),
-          supabase.from('asset_allocations').select('asset_id, asset_class_id, percentage, asset_classes(name, color, sort_order)'),
-          supabase.from('asset_classes').select('id, name').order('name')
+        const [assetsData, pricesData, allocationsData, classesData] = await Promise.all([
+          listAssets(),
+          listAssetPrices('desc'),
+          listAssetAllocationsWithClass(),
+          listAssetClasses()
         ])
 
-        if (assetsResult.error) throw assetsResult.error
-        if (pricesResult.error) throw pricesResult.error
-        if (allocationsResult.error) throw allocationsResult.error
-        if (classesResult.error) throw classesResult.error
-
-        const assetsData = assetsResult.data
-        const pricesData = pricesResult.data
-        const allocationsData = allocationsResult.data
-        this.assetClasses = classesResult.data || []
+        // Sort by name for dropdown display (original behavior)
+        this.assetClasses = classesData
+          .map(c => ({ id: c.id, name: c.name }))
+          .sort((a, b) => a.name.localeCompare(b.name))
 
         // Build map of asset_id -> { price, date }
         const latestPriceByAsset = {}
@@ -208,14 +204,13 @@ export default {
       return getColorClasses(colorName)
     },
 
-    async deleteAsset(asset) {
+    async doDeleteAsset(asset) {
       if (!confirm(`Delete "${asset.name}"? This will also delete all price history and holdings for this asset.`)) {
         return
       }
 
       try {
-        const { error } = await supabase.from('assets').delete().eq('id', asset.id)
-        if (error) throw error
+        await deleteAsset(asset.id)
         await this.loadData()
       } catch (err) {
         this.error = err.message
@@ -332,7 +327,7 @@ export default {
                       <MenuItem v-slot="{ active }">
                         <button
                           v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
-                          v-on:click="deleteAsset(asset)"
+                          v-on:click="doDeleteAsset(asset)"
                         >
                           Delete
                         </button>

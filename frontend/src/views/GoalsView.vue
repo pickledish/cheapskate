@@ -7,6 +7,7 @@ import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import GoalAllocationChart from '@/components/charts/GoalAllocationChart.vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { supabase } from '@/lib/supabase'
+import { listAssetClasses, listAssetAllocations, updateSortOrder, deleteAssetClass } from '@/lib/data'
 import { getColorClasses } from '@/lib/tagColors'
 import { Bars3Icon } from '@heroicons/vue/24/solid'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
@@ -73,19 +74,16 @@ export default {
       this.loading = true
       this.error = null
       try {
-        const [classesResult, allocationsResult] = await Promise.all([
-          supabase.from('asset_classes').select('*').order('sort_order'),
-          supabase.from('asset_allocations').select('asset_id, asset_class_id')
+        const [classes, allocations] = await Promise.all([
+          listAssetClasses(),
+          listAssetAllocations()
         ])
 
-        if (classesResult.error) throw classesResult.error
-        if (allocationsResult.error) throw allocationsResult.error
-
-        this.assetClasses = classesResult.data
+        this.assetClasses = classes
 
         // Count unique assets per class
         const countByClass = {}
-        for (const alloc of allocationsResult.data) {
+        for (const alloc of allocations) {
           if (!countByClass[alloc.asset_class_id]) {
             countByClass[alloc.asset_class_id] = new Set()
           }
@@ -114,14 +112,13 @@ export default {
       this.selectedAssetClass = null
     },
 
-    async deleteAssetClass(assetClass) {
+    async doDeleteAssetClass(assetClass) {
       if (!confirm(`Delete "${assetClass.name}"? This may affect assets using this class.`)) {
         return
       }
 
       try {
-        const { error } = await supabase.from('asset_classes').delete().eq('id', assetClass.id)
-        if (error) throw error
+        await deleteAssetClass(assetClass.id)
         await this.loadData()
       } catch (err) {
         this.error = err.message
@@ -145,18 +142,8 @@ export default {
     async onReorder() {
       // Update sort_order for all items based on new array positions
       try {
-        const updates = this.assetClasses.map((ac, index) => ({
-          id: ac.id,
-          sort_order: index
-        }))
-
-        for (const update of updates) {
-          const { error } = await supabase
-            .from('asset_classes')
-            .update({ sort_order: update.sort_order })
-            .eq('id', update.id)
-
-          if (error) throw error
+        for (let index = 0; index < this.assetClasses.length; index++) {
+          await updateSortOrder(this.assetClasses[index].id, index)
         }
       } catch (err) {
         this.error = err.message
@@ -274,7 +261,7 @@ export default {
                     <MenuItem v-slot="{ active }">
                       <button
                         v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
-                        v-on:click="deleteAssetClass(assetClass)"
+                        v-on:click="doDeleteAssetClass(assetClass)"
                       >
                         Delete
                       </button>

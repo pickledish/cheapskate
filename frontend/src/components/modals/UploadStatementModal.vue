@@ -2,6 +2,14 @@
 import BaseModal from './BaseModal.vue'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 import { supabase } from '@/lib/supabase'
+import {
+  insertStatement,
+  findAssetByTickerOrName,
+  insertAsset,
+  upsertAssetPrice,
+  upsertAssetHolding,
+  deleteStatement
+} from '@/lib/data'
 
 export default {
   name: 'UploadStatementModal',
@@ -159,50 +167,37 @@ export default {
       this.loading = true
       this.error = null
 
+      let statement = null
+
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Not authenticated')
 
         // 1. Create the statement record
-        const { data: statement, error: statementError } = await supabase
-          .from('statements')
-          .insert({
-            account_id: this.account.id,
-            statement_date: this.statementDate
-          })
-          .select()
-          .single()
-
-        if (statementError) throw statementError
+        statement = await insertStatement({
+          account_id: this.account.id,
+          statement_date: this.statementDate
+        })
 
         // 2. Process each holding
         for (const holding of this.holdings) {
           // Look up asset by ticker=name OR name=name
-          let { data: asset } = await supabase
-            .from('assets')
-            .select('id')
-            .or(`ticker.eq.${holding.name},name.eq.${holding.name}`)
-            .single()
+          let asset = await findAssetByTickerOrName(holding.name)
 
           // If not found, auto-create
           if (!asset) {
-            const { data: newAsset, error: createError } = await supabase
-              .from('assets')
-              .insert({
+            try {
+              asset = await insertAsset({
                 family_id: user.user_metadata.family_id,
                 created_by: user.id,
                 ticker: holding.name,
                 name: holding.name
               })
-              .select()
-              .single()
-
-            if (createError) {
+            } catch (createError) {
               // Rollback: delete the statement
-              await supabase.from('statements').delete().eq('id', statement.id)
+              await deleteStatement(statement.id)
               throw createError
             }
-            asset = newAsset
           }
 
           // Compute price (null for sold positions)
@@ -210,40 +205,32 @@ export default {
 
           // Insert/update price (skip for sold positions where price is null)
           if (price != null) {
-            const { error: priceError } = await supabase
-              .from('asset_prices')
-              .upsert({
+            try {
+              await upsertAssetPrice({
                 asset_id: asset.id,
                 price_date: this.statementDate,
                 price: price,
                 statement_id: statement.id,
                 created_by: user.id
-              }, {
-                onConflict: 'asset_id,price_date'
               })
-
-            if (priceError) {
-              await supabase.from('statements').delete().eq('id', statement.id)
+            } catch (priceError) {
+              await deleteStatement(statement.id)
               throw priceError
             }
           }
 
           // Insert/update holding
-          const { error: holdingError } = await supabase
-            .from('asset_holdings')
-            .upsert({
+          try {
+            await upsertAssetHolding({
               asset_id: asset.id,
               account_id: this.account.id,
               holding_date: this.statementDate,
               quantity: holding.quantity,
               statement_id: statement.id,
               created_by: user.id
-            }, {
-              onConflict: 'asset_id,account_id,holding_date'
             })
-
-          if (holdingError) {
-            await supabase.from('statements').delete().eq('id', statement.id)
+          } catch (holdingError) {
+            await deleteStatement(statement.id)
             throw holdingError
           }
         }

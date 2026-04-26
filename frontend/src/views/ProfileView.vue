@@ -4,6 +4,7 @@ import EditNameModal from '@/components/modals/EditNameModal.vue'
 import ChangeFamilyModal from '@/components/modals/ChangeFamilyModal.vue'
 import DeleteAccountModal from '@/components/modals/DeleteAccountModal.vue'
 import { supabase } from '@/lib/supabase'
+import { getProfile, listProfilesByFamily } from '@/lib/data'
 import { ClipboardIcon } from '@heroicons/vue/24/outline'
 import dayjs from 'dayjs'
 
@@ -53,24 +54,13 @@ export default {
         this.familyId = user.user_metadata?.family_id
 
         // Load profile and family members in parallel
-        const [profileResult, membersResult] = await Promise.all([
-          supabase
-            .from('profiles')
-            .select('name')
-            .eq('id', user.id)
-            .single(),
-          supabase
-            .from('profiles')
-            .select('id, name, created_at')
-            .eq('family_id', this.familyId)
-            .order('created_at')
+        const [profile, members] = await Promise.all([
+          getProfile(user.id),
+          listProfilesByFamily(this.familyId)
         ])
 
-        if (profileResult.error) throw profileResult.error
-        if (membersResult.error) throw membersResult.error
-
-        this.userName = profileResult.data?.name || 'Unknown'
-        this.familyMembers = membersResult.data || []
+        this.userName = profile?.name || 'Unknown'
+        this.familyMembers = members
 
       } catch (err) {
         this.error = err.message

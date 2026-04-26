@@ -1,6 +1,17 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
-import { supabase } from '@/lib/supabase'
+import {
+  listAssetPrices,
+  listAssetHoldings,
+  listStatements,
+  listAccounts,
+  listAssets,
+  listProfiles,
+  deleteStatement,
+  deleteAssetPrice,
+  deleteAssetHolding,
+  updateAccount
+} from '@/lib/data'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon } from '@heroicons/vue/24/outline'
@@ -27,39 +38,16 @@ export default {
       this.error = null
 
       try {
-        const [pricesResult, holdingsResult, statementsResult, accountsResult, assetsResult, profilesResult] = await Promise.all([
-          supabase.from('asset_prices')
-            .select('asset_id, price_date, price, statement_id, created_by, created_at')
-            .order('created_at', { ascending: false }),
-          supabase.from('asset_holdings')
-            .select('asset_id, account_id, holding_date, quantity, statement_id, created_by, created_at')
-            .order('created_at', { ascending: false }),
-          supabase.from('statements')
-            .select('id, account_id, statement_date, created_at')
-            .order('created_at', { ascending: false }),
-          supabase.from('accounts')
-            .select('id, name, archived_at'),
-          supabase.from('assets')
-            .select('id, ticker, name'),
-          supabase.from('profiles')
-            .select('id, name')
+        const [prices, holdings, statements, accounts, assets, profiles] = await Promise.all([
+          listAssetPrices('desc'),
+          listAssetHoldings('desc'),
+          listStatements(),
+          listAccounts(),
+          listAssets(),
+          listProfiles()
         ])
 
-        if (pricesResult.error) throw pricesResult.error
-        if (holdingsResult.error) throw holdingsResult.error
-        if (statementsResult.error) throw statementsResult.error
-        if (accountsResult.error) throw accountsResult.error
-        if (assetsResult.error) throw assetsResult.error
-        if (profilesResult.error) throw profilesResult.error
-
-        this.processEvents(
-          pricesResult.data || [],
-          holdingsResult.data || [],
-          statementsResult.data || [],
-          accountsResult.data || [],
-          assetsResult.data || [],
-          profilesResult.data || []
-        )
+        this.processEvents(prices, holdings, statements, accounts, assets, profiles)
       } catch (err) {
         this.error = err.message
       } finally {
@@ -204,48 +192,38 @@ export default {
     async undoClose(event) {
       if (!confirm(`Undo close of "${event.accountName}"? This will restore the account and undo the zeroed-out holdings.`)) return
       try {
-        const { error: stmtError } = await supabase.from('statements').delete().eq('id', event.statementId)
-        if (stmtError) throw stmtError
-        const { error: accountError } = await supabase.from('accounts').update({ archived_at: null }).eq('id', event.accountId)
-        if (accountError) throw accountError
+        await deleteStatement(event.statementId)
+        await updateAccount(event.accountId, { archived_at: null })
         await this.loadData()
       } catch (err) {
         this.error = err.message
       }
     },
 
-    async deleteStatement(statementId) {
+    async doDeleteStatement(statementId) {
       if (!confirm('Undo this statement upload?')) return
       try {
-        const { error } = await supabase.from('statements').delete().eq('id', statementId)
-        if (error) throw error
+        await deleteStatement(statementId)
         await this.loadData()
       } catch (err) {
         this.error = err.message
       }
     },
 
-    async deletePrice(assetId, priceDate) {
+    async doDeletePrice(assetId, priceDate) {
       if (!confirm('Undo this price update?')) return
       try {
-        const { error } = await supabase.from('asset_prices').delete()
-          .eq('asset_id', assetId)
-          .eq('price_date', priceDate)
-        if (error) throw error
+        await deleteAssetPrice(assetId, priceDate)
         await this.loadData()
       } catch (err) {
         this.error = err.message
       }
     },
 
-    async deleteHolding(assetId, accountId, holdingDate) {
+    async doDeleteHolding(assetId, accountId, holdingDate) {
       if (!confirm('Undo this shares update?')) return
       try {
-        const { error } = await supabase.from('asset_holdings').delete()
-          .eq('asset_id', assetId)
-          .eq('account_id', accountId)
-          .eq('holding_date', holdingDate)
-        if (error) throw error
+        await deleteAssetHolding(assetId, accountId, holdingDate)
         await this.loadData()
       } catch (err) {
         this.error = err.message
@@ -297,7 +275,7 @@ export default {
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
                 <button
-                  @click="deleteStatement(event.statementId)"
+                  @click="doDeleteStatement(event.statementId)"
                   class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
                   title="Undo statement upload"
                 >
@@ -356,7 +334,7 @@ export default {
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
                 <button
-                  @click="deletePrice(event.assetId, event.effectiveDate)"
+                  @click="doDeletePrice(event.assetId, event.effectiveDate)"
                   class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
                   title="Undo price update"
                 >
@@ -385,7 +363,7 @@ export default {
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
                 <button
-                  @click="deleteHolding(event.assetId, event.accountId, event.effectiveDate)"
+                  @click="doDeleteHolding(event.assetId, event.accountId, event.effectiveDate)"
                   class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
                   title="Undo shares update"
                 >

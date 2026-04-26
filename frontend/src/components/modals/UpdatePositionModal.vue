@@ -1,6 +1,7 @@
 <script>
 import BaseModal from './BaseModal.vue'
 import { supabase } from '@/lib/supabase'
+import { upsertAssetHolding } from '@/lib/data'
 import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/vue'
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
 
@@ -67,18 +68,14 @@ export default {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Not authenticated')
 
-        const { error } = await supabase.from('asset_holdings').upsert({
+        await upsertAssetHolding({
           asset_id: this.selectedAsset.id,
           account_id: this.account.id,
           holding_date: this.date,
           quantity: quantityNum,
           statement_id: null,  // manual update
           created_by: user.id
-        }, {
-          onConflict: 'asset_id,account_id,holding_date'
         })
-
-        if (error) throw error
 
         this.$emit('updated')
       } catch (err) {

@@ -2,7 +2,7 @@
 import AppLayout from '@/components/AppLayout.vue'
 import AllocationHistoryChart from '@/components/charts/AllocationHistoryChart.vue'
 import AllocationComparisonGrid from '@/components/charts/AllocationComparisonGrid.vue'
-import { supabase } from '@/lib/supabase'
+import { listAssetHoldings, listAssetPrices, listAccounts, listAssetClasses, listAssetAllocations } from '@/lib/data'
 
 export default {
   name: 'RebalancingView',
@@ -32,25 +32,19 @@ export default {
       this.error = null
 
       try {
-        const [holdingsResult, pricesResult, accountsResult, assetClassesResult, allocationsResult] = await Promise.all([
-          supabase.from('asset_holdings').select('asset_id, account_id, holding_date, quantity').order('holding_date', { ascending: true }),
-          supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: true }),
-          supabase.from('accounts').select('id, name, rebalancing'),
-          supabase.from('asset_classes').select('id, name, color, sort_order, goal').order('sort_order'),
-          supabase.from('asset_allocations').select('asset_id, asset_class_id, percentage')
+        const [holdings, prices, accounts, assetClasses, allocations] = await Promise.all([
+          listAssetHoldings('asc'),
+          listAssetPrices('asc'),
+          listAccounts(),
+          listAssetClasses(),
+          listAssetAllocations()
         ])
 
-        if (holdingsResult.error) throw holdingsResult.error
-        if (pricesResult.error) throw pricesResult.error
-        if (accountsResult.error) throw accountsResult.error
-        if (assetClassesResult.error) throw assetClassesResult.error
-        if (allocationsResult.error) throw allocationsResult.error
-
-        this.holdingsData = holdingsResult.data || []
-        this.pricesData = pricesResult.data || []
-        this.accountsData = accountsResult.data || []
-        this.assetClassesData = assetClassesResult.data || []
-        this.allocationsData = allocationsResult.data || []
+        this.holdingsData = holdings
+        this.pricesData = prices
+        this.accountsData = accounts
+        this.assetClassesData = assetClasses
+        this.allocationsData = allocations
 
         this.computeChartData()
       } catch (err) {

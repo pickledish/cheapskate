@@ -7,6 +7,18 @@ import UpdatePositionModal from '@/components/modals/UpdatePositionModal.vue'
 import OnboardingModal from '@/components/modals/OnboardingModal.vue'
 import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import { supabase } from '@/lib/supabase'
+import {
+  listAccounts,
+  listStatements,
+  listAssetHoldings,
+  listAssetPrices,
+  listAssets,
+  listAssetAllocationsWithClass,
+  insertStatement,
+  upsertAssetHolding,
+  updateAccount,
+  deleteAccount
+} from '@/lib/data'
 import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -83,28 +95,14 @@ export default {
       this.error = null
       try {
         // Load all data in parallel
-        const [accountsResult, statementsResult, holdingsResult, pricesResult, assetsResult, allocationsResult] = await Promise.all([
-          supabase.from('accounts').select('*').order('created_at'),
-          supabase.from('statements').select('account_id, statement_date').order('statement_date', { ascending: false }),
-          supabase.from('asset_holdings').select('account_id, asset_id, holding_date, quantity').order('holding_date', { ascending: false }),
-          supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: false }),
-          supabase.from('assets').select('id, ticker, name'),
-          supabase.from('asset_allocations').select('asset_id, asset_class_id, percentage, asset_classes(name, color, sort_order)')
+        const [accountsData, statementsData, holdingsData, pricesData, assetsData, allocationsData] = await Promise.all([
+          listAccounts(),
+          listStatements(),
+          listAssetHoldings('desc'),
+          listAssetPrices('desc'),
+          listAssets(),
+          listAssetAllocationsWithClass()
         ])
-
-        if (accountsResult.error) throw accountsResult.error
-        if (statementsResult.error) throw statementsResult.error
-        if (holdingsResult.error) throw holdingsResult.error
-        if (pricesResult.error) throw pricesResult.error
-        if (assetsResult.error) throw assetsResult.error
-        if (allocationsResult.error) throw allocationsResult.error
-
-        const accountsData = accountsResult.data
-        const statementsData = statementsResult.data
-        const holdingsData = holdingsResult.data
-        const pricesData = pricesResult.data
-        const assetsData = assetsResult.data
-        const allocationsData = allocationsResult.data
 
         // Store assets list for modal usage
         this.assets = assetsData
@@ -265,41 +263,34 @@ export default {
           const { data: { session } } = await supabase.auth.getSession()
 
           // Create a statement to group the zero-out holdings
-          const { data: statement, error: stmtError } = await supabase
-            .from('statements')
-            .insert({ account_id: account.id, statement_date: today })
-            .select('id')
-            .single()
-          if (stmtError) throw stmtError
+          const statement = await insertStatement({ account_id: account.id, statement_date: today })
 
-          const zeroRows = holdings.map(h => ({
-            asset_id: h.asset_id,
-            account_id: account.id,
-            holding_date: today,
-            quantity: 0,
-            statement_id: statement.id,
-            created_by: session.user.id
-          }))
-          const { error: holdingsError } = await supabase.from('asset_holdings').upsert(zeroRows)
-          if (holdingsError) throw holdingsError
+          for (const h of holdings) {
+            await upsertAssetHolding({
+              asset_id: h.asset_id,
+              account_id: account.id,
+              holding_date: today,
+              quantity: 0,
+              statement_id: statement.id,
+              created_by: session.user.id
+            })
+          }
         }
 
-        const { error } = await supabase.from('accounts').update({ archived_at: today }).eq('id', account.id)
-        if (error) throw error
+        await updateAccount(account.id, { archived_at: today })
         await this.loadData()
       } catch (err) {
         this.error = err.message
       }
     },
 
-    async deleteAccount(account) {
+    async doDeleteAccount(account) {
       if (!confirm(`Delete "${account.name}"? This will also delete all statements for this account.`)) {
         return
       }
 
       try {
-        const { error } = await supabase.from('accounts').delete().eq('id', account.id)
-        if (error) throw error
+        await deleteAccount(account.id)
         await this.loadData()
       } catch (err) {
         this.error = err.message
@@ -428,7 +419,7 @@ export default {
                 <MenuItem v-slot="{ active }">
                   <button
                     v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
-                    v-on:click="deleteAccount(account)"
+                    v-on:click="doDeleteAccount(account)"
                   >
                     Delete
                   </button>

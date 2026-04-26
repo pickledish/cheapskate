@@ -1,7 +1,7 @@
 <script>
 import BaseModal from './BaseModal.vue'
 import ColorPicker from '@/components/ColorPicker.vue'
-import { supabase } from '@/lib/supabase'
+import { updateAssetClass } from '@/lib/data'
 
 export default {
   name: 'EditAssetClassModal',
@@ -38,13 +38,11 @@ export default {
       this.error = null
 
       try {
-        const { error } = await supabase.from('asset_classes').update({
+        await updateAssetClass(this.assetClass.id, {
           name: this.name.trim(),
           color: this.color,
           goal: this.goal / 100
-        }).eq('id', this.assetClass.id)
-
-        if (error) throw error
+        })
 
         this.$emit('updated')
       } catch (err) {

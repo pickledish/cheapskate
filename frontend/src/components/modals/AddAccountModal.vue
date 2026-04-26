@@ -1,6 +1,7 @@
 <script>
 import BaseModal from './BaseModal.vue'
 import { supabase } from '@/lib/supabase'
+import { insertAccount } from '@/lib/data'
 
 export default {
   name: 'AddAccountModal',
@@ -27,14 +28,12 @@ export default {
       try {
         const { data: { user } } = await supabase.auth.getUser()
 
-        const { error } = await supabase.from('accounts').insert({
+        await insertAccount({
           family_id: user.user_metadata.family_id,
           created_by: user.id,
           name: this.name.trim(),
           rebalancing: this.rebalancing
         })
-
-        if (error) throw error
 
         this.$emit('created')
       } catch (err) {

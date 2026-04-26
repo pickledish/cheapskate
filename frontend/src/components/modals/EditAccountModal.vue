@@ -1,6 +1,6 @@
 <script>
 import BaseModal from './BaseModal.vue'
-import { supabase } from '@/lib/supabase'
+import { updateAccount } from '@/lib/data'
 
 export default {
   name: 'EditAccountModal',
@@ -33,15 +33,7 @@ export default {
       this.error = null
 
       try {
-        const { error } = await supabase
-          .from('accounts')
-          .update({
-            name: this.name.trim()
-          })
-          .eq('id', this.account.id)
-
-        if (error) throw error
-
+        await updateAccount(this.account.id, { name: this.name.trim() })
         this.$emit('updated')
       } catch (err) {
         this.error = err.message

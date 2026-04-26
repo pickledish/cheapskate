@@ -2,6 +2,7 @@
 import BaseModal from './BaseModal.vue'
 import ColorPicker from '@/components/ColorPicker.vue'
 import { supabase } from '@/lib/supabase'
+import { getMaxSortOrder, insertAssetClass } from '@/lib/data'
 
 export default {
   name: 'AddAssetClassModal',
@@ -31,17 +32,10 @@ export default {
         const familyId = user.user_metadata.family_id
 
         // Get max sort_order for this family
-        const { data: maxData } = await supabase
-          .from('asset_classes')
-          .select('sort_order')
-          .eq('family_id', familyId)
-          .order('sort_order', { ascending: false })
-          .limit(1)
-          .single()
+        const maxOrder = await getMaxSortOrder(familyId)
+        const nextSortOrder = maxOrder + 1
 
-        const nextSortOrder = (maxData?.sort_order ?? -1) + 1
-
-        const { error } = await supabase.from('asset_classes').insert({
+        await insertAssetClass({
           family_id: familyId,
           created_by: user.id,
           name: this.name.trim(),
@@ -49,8 +43,6 @@ export default {
           goal: this.goal / 100,
           sort_order: nextSortOrder
         })
-
-        if (error) throw error
 
         this.$emit('created')
       } catch (err) {

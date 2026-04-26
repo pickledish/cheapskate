@@ -1,6 +1,7 @@
 <script>
 import BaseModal from './BaseModal.vue'
 import { supabase } from '@/lib/supabase'
+import { insertAsset } from '@/lib/data'
 
 export default {
   name: 'AddAssetModal',
@@ -26,14 +27,12 @@ export default {
 
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        const { error } = await supabase.from('assets').insert({
+        await insertAsset({
           family_id: user.user_metadata.family_id,
           created_by: user.id,
           name: this.name.trim(),
           ticker: this.ticker.trim() || null
         })
-
-        if (error) throw error
 
         this.$emit('created')
       } catch (err) {

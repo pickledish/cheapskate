@@ -1,7 +1,7 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
 import NetWorthBarChart from '@/components/charts/NetWorthBarChart.vue'
-import { supabase } from '@/lib/supabase'
+import { listAssetHoldings, listAssetPrices, listAccounts, listProfiles, listAssets, listAssetClasses, listAssetAllocations } from '@/lib/data'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
 
@@ -49,23 +49,23 @@ export default {
     async loadData() {
       this.loading = true
 
-      const [holdingsResult, pricesResult, accountsResult, profilesResult, assetsResult, assetClassesResult, allocationsResult] = await Promise.all([
-        supabase.from('asset_holdings').select('asset_id, account_id, holding_date, quantity').order('holding_date', { ascending: true }),
-        supabase.from('asset_prices').select('asset_id, price_date, price').order('price_date', { ascending: true }),
-        supabase.from('accounts').select('id, name, created_by'),
-        supabase.from('profiles').select('id, name'),
-        supabase.from('assets').select('id, name, ticker'),
-        supabase.from('asset_classes').select('id, name'),
-        supabase.from('asset_allocations').select('asset_id, asset_class_id, percentage')
+      const [holdings, prices, accounts, profiles, assets, assetClasses, allocations] = await Promise.all([
+        listAssetHoldings('asc'),
+        listAssetPrices('asc'),
+        listAccounts(),
+        listProfiles(),
+        listAssets(),
+        listAssetClasses(),
+        listAssetAllocations()
       ])
 
-      this.holdingsData = holdingsResult.data || []
-      this.pricesData = pricesResult.data || []
-      this.accountsData = accountsResult.data || []
-      this.profilesData = profilesResult.data || []
-      this.assetsData = assetsResult.data || []
-      this.assetClassesData = assetClassesResult.data || []
-      this.allocationsData = allocationsResult.data || []
+      this.holdingsData = holdings
+      this.pricesData = prices
+      this.accountsData = accounts
+      this.profilesData = profiles
+      this.assetsData = assets
+      this.assetClassesData = assetClasses
+      this.allocationsData = allocations
 
       this.computeChartData()
       this.loading = false
