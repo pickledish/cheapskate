@@ -1,0 +1,645 @@
+<script>
+import AppLayout from '@/components/AppLayout.vue'
+import EditAccountModal from '@/components/modals/EditAccountModal.vue'
+import {
+  getAccount,
+  listAssetHoldingsByAccount,
+  listAssetPrices,
+  listAssets,
+  listAssetAllocationsWithClass,
+  listStatements,
+  insertStatement,
+  upsertAssetHolding,
+  updateAccount,
+  deleteAccount
+} from '@/lib/data'
+import { supabase } from '@/lib/supabase'
+import { getColorClasses } from '@/lib/tagColors'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import { PencilSquareIcon, CheckIcon, ChevronUpDownIcon, ArchiveBoxIcon, TrashIcon } from '@heroicons/vue/24/solid'
+import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/vue'
+
+dayjs.extend(relativeTime)
+
+export default {
+  name: 'AccountDetailView',
+  components: {
+    AppLayout,
+    EditAccountModal,
+    PencilSquareIcon,
+    CheckIcon,
+    ChevronUpDownIcon,
+    ArchiveBoxIcon,
+    TrashIcon,
+    Combobox,
+    ComboboxInput,
+    ComboboxButton,
+    ComboboxOptions,
+    ComboboxOption
+  },
+  data() {
+    return {
+      account: null,
+      assets: [],
+      holdings: [],
+      totalValue: null,
+      assetClasses: [],
+      allocationsByAsset: {},
+      latestStatementDate: null,
+      loading: true,
+      error: null,
+
+      showEditAccountModal: false,
+
+      // Inline editing state
+      editing: false,
+      editQuantities: {},
+      newRows: [],
+      saving: false
+    }
+  },
+  computed: {
+    isArchived() {
+      return !!this.account?.archived_at
+    },
+    availableAssets() {
+      const usedIds = new Set(this.holdings.map(h => h.asset_id))
+      const newRowIds = new Set(this.newRows.filter(r => r.asset).map(r => r.asset.id))
+      return this.assets.filter(a => !usedIds.has(a.id) && !newRowIds.has(a.id))
+    }
+  },
+  async mounted() {
+    await this.loadData()
+  },
+  methods: {
+    async loadData() {
+      this.loading = true
+      this.error = null
+      const accountId = Number(this.$route.params.id)
+
+      try {
+        const accountData = await getAccount(accountId)
+        if (!accountData) {
+          this.error = 'Account not found'
+          this.loading = false
+          return
+        }
+        this.account = accountData
+
+        const [holdingsData, pricesData, assetsData, allocationsData, statementsData] = await Promise.all([
+          listAssetHoldingsByAccount(accountId, 'desc'),
+          listAssetPrices('desc'),
+          listAssets(),
+          listAssetAllocationsWithClass(),
+          listStatements()
+        ])
+
+        this.assets = assetsData
+
+        const assetMap = {}
+        for (const a of assetsData) {
+          assetMap[a.id] = { ticker: a.ticker, name: a.name }
+        }
+
+        const allocationsByAsset = {}
+        for (const a of allocationsData) {
+          if (!allocationsByAsset[a.asset_id]) {
+            allocationsByAsset[a.asset_id] = []
+          }
+          allocationsByAsset[a.asset_id].push({
+            name: a.asset_classes.name,
+            color: a.asset_classes.color,
+            sort_order: a.asset_classes.sort_order
+          })
+        }
+        for (const assetId in allocationsByAsset) {
+          allocationsByAsset[assetId].sort((a, b) => a.sort_order - b.sort_order)
+        }
+        this.allocationsByAsset = allocationsByAsset
+
+        const latestPriceByAsset = {}
+        for (const p of pricesData) {
+          if (!latestPriceByAsset[p.asset_id]) {
+            latestPriceByAsset[p.asset_id] = parseFloat(p.price)
+          }
+        }
+
+        const latestByAsset = {}
+        for (const h of holdingsData) {
+          if (!latestByAsset[h.asset_id]) {
+            latestByAsset[h.asset_id] = h
+          }
+        }
+
+        let total = 0
+        const holdingsDisplay = []
+        for (const assetId in latestByAsset) {
+          const h = latestByAsset[assetId]
+          const quantity = parseFloat(h.quantity)
+          if (quantity <= 0) continue
+          const asset = assetMap[h.asset_id] || {}
+          const price = latestPriceByAsset[h.asset_id] || 0
+          const value = quantity * price
+          total += value
+          holdingsDisplay.push({
+            asset_id: h.asset_id,
+            name: asset.name || 'Unknown',
+            ticker: asset.ticker || null,
+            assetClasses: (allocationsByAsset[h.asset_id] || []).map(c => ({ name: c.name, color: c.color })),
+            quantity,
+            value
+          })
+        }
+        this.holdings = holdingsDisplay.sort((a, b) => b.value - a.value)
+        this.totalValue = total > 0 ? total : null
+
+        const classValues = {}
+        let unclassifiedValue = 0
+        for (const h of holdingsDisplay) {
+          const allocations = allocationsByAsset[h.asset_id] || []
+          if (allocations.length === 0) {
+            unclassifiedValue += h.value
+          } else {
+            for (const alloc of allocations) {
+              const pct = allocationsData.find(a => a.asset_id === h.asset_id && a.asset_classes.name === alloc.name)
+              const percentage = pct ? parseFloat(pct.percentage) : 1
+              if (!classValues[alloc.name]) {
+                classValues[alloc.name] = { value: 0, color: alloc.color, sort_order: alloc.sort_order }
+              }
+              classValues[alloc.name].value += h.value * percentage
+            }
+          }
+        }
+        const classes = Object.entries(classValues)
+          .filter(([, data]) => total > 0 && data.value / total >= 0.10)
+          .map(([name, data]) => ({ name, color: data.color, sort_order: data.sort_order }))
+          .sort((a, b) => a.sort_order - b.sort_order)
+        if (total > 0 && unclassifiedValue / total >= 0.10) {
+          classes.push({ name: 'Unclassified', color: 'gray', sort_order: 9999 })
+        }
+        this.assetClasses = classes
+
+        const accountStatements = statementsData.filter(s => s.account_id === accountId)
+        this.latestStatementDate = accountStatements.length > 0 ? accountStatements[0].statement_date : null
+
+      } catch (err) {
+        this.error = err.message
+      } finally {
+        this.loading = false
+      }
+    },
+
+    formatCurrency(value) {
+      if (value == null) return '-'
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(value)
+    },
+
+    formatQuantity(qty) {
+      if (Number.isInteger(qty)) return qty.toString()
+      return qty.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')
+    },
+
+    relativeDate(dateStr) {
+      if (!dateStr) return null
+      return dayjs(dateStr).fromNow()
+    },
+
+    getClassColor(colorName) {
+      return getColorClasses(colorName)
+    },
+
+    // Inline editing
+    enterEditMode() {
+      this.editQuantities = {}
+      for (const h of this.holdings) {
+        this.editQuantities[h.asset_id] = this.formatQuantity(h.quantity)
+      }
+      this.newRows = [{ asset: null, query: '', quantity: '' }]
+      this.editing = true
+    },
+
+    cancelEdit() {
+      this.editing = false
+      this.editQuantities = {}
+      this.newRows = []
+    },
+
+    onNewRowAssetSelected(index) {
+      const row = this.newRows[index]
+      if (row.asset) {
+        // Add a new phantom row if this is the last one
+        if (index === this.newRows.length - 1) {
+          this.newRows.push({ asset: null, query: '', quantity: '' })
+        }
+      }
+    },
+
+    filteredAssetsForRow(index) {
+      const query = this.newRows[index].query.toLowerCase().trim()
+      let pool = this.availableAssets
+      // Also exclude assets picked in other new rows (except this one)
+      const otherPickedIds = new Set(
+        this.newRows.filter((r, i) => i !== index && r.asset).map(r => r.asset.id)
+      )
+      pool = pool.filter(a => !otherPickedIds.has(a.id))
+      if (!query) return pool
+      return pool.filter(a =>
+        (a.ticker && a.ticker.toLowerCase().includes(query)) ||
+        (a.name && a.name.toLowerCase().includes(query))
+      )
+    },
+
+    displayAsset(asset) {
+      if (!asset) return ''
+      if (!asset.ticker) return asset.name
+      return `${asset.ticker} - ${asset.name}`
+    },
+
+    getNewRowClasses(assetId) {
+      return (this.allocationsByAsset[assetId] || []).map(c => ({ name: c.name, color: c.color }))
+    },
+
+    async saveEdits() {
+      this.saving = true
+      this.error = null
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
+
+        const today = new Date().toISOString().split('T')[0]
+        const upserts = []
+
+        // Existing holdings with changed quantities
+        for (const h of this.holdings) {
+          const newQty = parseFloat(this.editQuantities[h.asset_id])
+          if (isNaN(newQty) || newQty < 0) continue
+          if (newQty !== h.quantity) {
+            upserts.push({
+              asset_id: h.asset_id,
+              account_id: this.account.id,
+              holding_date: today,
+              quantity: newQty,
+              statement_id: null,
+              created_by: user.id
+            })
+          }
+        }
+
+        // New rows
+        for (const row of this.newRows) {
+          if (!row.asset) continue
+          const qty = parseFloat(row.quantity)
+          if (isNaN(qty) || qty <= 0) continue
+          upserts.push({
+            asset_id: row.asset.id,
+            account_id: this.account.id,
+            holding_date: today,
+            quantity: qty,
+            statement_id: null,
+            created_by: user.id
+          })
+        }
+
+        for (const u of upserts) {
+          await upsertAssetHolding(u)
+        }
+
+        this.editing = false
+        this.editQuantities = {}
+        this.newRows = []
+        await this.loadData()
+      } catch (err) {
+        this.error = err.message
+      } finally {
+        this.saving = false
+      }
+    },
+
+    async closeAccount() {
+      if (!confirm(`Mark "${this.account.name}" as closed? All holdings will be set to zero and the account will be hidden from the accounts list. Historical data is preserved.`)) {
+        return
+      }
+
+      try {
+        const today = new Date().toISOString().split('T')[0]
+
+        if (this.holdings.length > 0) {
+          const { data: { session } } = await supabase.auth.getSession()
+          const statement = await insertStatement({ account_id: this.account.id, statement_date: today })
+
+          for (const h of this.holdings) {
+            await upsertAssetHolding({
+              asset_id: h.asset_id,
+              account_id: this.account.id,
+              holding_date: today,
+              quantity: 0,
+              statement_id: statement.id,
+              created_by: session.user.id
+            })
+          }
+        }
+
+        await updateAccount(this.account.id, { archived_at: today })
+        await this.loadData()
+      } catch (err) {
+        this.error = err.message
+      }
+    },
+
+    async reopenAccount() {
+      if (!confirm(`Reopen "${this.account.name}"? It will appear in your accounts list again.`)) {
+        return
+      }
+
+      try {
+        await updateAccount(this.account.id, { archived_at: null })
+        await this.loadData()
+      } catch (err) {
+        this.error = err.message
+      }
+    },
+
+    async doDeleteAccount() {
+      if (!confirm(`Delete "${this.account.name}"? This will also delete all statements for this account.`)) {
+        return
+      }
+
+      try {
+        await deleteAccount(this.account.id)
+        this.$router.push('/accounts')
+      } catch (err) {
+        this.error = err.message
+      }
+    },
+
+    async onAccountUpdated() {
+      this.showEditAccountModal = false
+      await this.loadData()
+    }
+  }
+}
+</script>
+
+<template>
+  <AppLayout>
+    <div class="space-y-6">
+      <!-- Back link -->
+      <router-link to="/accounts" class="text-sm text-gray-500 hover:text-gray-700">
+        &larr; All Accounts
+      </router-link>
+
+      <!-- Error display -->
+      <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">
+        {{ error }}
+      </div>
+
+      <!-- Loading state -->
+      <div v-if="loading" class="text-gray-500">Loading...</div>
+
+      <template v-if="!loading && account">
+        <!-- Header row -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <h2 class="text-2xl font-bold text-gray-900">{{ account.name }}</h2>
+            <span v-if="isArchived" class="inline-block px-2 py-0.5 text-xs font-medium rounded bg-yellow-100 text-yellow-800">
+              Closed
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              v-on:click="showEditAccountModal = true"
+              class="px-3 py-1.5 text-sm flex items-center gap-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              <PencilSquareIcon class="w-4 h-4" />
+              Edit
+            </button>
+            <button
+              v-if="!isArchived"
+              v-on:click="closeAccount"
+              class="px-3 py-1.5 text-sm flex items-center gap-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              <ArchiveBoxIcon class="w-4 h-4" />
+              Close
+            </button>
+            <button
+              v-if="isArchived"
+              v-on:click="reopenAccount"
+              class="px-3 py-1.5 text-sm flex items-center gap-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              <ArchiveBoxIcon class="w-4 h-4" />
+              Reopen
+            </button>
+            <button
+              v-on:click="doDeleteAccount"
+              class="px-3 py-1.5 text-sm flex items-center gap-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              <TrashIcon class="w-4 h-4" />
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- Subheader info -->
+        <div class="flex flex-wrap items-center gap-3">
+          <span v-if="totalValue != null" class="text-lg font-semibold text-gray-700">
+            {{ formatCurrency(totalValue) }}
+          </span>
+          <span v-if="latestStatementDate" class="text-sm text-gray-400">
+            Updated {{ relativeDate(latestStatementDate) }}
+          </span>
+          <span v-else class="text-sm text-gray-400 italic">No data yet</span>
+        </div>
+
+        <!-- Holdings table -->
+        <div v-if="holdings.length > 0 || editing" class="bg-white shadow rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider w-96">
+                  Name
+                </th>
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                  Ticker
+                </th>
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                  Asset Class
+                </th>
+                <th class="bg-gray-600 px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider w-40">
+                  Quantity
+                </th>
+                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider">
+                  Total Value
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <!-- Existing holdings -->
+              <tr v-for="holding in holdings" v-bind:key="holding.asset_id">
+                <td class="px-6 py-3 whitespace-nowrap bg-white">
+                  <div class="h-8 flex items-center text-sm font-medium text-gray-900">{{ holding.name }}</div>
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap bg-white">
+                  <div class="h-8 flex items-center text-sm text-gray-500">{{ holding.ticker || '-' }}</div>
+                </td>
+                <td class="px-6 py-3 bg-white">
+                  <div class="h-8 flex items-center">
+                    <div v-if="holding.assetClasses.length" class="flex flex-wrap gap-1">
+                      <span
+                        v-for="ac in holding.assetClasses"
+                        v-bind:key="ac.name"
+                        class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                        v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
+                      >
+                        {{ ac.name }}
+                      </span>
+                    </div>
+                    <span v-else class="text-sm text-gray-400">-</span>
+                  </div>
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
+                  <div class="h-8 flex items-center justify-end">
+                    <input
+                      v-if="editing"
+                      v-model="editQuantities[holding.asset_id]"
+                      type="text"
+                      inputmode="decimal"
+                      class="w-28 h-8 px-2 text-sm text-right border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span v-else class="text-sm text-gray-900">{{ formatQuantity(holding.quantity) }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
+                  <div class="h-8 flex items-center justify-end text-sm text-gray-900">{{ formatCurrency(holding.value) }}</div>
+                </td>
+              </tr>
+
+              <!-- Phantom rows for new holdings (edit mode only) -->
+              <tr v-if="editing" v-for="(row, index) in newRows" v-bind:key="'new-' + index">
+                <td class="px-6 py-3 bg-white">
+                  <div class="h-8 flex items-center">
+                  <Combobox v-model="row.asset" as="div" class="relative w-full" v-on:update:model-value="onNewRowAssetSelected(index)">
+                    <div class="relative">
+                      <ComboboxInput
+                        v-bind:display-value="(a) => a ? a.name : ''"
+                        v-on:change="row.query = $event.target.value"
+                        placeholder="Search assets..."
+                        class="w-full h-8 px-3 pr-8 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
+                        <ChevronUpDownIcon class="w-4 h-4 text-gray-400" />
+                      </ComboboxButton>
+                    </div>
+                    <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white border border-gray-200 rounded-md shadow-lg focus:outline-none">
+                      <div v-if="filteredAssetsForRow(index).length === 0" class="px-3 py-2 text-sm text-gray-500">
+                        No assets found
+                      </div>
+                      <ComboboxOption
+                        v-for="asset in filteredAssetsForRow(index)"
+                        v-bind:key="asset.id"
+                        v-bind:value="asset"
+                        v-slot="{ active, selected }"
+                      >
+                        <div
+                          v-bind:class="[
+                            'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
+                            active ? 'bg-gray-100' : '',
+                            selected ? 'text-blue-600 font-medium' : 'text-gray-700'
+                          ]"
+                        >
+                          <span>{{ asset.ticker ? `${asset.ticker} - ${asset.name}` : asset.name }}</span>
+                          <CheckIcon v-if="selected" class="w-4 h-4" />
+                        </div>
+                      </ComboboxOption>
+                    </ComboboxOptions>
+                  </Combobox>
+                  </div>
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap bg-white">
+                  <div class="h-8 flex items-center text-sm text-gray-500">{{ row.asset?.ticker || '-' }}</div>
+                </td>
+                <td class="px-6 py-3 bg-white">
+                  <div class="h-8 flex items-center">
+                    <div v-if="row.asset && getNewRowClasses(row.asset.id).length" class="flex flex-wrap gap-1">
+                      <span
+                        v-for="ac in getNewRowClasses(row.asset.id)"
+                        v-bind:key="ac.name"
+                        class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                        v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
+                      >
+                        {{ ac.name }}
+                      </span>
+                    </div>
+                    <span v-else class="text-sm text-gray-400">-</span>
+                  </div>
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
+                  <div class="h-8 flex items-center justify-end">
+                    <input
+                      v-model="row.quantity"
+                      type="text"
+                      inputmode="decimal"
+                      placeholder="0"
+                      class="w-28 h-8 px-2 text-sm text-right border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
+                  <div class="h-8 flex items-center justify-end text-sm text-gray-400">-</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Edit/Save button below table -->
+        <div class="flex justify-end">
+          <button
+            v-if="!editing"
+            v-on:click="enterEditMode"
+            class="px-4 py-2 flex items-center gap-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            title="Edit holdings"
+          >
+            <PencilSquareIcon class="w-4 h-4" />
+            Edit Holdings
+          </button>
+          <div v-else class="flex items-center gap-2">
+            <button
+              v-on:click="cancelEdit"
+              class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              v-on:click="saveEdits"
+              v-bind:disabled="saving"
+              class="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {{ saving ? 'Saving...' : 'Save' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty state (only when not editing) -->
+        <div v-if="holdings.length === 0 && !editing" class="text-center py-12 text-gray-500">
+          <p class="text-lg">No holdings yet</p>
+          <p class="mt-1 text-sm">Click the edit button to add holdings manually.</p>
+        </div>
+      </template>
+    </div>
+
+    <!-- Modals -->
+    <EditAccountModal
+      v-if="showEditAccountModal"
+      v-bind:account="account"
+      v-on:close="showEditAccountModal = false"
+      v-on:updated="onAccountUpdated"
+    />
+  </AppLayout>
+</template>

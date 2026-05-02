@@ -6,6 +6,7 @@ import SetupView from '@/views/SetupView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import RebalancingView from '@/views/RebalancingView.vue'
 import AccountsView from '@/views/AccountsView.vue'
+import AccountDetailView from '@/views/AccountDetailView.vue'
 import AssetsView from '@/views/AssetsView.vue'
 import GoalsView from '@/views/GoalsView.vue'
 import HistoryView from '@/views/HistoryView.vue'
@@ -52,6 +53,12 @@ const routes = [
     path: '/accounts',
     name: 'accounts',
     component: AccountsView,
+    meta: { requiresAuth: true, requiresGoalsComplete: true }
+  },
+  {
+    path: '/accounts/:id',
+    name: 'account-detail',
+    component: AccountDetailView,
     meta: { requiresAuth: true, requiresGoalsComplete: true }
   },
   {

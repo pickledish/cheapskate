@@ -1,9 +1,6 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
 import AddAccountModal from '@/components/modals/AddAccountModal.vue'
-import EditAccountModal from '@/components/modals/EditAccountModal.vue'
-import UploadStatementModal from '@/components/modals/UploadStatementModal.vue'
-import UpdatePositionModal from '@/components/modals/UpdatePositionModal.vue'
 import OnboardingModal from '@/components/modals/OnboardingModal.vue'
 import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import { supabase } from '@/lib/supabase'
@@ -13,17 +10,11 @@ import {
   listAssetHoldings,
   listAssetPrices,
   listAssets,
-  listAssetAllocationsWithClass,
-  insertStatement,
-  upsertAssetHolding,
-  updateAccount,
-  deleteAccount
+  listAssetAllocationsWithClass
 } from '@/lib/data'
 import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { Bars3Icon } from '@heroicons/vue/24/solid'
-import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 
 dayjs.extend(relativeTime)
 
@@ -32,33 +23,18 @@ export default {
   components: {
     AppLayout,
     AddAccountModal,
-    EditAccountModal,
-    UploadStatementModal,
-    UpdatePositionModal,
     OnboardingModal,
-    OnboardingContinueCard,
-    Bars3Icon,
-    Menu,
-    MenuButton,
-    MenuItems,
-    MenuItem
+    OnboardingContinueCard
   },
   data() {
     return {
       accounts: [],
-      assets: [],
-      holdingsByAccount: {},
       hasAnyStatements: false,
       loading: true,
       error: null,
       searchQuery: '',
 
-      // Modal state
       showAddAccountModal: false,
-      showEditAccountModal: false,
-      showUploadModal: false,
-      showUpdatePositionModal: false,
-      selectedAccount: null,
 
       // Onboarding state
       showOnboardingModal: false,
@@ -104,10 +80,7 @@ export default {
           listAssetAllocationsWithClass()
         ])
 
-        // Store assets list for modal usage
-        this.assets = assetsData
-
-        // Track if any statements exist (for privacy notice default state)
+        // Track if any statements exist (for onboarding continue card)
         this.hasAnyStatements = statementsData.length > 0
 
         // Build map of asset_id -> asset info
@@ -164,27 +137,21 @@ export default {
         const holdingsByAccount = {}
         for (const key in latestHoldingByAccountAsset) {
           const holding = latestHoldingByAccountAsset[key]
-          const asset = assetMap[holding.asset_id] || {}
           const price = latestPriceByAsset[holding.asset_id] || 0
           const value = holding.quantity * price
 
           accountValues[holding.account_id] = (accountValues[holding.account_id] || 0) + value
 
-          // Add to holdingsByAccount (only if quantity > 0)
           if (holding.quantity > 0) {
             if (!holdingsByAccount[holding.account_id]) {
               holdingsByAccount[holding.account_id] = []
             }
             holdingsByAccount[holding.account_id].push({
               asset_id: holding.asset_id,
-              ticker: asset.ticker,
-              name: asset.name,
-              quantity: holding.quantity,
               value: value
             })
           }
         }
-        this.holdingsByAccount = holdingsByAccount
 
         // Calculate asset classes per account
         const assetClassesByAccount = {}
@@ -213,7 +180,7 @@ export default {
 
           // Convert to array, filter out classes <10% of account value, sort by sort_order
           const classes = Object.entries(classValues)
-            .filter(([name, data]) => totalValue > 0 && data.value / totalValue >= 0.10)
+            .filter(([, data]) => totalValue > 0 && data.value / totalValue >= 0.10)
             .map(([name, data]) => ({ name, color: data.color, sort_order: data.sort_order }))
             .sort((a, b) => a.sort_order - b.sort_order)
 
@@ -229,7 +196,6 @@ export default {
         this.accounts = accountsData.map(account => ({
           ...account,
           latestStatementDate: latestStatementByAccount[account.id] || null,
-          totalValue: accountValues[account.id] || null,
           assetClasses: assetClassesByAccount[account.id] || []
         }))
 
@@ -240,95 +206,8 @@ export default {
       }
     },
 
-    formatCurrency(value) {
-      if (value == null) return null
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(value)
-    },
-
-    async closeAccount(account) {
-      if (!confirm(`Mark "${account.name}" as closed? All holdings will be set to zero and the account will be hidden from this view. Historical data is preserved. You can undo this from the History page.`)) {
-        return
-      }
-
-      try {
-        const holdings = this.holdingsByAccount[account.id] || []
-        const today = new Date().toISOString().split('T')[0]
-
-        if (holdings.length > 0) {
-          const { data: { session } } = await supabase.auth.getSession()
-
-          // Create a statement to group the zero-out holdings
-          const statement = await insertStatement({ account_id: account.id, statement_date: today })
-
-          for (const h of holdings) {
-            await upsertAssetHolding({
-              asset_id: h.asset_id,
-              account_id: account.id,
-              holding_date: today,
-              quantity: 0,
-              statement_id: statement.id,
-              created_by: session.user.id
-            })
-          }
-        }
-
-        await updateAccount(account.id, { archived_at: today })
-        await this.loadData()
-      } catch (err) {
-        this.error = err.message
-      }
-    },
-
-    async doDeleteAccount(account) {
-      if (!confirm(`Delete "${account.name}"? This will also delete all statements for this account.`)) {
-        return
-      }
-
-      try {
-        await deleteAccount(account.id)
-        await this.loadData()
-      } catch (err) {
-        this.error = err.message
-      }
-    },
-
-    openUploadModal(account) {
-      this.selectedAccount = account
-      this.showUploadModal = true
-    },
-
-    closeUploadModal() {
-      this.showUploadModal = false
-      this.selectedAccount = null
-    },
-
-    openUpdatePositionModal(account) {
-      this.selectedAccount = account
-      this.showUpdatePositionModal = true
-    },
-
-    closeUpdatePositionModal() {
-      this.showUpdatePositionModal = false
-      this.selectedAccount = null
-    },
-
     async onAccountCreated() {
       this.showAddAccountModal = false
-      await this.loadData()
-    },
-
-    async onStatementUploaded() {
-      this.closeUploadModal()
-      await this.loadData()
-    },
-
-    async onPositionUpdated() {
-      this.closeUpdatePositionModal()
       await this.loadData()
     },
 
@@ -339,21 +218,6 @@ export default {
 
     getClassColor(colorName) {
       return getColorClasses(colorName)
-    },
-
-    openEditAccountModal(account) {
-      this.selectedAccount = account
-      this.showEditAccountModal = true
-    },
-
-    closeEditAccountModal() {
-      this.showEditAccountModal = false
-      this.selectedAccount = null
-    },
-
-    async onAccountUpdated() {
-      this.closeEditAccountModal()
-      await this.loadData()
     }
   }
 }
@@ -389,86 +253,32 @@ export default {
         <!-- Card grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- Account cards -->
-          <div
+          <router-link
             v-for="account in filteredAccounts"
             v-bind:key="account.id"
-            class="bg-white rounded-lg shadow p-4 flex flex-col relative"
+            v-bind:to="'/accounts/' + account.id"
+            class="bg-white rounded-lg shadow p-4 flex flex-col hover:shadow-md transition-shadow"
           >
-            <!-- Menu in upper right -->
-            <Menu as="div" class="absolute top-3 right-3">
-              <MenuButton class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded cursor-pointer">
-                <Bars3Icon class="w-5 h-5" />
-              </MenuButton>
-              <MenuItems class="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg focus:outline-none z-10 py-1">
-                <MenuItem v-slot="{ active }">
-                  <button
-                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
-                    v-on:click="openEditAccountModal(account)"
-                  >
-                    Edit
-                  </button>
-                </MenuItem>
-                <MenuItem v-slot="{ active }">
-                  <button
-                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
-                    v-on:click="closeAccount(account)"
-                  >
-                    Mark as Closed
-                  </button>
-                </MenuItem>
-                <MenuItem v-slot="{ active }">
-                  <button
-                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
-                    v-on:click="doDeleteAccount(account)"
-                  >
-                    Delete
-                  </button>
-                </MenuItem>
-              </MenuItems>
-            </Menu>
-
-            <div class="flex-1 pr-6">
-              <h3 class="font-semibold text-gray-900">{{ account.name }}</h3>
-              <!-- Asset class tags -->
-              <div v-if="account.assetClasses.length" class="flex flex-wrap gap-1 mt-3">
-                <span
-                  v-for="ac in account.assetClasses"
-                  v-bind:key="ac.name"
-                  class="inline-block px-2 py-0.5 text-xs font-medium rounded"
-                  v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
-                >
-                  {{ ac.name }}
-                </span>
-              </div>
-              <!-- Value and last updated -->
-              <div class="mt-3">
-                <p v-if="account.totalValue != null" class="text-xs text-gray-400">
-                  Total value - {{ formatCurrency(account.totalValue) }}
-                </p>
-                <p class="text-xs text-gray-400">
-                  <span v-if="account.latestStatementDate">
-                    Last updated - {{ relativeDate(account.latestStatementDate) }}
-                  </span>
-                  <span v-else class="italic">No data yet</span>
-                </p>
-              </div>
-            </div>
-            <!-- Action buttons - full width, both grey -->
-            <div class="mt-4 grid grid-cols-2 gap-2">
-              <button
-                v-on:click="openUploadModal(account)"
-                class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-blue-600 hover:text-white transition-colors"
+            <h3 class="font-semibold text-gray-900">{{ account.name }}</h3>
+            <!-- Asset class tags -->
+            <div v-if="account.assetClasses.length" class="flex flex-wrap gap-1 mt-3">
+              <span
+                v-for="ac in account.assetClasses"
+                v-bind:key="ac.name"
+                class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
               >
-                Upload Statement
-              </button>
-              <button
-                v-on:click="openUpdatePositionModal(account)"
-                class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-blue-600 hover:text-white transition-colors"
-              >
-                Update Holdings
-              </button>
+                {{ ac.name }}
+              </span>
             </div>
-          </div>
+            <!-- Last updated -->
+            <p class="mt-3 text-xs text-gray-400">
+              <span v-if="account.latestStatementDate">
+                Updated {{ relativeDate(account.latestStatementDate) }}
+              </span>
+              <span v-else class="italic">No data yet</span>
+            </p>
+          </router-link>
 
           <!-- Add account card -->
           <button
@@ -496,30 +306,6 @@ export default {
       v-if="showAddAccountModal"
       v-on:close="showAddAccountModal = false"
       v-on:created="onAccountCreated"
-    />
-
-    <EditAccountModal
-      v-if="showEditAccountModal"
-      v-bind:account="selectedAccount"
-      v-on:close="closeEditAccountModal"
-      v-on:updated="onAccountUpdated"
-    />
-
-    <UploadStatementModal
-      v-if="showUploadModal"
-      v-bind:account="selectedAccount"
-      v-bind:existing-holdings="holdingsByAccount[selectedAccount?.id] || []"
-      v-bind:has-existing-statements="hasAnyStatements"
-      v-on:close="closeUploadModal"
-      v-on:uploaded="onStatementUploaded"
-    />
-
-    <UpdatePositionModal
-      v-if="showUpdatePositionModal"
-      v-bind:account="selectedAccount"
-      v-bind:assets="assets"
-      v-on:close="closeUpdatePositionModal"
-      v-on:updated="onPositionUpdated"
     />
 
     <!-- Onboarding modal -->
