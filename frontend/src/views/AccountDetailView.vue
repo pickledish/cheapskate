@@ -88,14 +88,7 @@ export default {
       return 'Liquid'
     },
     displayTaxType() {
-      const taxType = this.account?.tax_type
-      if (taxType === 'taxable') return 'Taxable'
-      if (taxType === 'tax Deferred') return 'Tax Deferred'
-      if (taxType === 'tax Exempt') return 'Tax Exempt'
-      if (typeof this.account?.is_retirement === 'boolean') {
-        return this.account.is_retirement ? 'Tax Deferred' : 'Taxable'
-      }
-      return 'Tax Deferred'
+      return 'Retirement'
     },
     displayTotalHoldings() {
       return this.formatCurrency(this.totalValue || 0)
@@ -504,10 +497,10 @@ export default {
         <div class="bg-white shadow rounded-lg overflow-hidden">
           <div class="p-4">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div class="lg:col-span-2 px-1 py-1 space-y-4">
+              <div class="lg:col-span-2 px-1 py-1 flex flex-col justify-between gap-4">
                 <div>
-                  <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Total holdings</div>
-                  <div class="mt-2 text-2xl font-semibold text-gray-900">{{ displayTotalHoldings }}</div>
+                  <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Account value</div>
+                  <div class="mt-1 text-2xl font-semibold text-gray-900">{{ displayTotalHoldings }}</div>
                   <div v-if="assetClasses.length" class="mt-2 flex flex-wrap gap-1.5">
                     <span
                       v-for="ac in assetClasses"
@@ -525,7 +518,7 @@ export default {
                 </div>
               </div>
 
-              <dl class="divide-y divide-gray-200 rounded-lg bg-gray-100 px-4">
+              <dl class="divide-y divide-gray-200 rounded-lg bg-gray-50 border border-gray-200 px-4">
                 <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Institution</dt>
                   <dd class="text-sm font-bold text-gray-900">{{ displayInstitution }}</dd>
