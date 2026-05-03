@@ -17,8 +17,8 @@ import { supabase } from '@/lib/supabase'
 import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { PencilSquareIcon, CheckIcon, ChevronUpDownIcon, ArchiveBoxIcon, TrashIcon } from '@heroicons/vue/24/solid'
-import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/vue'
+import { PencilSquareIcon, CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/24/solid'
+import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 
 dayjs.extend(relativeTime)
 
@@ -30,13 +30,15 @@ export default {
     PencilSquareIcon,
     CheckIcon,
     ChevronUpDownIcon,
-    ArchiveBoxIcon,
-    TrashIcon,
     Combobox,
     ComboboxInput,
     ComboboxButton,
     ComboboxOptions,
-    ComboboxOption
+    ComboboxOption,
+    Menu,
+    MenuButton,
+    MenuItems,
+    MenuItem
   },
   data() {
     return {
@@ -63,6 +65,48 @@ export default {
   computed: {
     isArchived() {
       return !!this.account?.archived_at
+    },
+    displayInstitution() {
+      return this.account?.institution || 'Vanguard'
+    },
+    displaySubtitle() {
+      return `${this.displayInstitution} • ${this.displayAccountLast4}`
+    },
+    displayOwner() {
+      return this.account?.owner_name || 'Brandon'
+    },
+    displayAccountLast4() {
+      return this.account?.last4 ? `${this.account.last4}` : '4821'
+    },
+    displayLiquid() {
+      if (typeof this.account?.is_liquid === 'boolean') {
+        return this.account.is_liquid ? 'Liquid' : 'Not Liquid'
+      }
+      if (typeof this.account?.rebalancing === 'boolean') {
+        return this.account.rebalancing ? 'Liquid' : 'Not Liquid'
+      }
+      return 'Liquid'
+    },
+    displayTaxType() {
+      const taxType = this.account?.tax_type
+      if (taxType === 'taxable') return 'Taxable'
+      if (taxType === 'tax Deferred') return 'Tax Deferred'
+      if (taxType === 'tax Exempt') return 'Tax Exempt'
+      if (typeof this.account?.is_retirement === 'boolean') {
+        return this.account.is_retirement ? 'Tax Deferred' : 'Taxable'
+      }
+      return 'Tax Deferred'
+    },
+    displayTotalHoldings() {
+      return this.formatCurrency(this.totalValue || 0)
+    },
+    displayLastUpdated() {
+      return this.latestStatementDate ? this.relativeDate(this.latestStatementDate) : 'No data yet'
+    },
+    displayLastUpdatedDate() {
+      return this.latestStatementDate
+        ? dayjs(this.latestStatementDate).format('MMM D, YYYY')
+        : 'Upload a statement or add holdings manually'
     },
     availableAssets() {
       const usedIds = new Set(this.holdings.map(h => h.asset_id))
@@ -196,8 +240,8 @@ export default {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
       }).format(value)
     },
 
@@ -397,13 +441,8 @@ export default {
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <!-- Back link -->
-      <router-link to="/accounts" class="text-sm text-gray-500 hover:text-gray-700">
-        &larr; All Accounts
-      </router-link>
-
       <!-- Error display -->
-      <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">
+      <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-lg">
         {{ error }}
       </div>
 
@@ -411,57 +450,87 @@ export default {
       <div v-if="loading" class="text-gray-500">Loading...</div>
 
       <template v-if="!loading && account">
-        <!-- Header row -->
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <h2 class="text-2xl font-bold text-gray-900">{{ account.name }}</h2>
-            <span v-if="isArchived" class="inline-block px-2 py-0.5 text-xs font-medium rounded bg-yellow-100 text-yellow-800">
-              Closed
-            </span>
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-3">
+              <h2 class="text-2xl font-bold text-gray-900">{{ account.name }}</h2>
+              <span v-if="isArchived" class="inline-block rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-800">
+                Closed
+              </span>
+            </div>
+            <p class="mt-1 text-sm text-gray-600">{{ displaySubtitle }}</p>
           </div>
-          <div class="flex items-center gap-2">
-            <button
-              v-on:click="showEditAccountModal = true"
-              class="px-3 py-1.5 text-sm flex items-center gap-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-            >
-              <PencilSquareIcon class="w-4 h-4" />
-              Edit
-            </button>
-            <button
-              v-if="!isArchived"
-              v-on:click="closeAccount"
-              class="px-3 py-1.5 text-sm flex items-center gap-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-            >
-              <ArchiveBoxIcon class="w-4 h-4" />
-              Close
-            </button>
-            <button
-              v-if="isArchived"
-              v-on:click="reopenAccount"
-              class="px-3 py-1.5 text-sm flex items-center gap-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-            >
-              <ArchiveBoxIcon class="w-4 h-4" />
-              Reopen
-            </button>
-            <button
-              v-on:click="doDeleteAccount"
-              class="px-3 py-1.5 text-sm flex items-center gap-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-            >
-              <TrashIcon class="w-4 h-4" />
-              Delete
-            </button>
-          </div>
+
+          <Menu as="div" class="relative inline-block text-left shrink-0">
+            <MenuButton class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+              Manage Account
+            </MenuButton>
+            <MenuItems class="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col">
+              <MenuItem v-slot="{ active }">
+                <button
+                  v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                  v-on:click="showEditAccountModal = true"
+                >
+                  Edit
+                </button>
+              </MenuItem>
+              <MenuItem v-if="!isArchived" v-slot="{ active }">
+                <button
+                  v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                  v-on:click="closeAccount"
+                >
+                  Close
+                </button>
+              </MenuItem>
+              <MenuItem v-if="isArchived" v-slot="{ active }">
+                <button
+                  v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                  v-on:click="reopenAccount"
+                >
+                  Reopen
+                </button>
+              </MenuItem>
+              <MenuItem v-slot="{ active }">
+                <button
+                  v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
+                  v-on:click="doDeleteAccount"
+                >
+                  Delete
+                </button>
+              </MenuItem>
+            </MenuItems>
+          </Menu>
         </div>
 
-        <!-- Subheader info -->
-        <div class="flex flex-wrap items-center gap-3">
-          <span v-if="totalValue != null" class="text-lg font-semibold text-gray-700">
-            {{ formatCurrency(totalValue) }}
-          </span>
-          <span v-if="latestStatementDate" class="text-sm text-gray-400">
-            Updated {{ relativeDate(latestStatementDate) }}
-          </span>
-          <span v-else class="text-sm text-gray-400 italic">No data yet</span>
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="p-4">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+              <div class="px-1 py-1">
+                <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Total holdings</div>
+                <div class="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <div class="text-2xl font-semibold text-gray-900">{{ displayTotalHoldings }}</div>
+                  <div class="text-sm text-gray-500">
+                    (last updated {{ displayLastUpdated }})
+                  </div>
+                </div>
+              </div>
+
+              <dl class="flex flex-wrap gap-3 lg:flex-nowrap lg:justify-end">
+                <div class="w-40 rounded-lg border border-gray-200 px-4 py-3">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Owner</dt>
+                  <dd class="mt-1 text-sm text-gray-900">{{ displayOwner }}</dd>
+                </div>
+                <div class="w-40 rounded-lg border border-gray-200 px-4 py-3">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Liquidity</dt>
+                  <dd class="mt-1 text-sm text-gray-900">{{ displayLiquid }}</dd>
+                </div>
+                <div class="w-40 rounded-lg border border-gray-200 px-4 py-3">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Type</dt>
+                  <dd class="mt-1 text-sm text-gray-900">{{ displayTaxType }}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
         </div>
 
         <!-- Holdings table -->
@@ -543,7 +612,7 @@ export default {
                         <ChevronUpDownIcon class="w-4 h-4 text-gray-400" />
                       </ComboboxButton>
                     </div>
-                    <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white border border-gray-200 rounded-md shadow-lg focus:outline-none">
+                    <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg focus:outline-none">
                       <div v-if="filteredAssetsForRow(index).length === 0" class="px-3 py-2 text-sm text-gray-500">
                         No assets found
                       </div>
@@ -610,7 +679,7 @@ export default {
           <button
             v-if="!editing"
             v-on:click="enterEditMode"
-            class="px-4 py-2 flex items-center gap-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            class="px-4 py-2 flex items-center gap-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             title="Edit holdings"
           >
             <PencilSquareIcon class="w-4 h-4" />
