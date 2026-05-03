@@ -54,6 +54,7 @@ export default {
 
       // Inline editing state
       editing: false,
+      editDate: '',
       editQuantities: {},
       newRows: [],
       saving: false
@@ -216,6 +217,7 @@ export default {
 
     // Inline editing
     enterEditMode() {
+      this.editDate = new Date().toISOString().split('T')[0]
       this.editQuantities = {}
       for (const h of this.holdings) {
         this.editQuantities[h.asset_id] = this.formatQuantity(h.quantity)
@@ -226,6 +228,7 @@ export default {
 
     cancelEdit() {
       this.editing = false
+      this.editDate = ''
       this.editQuantities = {}
       this.newRows = []
     },
@@ -266,6 +269,11 @@ export default {
     },
 
     async saveEdits() {
+      if (!this.editDate) {
+        this.error = 'Please select an effective date'
+        return
+      }
+
       this.saving = true
       this.error = null
 
@@ -273,7 +281,6 @@ export default {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Not authenticated')
 
-        const today = new Date().toISOString().split('T')[0]
         const upserts = []
 
         // Existing holdings with changed quantities
@@ -284,7 +291,7 @@ export default {
             upserts.push({
               asset_id: h.asset_id,
               account_id: this.account.id,
-              holding_date: today,
+              holding_date: this.editDate,
               quantity: newQty,
               statement_id: null,
               created_by: user.id
@@ -300,7 +307,7 @@ export default {
           upserts.push({
             asset_id: row.asset.id,
             account_id: this.account.id,
-            holding_date: today,
+            holding_date: this.editDate,
             quantity: qty,
             statement_id: null,
             created_by: user.id
@@ -609,10 +616,18 @@ export default {
             <PencilSquareIcon class="w-4 h-4" />
             Edit Holdings
           </button>
-          <div v-else class="flex items-center gap-2">
+          <div v-else class="flex items-center gap-3">
+            <label class="flex items-center gap-2 text-sm text-gray-600">
+              Effective date
+              <input
+                v-model="editDate"
+                type="date"
+                class="px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </label>
             <button
               v-on:click="cancelEdit"
-              class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               Cancel
             </button>
