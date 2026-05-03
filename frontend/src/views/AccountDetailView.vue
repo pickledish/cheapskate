@@ -217,10 +217,10 @@ export default {
           }
         }
         const classes = Object.entries(classValues)
-          .filter(([, data]) => total > 0 && data.value / total >= 0.10)
+          .filter(([, data]) => data.value > 0)
           .map(([name, data]) => ({ name, color: data.color, sort_order: data.sort_order }))
           .sort((a, b) => a.sort_order - b.sort_order)
-        if (total > 0 && unclassifiedValue / total >= 0.10) {
+        if (unclassifiedValue > 0) {
           classes.push({ name: 'Unclassified', color: 'gray', sort_order: 9999 })
         }
         this.assetClasses = classes
@@ -458,7 +458,6 @@ export default {
                 Closed
               </span>
             </div>
-            <p class="mt-1 text-sm text-gray-600">{{ displaySubtitle }}</p>
           </div>
 
           <Menu as="div" class="relative inline-block text-left shrink-0">
@@ -504,29 +503,44 @@ export default {
 
         <div class="bg-white shadow rounded-lg overflow-hidden">
           <div class="p-4">
-            <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
-              <div class="px-1 py-1">
-                <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Total holdings</div>
-                <div class="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <div class="text-2xl font-semibold text-gray-900">{{ displayTotalHoldings }}</div>
-                  <div class="text-sm text-gray-500">
-                    (last updated {{ displayLastUpdated }})
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div class="lg:col-span-2 px-1 py-1 space-y-4">
+                <div>
+                  <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Total holdings</div>
+                  <div class="mt-2 text-2xl font-semibold text-gray-900">{{ displayTotalHoldings }}</div>
+                  <div v-if="assetClasses.length" class="mt-2 flex flex-wrap gap-1.5">
+                    <span
+                      v-for="ac in assetClasses"
+                      v-bind:key="ac.name"
+                      class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                      v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
+                    >
+                      {{ ac.name }}
+                    </span>
                   </div>
+                </div>
+                <div>
+                  <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Last updated</div>
+                  <div class="mt-1 text-sm text-gray-900">{{ displayLastUpdatedDate }} <span class="text-gray-500">({{ displayLastUpdated }})</span></div>
                 </div>
               </div>
 
-              <dl class="flex flex-wrap gap-3 lg:flex-nowrap lg:justify-end">
-                <div class="w-40 rounded-lg border border-gray-200 px-4 py-3">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Owner</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ displayOwner }}</dd>
+              <dl class="divide-y divide-gray-200 rounded-lg bg-gray-100 px-4">
+                <div class="flex items-baseline justify-between py-2.5">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Institution</dt>
+                  <dd class="text-sm font-bold text-gray-900">{{ displayInstitution }}</dd>
                 </div>
-                <div class="w-40 rounded-lg border border-gray-200 px-4 py-3">
+                <div class="flex items-baseline justify-between py-2.5">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Account Number</dt>
+                  <dd class="text-sm font-bold text-gray-900">******{{ displayAccountLast4 }}</dd>
+                </div>
+                <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Liquidity</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ displayLiquid }}</dd>
+                  <dd class="text-sm font-bold text-gray-900">{{ displayLiquid }}</dd>
                 </div>
-                <div class="w-40 rounded-lg border border-gray-200 px-4 py-3">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Type</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ displayTaxType }}</dd>
+                <div class="flex items-baseline justify-between py-2.5">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Account Type</dt>
+                  <dd class="text-sm font-bold text-gray-900">{{ displayTaxType }}</dd>
                 </div>
               </dl>
             </div>
