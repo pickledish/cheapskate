@@ -228,6 +228,22 @@ export default {
 <template>
   <AppLayout>
     <div class="space-y-6">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Accounts</h2>
+          <p class="mt-1 text-sm text-gray-600">
+            Create and manage accounts. Update holdings manually, or upload statements to be parsed automatically.
+          </p>
+        </div>
+        <button
+          v-on:click="showUploadStatementModal = true"
+          class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+        >
+          Upload Statement
+        </button>
+      </div>
+
       <!-- Error display -->
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">
         {{ error }}
@@ -238,20 +254,6 @@ export default {
 
       <!-- Investment Accounts Section -->
       <section v-if="!loading" class="space-y-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold text-gray-900">Accounts</h2>
-            <p class="mt-1 text-sm text-gray-600">
-              Create and manage accounts. Update holdings manually, or upload statements to be parsed automatically.
-            </p>
-          </div>
-          <button
-            v-on:click="showUploadStatementModal = true"
-            class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Upload Statement
-          </button>
-        </div>
         <!-- Card grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- Account cards -->
