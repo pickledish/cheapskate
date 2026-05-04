@@ -3,6 +3,7 @@ import AppLayout from '@/components/AppLayout.vue'
 import EditAccountModal from '@/components/modals/EditAccountModal.vue'
 import {
   getAccount,
+  getProfile,
   listAssetHoldingsByAccount,
   listAssetPrices,
   listAssets,
@@ -43,6 +44,7 @@ export default {
   data() {
     return {
       account: null,
+      ownerName: null,
       assets: [],
       holdings: [],
       totalValue: null,
@@ -116,13 +118,16 @@ export default {
         }
         this.account = accountData
 
-        const [holdingsData, pricesData, assetsData, allocationsData, statementsData] = await Promise.all([
+        const [holdingsData, pricesData, assetsData, allocationsData, statementsData, ownerProfile] = await Promise.all([
           listAssetHoldingsByAccount(accountId, 'desc'),
           listAssetPrices('desc'),
           listAssets(),
           listAssetAllocationsWithClass(),
-          listStatements()
+          listStatements(),
+          accountData.created_by ? getProfile(accountData.created_by) : Promise.resolve(null)
         ])
+
+        this.ownerName = ownerProfile?.name || null
 
         this.assets = assetsData
 
@@ -511,19 +516,26 @@ export default {
 
               <dl class="divide-y divide-gray-200 rounded-lg bg-gray-50 border border-gray-200 px-4">
                 <div class="flex items-baseline justify-between py-2.5">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Owner</dt>
+                  <dd class="text-sm font-semibold text-gray-900">
+                    <template v-if="ownerName">{{ ownerName }}</template>
+                    <span v-else class="text-gray-400 font-normal">Unknown</span>
+                  </dd>
+                </div>
+                <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Account Number</dt>
-                  <dd class="text-sm font-bold text-gray-900">
-                    <template v-if="displayAccountLast4">****{{ displayAccountLast4 }}</template>
+                  <dd class="text-sm font-semibold text-gray-900">
+                    <template v-if="displayAccountLast4">*****{{ displayAccountLast4 }}</template>
                     <span v-else class="text-gray-400 font-normal">Not set</span>
                   </dd>
                 </div>
                 <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Liquidity</dt>
-                  <dd class="text-sm font-bold text-gray-900">{{ displayLiquid }}</dd>
+                  <dd class="text-sm font-semibold text-gray-900">{{ displayLiquid }}</dd>
                 </div>
                 <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Account Type</dt>
-                  <dd class="text-sm font-bold text-gray-900">{{ displayTaxType }}</dd>
+                  <dd class="text-sm font-semibold text-gray-900">{{ displayTaxType }}</dd>
                 </div>
               </dl>
             </div>
