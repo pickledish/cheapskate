@@ -1,6 +1,7 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
 import AddAccountModal from '@/components/modals/AddAccountModal.vue'
+import UploadStatementModal from '@/components/modals/UploadStatementModal.vue'
 import OnboardingModal from '@/components/modals/OnboardingModal.vue'
 import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import { supabase } from '@/lib/supabase'
@@ -23,6 +24,7 @@ export default {
   components: {
     AppLayout,
     AddAccountModal,
+    UploadStatementModal,
     OnboardingModal,
     OnboardingContinueCard
   },
@@ -32,9 +34,9 @@ export default {
       hasAnyStatements: false,
       loading: true,
       error: null,
-      searchQuery: '',
 
       showAddAccountModal: false,
+      showUploadStatementModal: false,
 
       // Onboarding state
       showOnboardingModal: false,
@@ -43,12 +45,7 @@ export default {
   },
   computed: {
     filteredAccounts() {
-      const query = this.searchQuery.toLowerCase().trim()
-      return this.accounts.filter(account => {
-        if (account.archived_at) return false
-        if (!query) return true
-        return account.name.toLowerCase().includes(query)
-      })
+      return this.accounts.filter(account => !account.archived_at)
     },
     showContinueCard() {
       // Show continue card if: has at least 1 account, has at least 1 statement, and not yet completed
@@ -211,6 +208,11 @@ export default {
       await this.loadData()
     },
 
+    async onStatementUploaded() {
+      this.showUploadStatementModal = false
+      await this.loadData()
+    },
+
     relativeDate(dateStr) {
       if (!dateStr) return null
       return dayjs(dateStr).fromNow()
@@ -243,12 +245,12 @@ export default {
               Create and manage accounts. Update holdings manually, or upload statements to be parsed automatically.
             </p>
           </div>
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search accounts..."
-            class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
-          />
+          <button
+            v-on:click="showUploadStatementModal = true"
+            class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Upload Statement
+          </button>
         </div>
         <!-- Card grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -306,6 +308,12 @@ export default {
       v-if="showAddAccountModal"
       v-on:close="showAddAccountModal = false"
       v-on:created="onAccountCreated"
+    />
+
+    <UploadStatementModal
+      v-if="showUploadStatementModal"
+      v-on:close="showUploadStatementModal = false"
+      v-on:uploaded="onStatementUploaded"
     />
 
     <!-- Onboarding modal -->

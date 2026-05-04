@@ -16,6 +16,7 @@ const HoldingSchema = z.object({
 const ParsePdfResponseSchema = z.object({
   holdings: z.array(HoldingSchema).describe("Array of all holdings/positions found in the statement"),
   statement_date: z.string().optional().describe("Statement date in YYYY-MM-DD format, if found"),
+  last4: z.string().optional().describe("Last 4 digits of the account number, if found"),
 });
 
 type ParsePdfResponse = z.infer<typeof ParsePdfResponseSchema>;
@@ -54,6 +55,10 @@ const geminiSchema = {
     statement_date: {
       type: "string",
       description: "Statement date in YYYY-MM-DD format, if found",
+    },
+    last4: {
+      type: "string",
+      description: "Last 4 digits of the account number, if found",
     },
   },
   required: ["holdings"],
@@ -124,7 +129,8 @@ Rules:
 - For each holding, also extract the per-share price if it's explicitly shown
 - For cash or money-market balances, use name "$CASH" with quantity AND total_value both equal to the dollar amount
 - Only include actual holdings, not transaction history
-- Extract the statement date if visible`;
+- Extract the statement date if visible
+- Extract the last 4 digits of the account number if visible`;
 
     if (existingAssets && existingAssets.length > 0) {
       const knownAssets = existingAssets

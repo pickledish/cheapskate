@@ -8,6 +8,7 @@ export {
   getAccount,
   insertAccount,
   updateAccount,
+  findAccountByLast4,
   deleteAccount
 } from './accounts'
 export type { Account } from './accounts'

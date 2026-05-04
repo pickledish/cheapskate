@@ -168,7 +168,7 @@ export default {
         </div>
         <button
           v-on:click="showAddModal = true"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
         >
           Add Asset Class
         </button>
@@ -315,7 +315,7 @@ export default {
         <p class="text-gray-500 mb-4">No asset classes yet. Add your first to categorize your assets.</p>
         <button
           v-on:click="showAddModal = true"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
         >
           Add Asset Class
         </button>

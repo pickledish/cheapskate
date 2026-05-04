@@ -10,6 +10,7 @@ export default {
   data() {
     return {
       name: '',
+      last4: '',
       rebalancing: true,
       loading: false,
       error: null
@@ -32,7 +33,8 @@ export default {
           family_id: user.user_metadata.family_id,
           created_by: user.id,
           name: this.name.trim(),
-          rebalancing: this.rebalancing
+          rebalancing: this.rebalancing,
+          last4: this.last4.trim() || null
         })
 
         this.$emit('created')
@@ -69,6 +71,22 @@ export default {
           placeholder="e.g., Fidelity 401k"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Account Last 4 Digits
+        </label>
+        <input
+          v-model="last4"
+          type="text"
+          maxlength="4"
+          placeholder="e.g., 1234"
+          class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <p class="mt-1 text-xs text-gray-500">
+          Used to auto-match uploaded statements to this account.
+        </p>
       </div>
 
       <div>

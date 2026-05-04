@@ -1,45 +1,50 @@
 <script>
 import BaseModal from './BaseModal.vue'
-import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
+import { Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/vue'
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/24/solid'
 import { supabase } from '@/lib/supabase'
 import {
+  listAccounts,
+  findAccountByLast4,
+  insertAccount,
+  updateAccount,
   insertStatement,
   findAssetByTickerOrName,
   insertAsset,
   upsertAssetPrice,
   upsertAssetHolding,
-  deleteStatement
+  deleteStatement,
+  listAssetHoldingsByAccount,
+  listAssets
 } from '@/lib/data'
 
 export default {
   name: 'UploadStatementModal',
-  components: { BaseModal, Disclosure, DisclosureButton, DisclosurePanel },
-  props: {
-    account: {
-      type: Object,
-      required: true
-    },
-    existingHoldings: {
-      type: Array,
-      default: () => []
-    },
-    hasExistingStatements: {
-      type: Boolean,
-      default: false
-    }
-  },
+  components: { BaseModal, Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, CheckIcon, ChevronUpDownIcon },
   emits: ['close', 'uploaded'],
   data() {
     return {
-      // Step: 'upload' | 'preview' | 'saving'
+      // Step: 'upload' | 'match' | 'preview' | 'saving'
       step: 'upload',
 
       // File state
       file: null,
 
-      // Parsed data (holdings now have: name, quantity, total_value, price?)
+      // Parsed data
       holdings: [],
       statementDate: '',
+      parsedLast4: null,
+
+      // Account matching
+      matchedAccount: null,
+      allAccounts: [],
+      selectedAccount: null,
+      accountQuery: '',
+      createNewAccount: false,
+      newAccountName: '',
+
+      // Existing holdings for sold-position detection
+      existingHoldings: [],
 
       // Loading/error
       loading: false,
@@ -51,10 +56,28 @@ export default {
       return new Date().toISOString().split('T')[0]
     },
     modalTitle() {
-      return `Upload Statement - ${this.account.name}`
+      if (this.step === 'match') return 'Select Account'
+      if (this.matchedAccount) return `Upload Statement - ${this.matchedAccount.name}`
+      return 'Upload Statement'
+    },
+    filteredAccounts() {
+      const query = this.accountQuery.toLowerCase().trim()
+      if (!query) return this.allAccounts
+      return this.allAccounts.filter(a =>
+        a.name.toLowerCase().includes(query) ||
+        (a.last4 && a.last4.includes(query))
+      )
+    },
+    resolvedAccount() {
+      return this.matchedAccount
     }
   },
   methods: {
+    displayAccount(account) {
+      if (!account) return ''
+      return account.last4 ? `${account.name} (****${account.last4})` : account.name
+    },
+
     onFileChange(event) {
       this.file = event.target.files[0]
       this.error = null
@@ -81,9 +104,110 @@ export default {
 
         this.holdings = result.holdings || []
         this.statementDate = result.statement_date || this.todayDate
+        this.parsedLast4 = result.last4 || null
+
+        // Try to auto-match by last4
+        if (this.parsedLast4) {
+          const matches = await findAccountByLast4(this.parsedLast4)
+
+          if (matches.length === 1) {
+            this.matchedAccount = matches[0]
+            await this.onAccountResolved()
+            return
+          }
+
+          if (matches.length > 1) {
+            throw new Error(`Multiple accounts match last 4 digits "${this.parsedLast4}". Please update your accounts so each has a unique last-4.`)
+          }
+        }
+
+        // No match -- show account selection
+        this.allAccounts = await listAccounts()
+        this.step = 'match'
+
+      } catch (err) {
+        this.error = err.message
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async confirmAccountSelection() {
+      this.error = null
+
+      if (this.createNewAccount) {
+        if (!this.newAccountName.trim()) {
+          this.error = 'Please enter an account name'
+          return
+        }
+
+        this.loading = true
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (!user) throw new Error('Not authenticated')
+
+          const newAccount = await insertAccount({
+            family_id: user.user_metadata.family_id,
+            created_by: user.id,
+            name: this.newAccountName.trim(),
+            rebalancing: true, // uhh just hardcode 'true' for now I guess
+            last4: this.parsedLast4
+          })
+          this.matchedAccount = newAccount
+          await this.onAccountResolved()
+        } catch (err) {
+          this.error = err.message
+          this.loading = false
+        }
+        return
+      }
+
+      if (!this.selectedAccount) {
+        this.error = 'Please select an account'
+        return
+      }
+
+      this.loading = true
+      try {
+        this.matchedAccount = this.selectedAccount
+        await this.onAccountResolved()
+      } catch (err) {
+        this.error = err.message
+        this.loading = false
+      }
+    },
+
+    async onAccountResolved() {
+      try {
+        // Fetch existing holdings for sold-position detection
+        const [holdingsData, assetsData] = await Promise.all([
+          listAssetHoldingsByAccount(this.matchedAccount.id, 'desc'),
+          listAssets()
+        ])
+
+        const assetMap = {}
+        for (const a of assetsData) {
+          assetMap[a.id] = { ticker: a.ticker, name: a.name }
+        }
+
+        // Get latest holding per asset
+        const latestByAsset = {}
+        for (const h of holdingsData) {
+          if (!latestByAsset[h.asset_id]) {
+            latestByAsset[h.asset_id] = h
+          }
+        }
+
+        this.existingHoldings = Object.values(latestByAsset)
+          .filter(h => parseFloat(h.quantity) > 0)
+          .map(h => ({
+            asset_id: h.asset_id,
+            ticker: assetMap[h.asset_id]?.ticker || null,
+            name: assetMap[h.asset_id]?.name || null
+          }))
+
         this.addSoldPositions()
         this.step = 'preview'
-
       } catch (err) {
         this.error = err.message
       } finally {
@@ -163,6 +287,12 @@ export default {
         return
       }
 
+      const account = this.resolvedAccount
+      if (!account) {
+        this.error = 'No account selected'
+        return
+      }
+
       this.step = 'saving'
       this.loading = true
       this.error = null
@@ -173,9 +303,14 @@ export default {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Not authenticated')
 
+        // Backfill last4 if the account doesn't have one yet
+        if (this.parsedLast4 && !account.last4) {
+          await updateAccount(account.id, { last4: this.parsedLast4 })
+        }
+
         // 1. Create the statement record
         statement = await insertStatement({
-          account_id: this.account.id,
+          account_id: account.id,
           statement_date: this.statementDate
         })
 
@@ -223,7 +358,7 @@ export default {
           try {
             await upsertAssetHolding({
               asset_id: asset.id,
-              account_id: this.account.id,
+              account_id: account.id,
               holding_date: this.statementDate,
               quantity: holding.quantity,
               statement_id: statement.id,
@@ -262,7 +397,7 @@ export default {
         Select a PDF statement to upload. It will be parsed using AI to extract holdings.
       </p>
 
-      <Disclosure v-slot="{ open }" v-bind:default-open="!hasExistingStatements" as="div" class="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <Disclosure v-slot="{ open }" default-open as="div" class="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <DisclosureButton class="w-full flex items-center justify-between text-left">
           <h4 class="text-sm font-medium text-blue-900">Privacy Notice</h4>
           <svg
@@ -282,7 +417,7 @@ export default {
           <DisclosurePanel static class="overflow-hidden">
             <div class="mt-2">
               <p class="text-sm text-blue-800 mb-2">
-                Cheapskate extracts and stores only ticker symbols and share quantities from your statement — no account numbers, addresses, or other personal information.
+                Cheapskate extracts and stores only ticker symbols, share quantities, and account last-4 digits from your statement — no full account numbers, addresses, or other personal information.
               </p>
               <p class="text-sm text-blue-800">
                 Gemini is also configured in <a href="https://docs.cloud.google.com/vertex-ai/generative-ai/docs/vertex-ai-zero-data-retention" class="font-semibold underline hover:text-blue-900">zero-retention mode</a>, so your document is deleted from Google's servers as soon as the parsing is completed.
@@ -316,9 +451,102 @@ export default {
       </div>
     </div>
 
-    <!-- Step 2: Preview -->
+    <!-- Step 2: Account matching (only shown when no auto-match) -->
+    <div v-if="step === 'match'">
+      <p class="text-sm text-gray-600 mb-4">
+        <template v-if="parsedLast4">
+          No account found matching account number ending in <strong>{{ parsedLast4 }}</strong>.
+        </template>
+        <template v-else>
+          Could not detect an account number in the statement.
+        </template>
+        Please select an existing account or create a new one.
+      </p>
+
+      <div class="space-y-4">
+        <!-- Account combobox -->
+        <div>
+          <Combobox v-model="selectedAccount" as="div" class="relative" v-on:update:model-value="createNewAccount = false">
+            <div class="relative">
+              <ComboboxInput
+                v-bind:display-value="displayAccount"
+                v-on:change="accountQuery = $event.target.value"
+                placeholder="Search accounts..."
+                class="w-full px-3 py-2 pr-8 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
+                <ChevronUpDownIcon class="w-4 h-4 text-gray-400" />
+              </ComboboxButton>
+            </div>
+            <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg focus:outline-none">
+              <div v-if="filteredAccounts.length === 0" class="px-3 py-2 text-sm text-gray-500">
+                No accounts found
+              </div>
+              <ComboboxOption
+                v-for="acct in filteredAccounts"
+                v-bind:key="acct.id"
+                v-bind:value="acct"
+                v-slot="{ active, selected }"
+              >
+                <div
+                  v-bind:class="[
+                    'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
+                    active ? 'bg-gray-100' : '',
+                    selected ? 'text-blue-600 font-medium' : 'text-gray-700'
+                  ]"
+                >
+                  <span>{{ acct.last4 ? `${acct.name} (****${acct.last4})` : acct.name }}</span>
+                  <CheckIcon v-if="selected" class="w-4 h-4" />
+                </div>
+              </ComboboxOption>
+            </ComboboxOptions>
+          </Combobox>
+        </div>
+
+        <!-- Create new account option -->
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            v-model="createNewAccount"
+            v-on:change="createNewAccount ? selectedAccount = null : null"
+            class="rounded border-gray-300 text-blue-600 mt-0.5"
+          />
+          <div class="flex-1">
+            <div class="text-sm font-medium text-gray-700">Create new account instead</div>
+            <input
+              v-if="createNewAccount"
+              v-model="newAccountName"
+              type="text"
+              placeholder="Account name (e.g., Fidelity 401k)"
+              class="mt-2 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </label>
+      </div>
+
+      <div class="mt-4 flex justify-end space-x-2">
+        <button
+          v-on:click="step = 'upload'"
+          class="px-4 py-2 text-gray-700 hover:text-gray-900"
+        >
+          Back
+        </button>
+        <button
+          v-on:click="confirmAccountSelection"
+          v-bind:disabled="loading || (!selectedAccount && !createNewAccount)"
+          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+        >
+          {{ loading ? 'Loading...' : 'Continue' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Preview -->
     <div v-if="step === 'preview'">
       <p class="text-sm text-gray-600 mb-4">
+        <template v-if="resolvedAccount">
+          Uploading to <strong>{{ resolvedAccount.name }}</strong><template v-if="resolvedAccount.last4 || parsedLast4"> (****{{ resolvedAccount.last4 || parsedLast4 }})</template>.
+        </template>
         Review the parsed holdings below. New assets will be created automatically.
       </p>
 
@@ -387,7 +615,7 @@ export default {
       </div>
     </div>
 
-    <!-- Step 3: Saving -->
+    <!-- Step 4: Saving -->
     <div v-if="step === 'saving'" class="text-center py-8">
       <p class="text-gray-600">Saving statement...</p>
     </div>

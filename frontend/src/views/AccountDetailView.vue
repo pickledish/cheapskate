@@ -66,17 +66,8 @@ export default {
     isArchived() {
       return !!this.account?.archived_at
     },
-    displayInstitution() {
-      return this.account?.institution || 'Vanguard'
-    },
-    displaySubtitle() {
-      return `${this.displayInstitution} • ${this.displayAccountLast4}`
-    },
-    displayOwner() {
-      return this.account?.owner_name || 'Brandon'
-    },
     displayAccountLast4() {
-      return this.account?.last4 ? `${this.account.last4}` : '4821'
+      return this.account?.last4 || null
     },
     displayLiquid() {
       if (typeof this.account?.is_liquid === 'boolean') {
@@ -520,12 +511,11 @@ export default {
 
               <dl class="divide-y divide-gray-200 rounded-lg bg-gray-50 border border-gray-200 px-4">
                 <div class="flex items-baseline justify-between py-2.5">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Institution</dt>
-                  <dd class="text-sm font-bold text-gray-900">{{ displayInstitution }}</dd>
-                </div>
-                <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Account Number</dt>
-                  <dd class="text-sm font-bold text-gray-900">******{{ displayAccountLast4 }}</dd>
+                  <dd class="text-sm font-bold text-gray-900">
+                    <template v-if="displayAccountLast4">****{{ displayAccountLast4 }}</template>
+                    <span v-else class="text-gray-400 font-normal">Not set</span>
+                  </dd>
                 </div>
                 <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Liquidity</dt>

@@ -5,6 +5,7 @@ export interface Account {
   name: string
   rebalancing: boolean
   archived_at: string | null
+  last4: string | null
   created_by: string
   created_at: string
   family_id: string
@@ -39,6 +40,7 @@ export async function insertAccount(account: {
   rebalancing: boolean
   created_by: string
   family_id: string
+  last4?: string | null
 }): Promise<Account> {
   const { data, error } = await supabase
     .from('accounts')
@@ -46,7 +48,8 @@ export async function insertAccount(account: {
       name: account.name,
       rebalancing: account.rebalancing,
       created_by: account.created_by,
-      family_id: account.family_id
+      family_id: account.family_id,
+      last4: account.last4 ?? null
     })
     .select()
     .single()
@@ -59,6 +62,7 @@ export async function updateAccount(id: number, updates: {
   name?: string
   rebalancing?: boolean
   archived_at?: string | null
+  last4?: string | null
 }): Promise<void> {
   const { error } = await supabase
     .from('accounts')
@@ -66,6 +70,16 @@ export async function updateAccount(id: number, updates: {
     .eq('id', id)
 
   if (error) throw error
+}
+
+export async function findAccountByLast4(last4: string): Promise<Account[]> {
+  const { data, error } = await supabase
+    .from('accounts')
+    .select('*')
+    .eq('last4', last4)
+
+  if (error) throw error
+  return data || []
 }
 
 export async function deleteAccount(id: number): Promise<void> {

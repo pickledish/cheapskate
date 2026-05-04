@@ -15,12 +15,14 @@ export default {
   data() {
     return {
       name: '',
+      last4: '',
       loading: false,
       error: null
     }
   },
   mounted() {
     this.name = this.account.name || ''
+    this.last4 = this.account.last4 || ''
   },
   methods: {
     async save() {
@@ -33,7 +35,10 @@ export default {
       this.error = null
 
       try {
-        await updateAccount(this.account.id, { name: this.name.trim() })
+        await updateAccount(this.account.id, {
+          name: this.name.trim(),
+          last4: this.last4.trim() || null
+        })
         this.$emit('updated')
       } catch (err) {
         this.error = err.message
@@ -64,6 +69,21 @@ export default {
           placeholder="e.g., Fidelity 401k"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Account Last 4 Digits
+        </label>
+        <input
+          v-model="last4"
+          type="text"
+          maxlength="4"
+          placeholder="e.g., 1234"
+          class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <p class="mt-1 text-xs text-gray-500">
+          Used to auto-match uploaded statements to this account.
+        </p>
       </div>
     </div>
 
