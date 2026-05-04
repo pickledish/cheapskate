@@ -27,7 +27,9 @@ export default {
   },
   methods: {
     navClass(path, enabled) {
-      const isActive = this.$route.path === path
+      const isActive = path === '/'
+        ? this.$route.path === '/'
+        : this.$route.path.startsWith(path)
       if (!enabled) {
         return 'border-transparent text-gray-300 cursor-not-allowed pointer-events-none'
       }
