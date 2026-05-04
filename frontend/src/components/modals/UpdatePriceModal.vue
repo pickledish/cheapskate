@@ -33,7 +33,7 @@ export default {
       }
 
       const priceNum = parseFloat(this.price)
-      if (isNaN(priceNum) || priceNum < 0) {
+      if (isNaN(priceNum)) {
         this.error = 'Please enter a valid price'
         return
       }
@@ -94,9 +94,8 @@ export default {
         </label>
         <input
           v-model="price"
-          type="number"
-          step="0.01"
-          min="0"
+          type="text"
+          inputmode="decimal"
           placeholder="e.g., 250.00"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />

@@ -129,7 +129,7 @@ export default {
       }
     },
     hasData() {
-      return this.series.length > 0 && this.series.some(s => s.data.some(v => v > 0))
+      return this.series.length > 0 && this.series.some(s => s.data.some(v => v !== 0))
     }
   }
 }
