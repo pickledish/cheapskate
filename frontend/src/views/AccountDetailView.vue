@@ -186,7 +186,7 @@ export default {
           })
         }
         this.holdings = holdingsDisplay.sort((a, b) => b.value - a.value)
-        this.totalValue = total > 0 ? total : null
+        this.totalValue = total !== 0 ? total : null
 
         const classValues = {}
         let unclassifiedValue = 0

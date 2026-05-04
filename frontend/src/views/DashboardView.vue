@@ -178,7 +178,7 @@ export default {
           return total
         })
         return { name: accountMap[accountId] || `Account ${accountId}`, data }
-      }).filter(s => s.data.some(v => v > 0))
+      }).filter(s => s.data.some(v => v !== 0))
     },
 
     computeGroupedByOwner(months) {
@@ -207,7 +207,7 @@ export default {
           return total
         })
         return { name: profileMap[ownerId] || 'Unknown', data }
-      }).filter(s => s.data.some(v => v > 0))
+      }).filter(s => s.data.some(v => v !== 0))
     },
 
     computeGroupedByAsset(months) {
@@ -227,7 +227,7 @@ export default {
           return total
         })
         return { name: assetMap[assetId] || `Asset ${assetId}`, data }
-      }).filter(s => s.data.some(v => v > 0))
+      }).filter(s => s.data.some(v => v !== 0))
     },
 
     computeGroupedByAssetClass(months) {
@@ -264,7 +264,7 @@ export default {
           return total
         })
         return { name: classMap[classId] || `Class ${classId}`, data }
-      }).filter(s => s.data.some(v => v > 0))
+      }).filter(s => s.data.some(v => v !== 0))
     }
   }
 }

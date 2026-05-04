@@ -128,6 +128,7 @@ Rules:
 - For the name field, use the ticker symbol if one is shown (e.g., AAPL, VTI), otherwise use a descriptive name
 - For each holding, also extract the per-share price if it's explicitly shown
 - For cash or money-market balances, use name "$CASH" with quantity AND total_value both equal to the dollar amount
+- For debt or liability balances (loans, mortgages, credit cards), use name "$DEBT" with quantity equal to the dollar amount owed and total_value as the negative of that amount
 - Only include actual holdings, not transaction history
 - Extract the statement date if visible
 - Extract the last 4 digits of the account number if visible`;
