@@ -88,8 +88,8 @@ export default {
 
       this.monthLabels = monthsWithData.map(m => this.formatMonth(m))
 
-      // Build class map for names and colors
-      const classMap = Object.fromEntries(this.assetClassesData.map(c => [c.id, { name: c.name, color: c.color }]))
+      // Build class map for names, colors, and goals
+      const classMap = Object.fromEntries(this.assetClassesData.map(c => [c.id, { name: c.name, color: c.color, goal: c.goal || 0 }]))
       const classIds = this.assetClassesData.map(c => c.id)
 
       // Compute values by class for each month (only months with data)
@@ -116,18 +116,20 @@ export default {
           // Return percentage (will be normalized after)
           return { classValue, totalValue }
         })
-        const classInfo = classMap[classId] || { name: `Class ${classId}`, color: 'red' }
-        return { classId, name: classInfo.name, color: classInfo.color, data }
+        const classInfo = classMap[classId] || { name: `Class ${classId}`, color: 'red', goal: 0 }
+        return { classId, name: classInfo.name, color: classInfo.color, goal: classInfo.goal, data }
       })
 
       // Normalize: convert to percentages of total for each month
+      // Exclude asset classes with no goal and no liquid holdings (nothing to rebalance)
       const normalizedSeries = seriesData
         .map(s => ({
           name: s.name,
           color: s.color,
+          goal: s.goal,
           data: s.data.map(d => d.totalValue > 0 ? d.classValue / d.totalValue : 0)
         }))
-        .filter(s => s.data.some(v => v > 0))
+        .filter(s => s.goal > 0 || s.data.some(v => v > 0))
 
       // Compute unclassified portion for each month (assets with no/incomplete allocations)
       const unclassifiedData = monthsWithData.map((month, monthIndex) => {
@@ -169,12 +171,13 @@ export default {
       this.currentTotalValue = currentTotal
 
       // Build comparison data for all asset classes (respecting sort_order)
+      // Exclude asset classes with no goal and no liquid holdings (nothing to rebalance)
       this.comparisonAllocations = this.assetClassesData.map(ac => ({
         name: ac.name,
         color: ac.color,
         current: currentTotal > 0 ? (currentValueByClass[ac.id] || 0) / currentTotal : 0,
         goal: ac.goal || 0
-      }))
+      })).filter(ac => ac.goal > 0 || ac.current > 0)
     },
 
     getLast12Months() {
