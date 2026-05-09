@@ -180,7 +180,8 @@ export default {
     getLast12Months() {
       const months = []
       const now = new Date()
-      for (let i = 11; i >= 0; i--) {
+      // Start from 12 months ago, end at previous month (exclude current month)
+      for (let i = 12; i >= 1; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
         months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
       }
@@ -195,11 +196,6 @@ export default {
     },
 
     formatMonth(monthStr) {
-      const now = new Date()
-      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-      if (monthStr === currentMonth) {
-        return 'Current'
-      }
       const [year, month] = monthStr.split('-')
       const date = new Date(year, month - 1)
       return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
