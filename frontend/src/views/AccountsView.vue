@@ -130,6 +130,9 @@ export default {
         }
 
         // Calculate total value per account and build holdingsByAccount
+        // We use absolute values for accountValues to get total exposure (not net value),
+        // so that the 10% threshold for showing asset class tags works correctly for
+        // accounts with both long and short positions.
         const accountValues = {}
         const holdingsByAccount = {}
         for (const key in latestHoldingByAccountAsset) {
@@ -137,9 +140,9 @@ export default {
           const price = latestPriceByAsset[holding.asset_id] || 0
           const value = holding.quantity * price
 
-          accountValues[holding.account_id] = (accountValues[holding.account_id] || 0) + value
+          accountValues[holding.account_id] = (accountValues[holding.account_id] || 0) + Math.abs(value)
 
-          if (holding.quantity > 0) {
+          if (holding.quantity !== 0) {
             if (!holdingsByAccount[holding.account_id]) {
               holdingsByAccount[holding.account_id] = []
             }
@@ -175,14 +178,15 @@ export default {
             }
           }
 
-          // Convert to array, filter out classes <10% of account value, sort by sort_order
+          // Convert to array, filter out classes <10% of account exposure, sort by sort_order
+          // Use Math.abs since class values can be negative (from short positions)
           const classes = Object.entries(classValues)
-            .filter(([, data]) => totalValue > 0 && data.value / totalValue >= 0.10)
+            .filter(([, data]) => totalValue > 0 && Math.abs(data.value) / totalValue >= 0.10)
             .map(([name, data]) => ({ name, color: data.color, sort_order: data.sort_order }))
             .sort((a, b) => a.sort_order - b.sort_order)
 
-          // Add "Unclassified" tag if >= 10% of account value
-          if (totalValue > 0 && unclassifiedValue / totalValue >= 0.10) {
+          // Add "Unclassified" tag if >= 10% of account exposure
+          if (totalValue > 0 && Math.abs(unclassifiedValue) / totalValue >= 0.10) {
             classes.push({ name: 'Unclassified', color: 'gray', sort_order: 9999 })
           }
 
