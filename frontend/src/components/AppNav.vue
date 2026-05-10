@@ -47,7 +47,7 @@ export default {
       <div class="flex justify-between h-16">
         <div class="flex">
           <div class="flex-shrink-0 flex items-center">
-            <span class="text-2xl font-bold text-gray-900">Cheapskate</span>
+            <span class="text-xl font-semibold text-gray-900"><span class="mr-2">🛼</span>Cheapskate</span>
           </div>
           <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
             <router-link
