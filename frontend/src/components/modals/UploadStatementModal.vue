@@ -42,6 +42,7 @@ export default {
       accountQuery: '',
       createNewAccount: false,
       newAccountName: '',
+      matchingAccountIds: [],
 
       // Existing holdings for sold-position detection
       existingHoldings: [],
@@ -67,6 +68,11 @@ export default {
         a.name.toLowerCase().includes(query) ||
         (a.last4 && a.last4.includes(query))
       )
+    },
+    sortedAccounts() {
+      const matching = this.filteredAccounts.filter(a => this.matchingAccountIds.includes(a.id))
+      const others = this.filteredAccounts.filter(a => !this.matchingAccountIds.includes(a.id))
+      return [...matching, ...others]
     },
     resolvedAccount() {
       return this.matchedAccount
@@ -109,6 +115,7 @@ export default {
         // Try to auto-match by last4
         if (this.parsedLast4) {
           const matches = await findAccountByLast4(this.parsedLast4)
+          this.matchingAccountIds = matches.map(a => a.id)
 
           if (matches.length === 1) {
             this.matchedAccount = matches[0]
@@ -117,7 +124,10 @@ export default {
           }
 
           if (matches.length > 1) {
-            throw new Error(`Multiple accounts match last 4 digits "${this.parsedLast4}". Please update your accounts so each has a unique last-4.`)
+            // Multiple matches - show account selection with matches highlighted
+            this.allAccounts = await listAccounts()
+            this.step = 'match'
+            return
           }
         }
 
@@ -154,6 +164,7 @@ export default {
             last4: this.parsedLast4
           })
           this.matchedAccount = newAccount
+          this.matchingAccountIds = []
           await this.onAccountResolved()
         } catch (err) {
           this.error = err.message
@@ -170,11 +181,19 @@ export default {
       this.loading = true
       try {
         this.matchedAccount = this.selectedAccount
+        this.matchingAccountIds = []
         await this.onAccountResolved()
       } catch (err) {
         this.error = err.message
         this.loading = false
       }
+    },
+
+    async rejectAutoMatch() {
+      this.matchedAccount = null
+      this.selectedAccount = null
+      this.allAccounts = await listAccounts()
+      this.step = 'match'
     },
 
     async onAccountResolved() {
@@ -454,19 +473,24 @@ export default {
     <!-- Step 2: Account matching (only shown when no auto-match) -->
     <div v-if="step === 'match'">
       <p class="text-sm text-gray-600 mb-4">
-        <template v-if="parsedLast4">
+        <template v-if="matchingAccountIds.length > 1">
+          Multiple accounts match account number ending in <strong>{{ parsedLast4 }}</strong>.
+          Please select the correct one.
+        </template>
+        <template v-else-if="parsedLast4">
           No account found matching account number ending in <strong>{{ parsedLast4 }}</strong>.
+          Please select an existing account or create a new one.
         </template>
         <template v-else>
           Could not detect an account number in the statement.
+          Please select an existing account or create a new one.
         </template>
-        Please select an existing account or create a new one.
       </p>
 
       <div class="space-y-4">
         <!-- Account combobox -->
         <div>
-          <Combobox v-model="selectedAccount" as="div" class="relative" v-on:update:model-value="createNewAccount = false">
+          <Combobox v-model="selectedAccount" as="div" class="relative" immediate v-on:update:model-value="createNewAccount = false">
             <div class="relative">
               <ComboboxInput
                 v-bind:display-value="displayAccount"
@@ -479,11 +503,11 @@ export default {
               </ComboboxButton>
             </div>
             <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg focus:outline-none">
-              <div v-if="filteredAccounts.length === 0" class="px-3 py-2 text-sm text-gray-500">
+              <div v-if="sortedAccounts.length === 0" class="px-3 py-2 text-sm text-gray-500">
                 No accounts found
               </div>
               <ComboboxOption
-                v-for="acct in filteredAccounts"
+                v-for="acct in sortedAccounts"
                 v-bind:key="acct.id"
                 v-bind:value="acct"
                 v-slot="{ active, selected }"
@@ -495,8 +519,14 @@ export default {
                     selected ? 'text-blue-600 font-medium' : 'text-gray-700'
                   ]"
                 >
-                  <span>{{ acct.last4 ? `${acct.name} (****${acct.last4})` : acct.name }}</span>
-                  <CheckIcon v-if="selected" class="w-4 h-4" />
+                  <span class="flex items-center gap-2">
+                    {{ acct.last4 ? `${acct.name} (****${acct.last4})` : acct.name }}
+                    <span
+                      v-if="matchingAccountIds.includes(acct.id)"
+                      class="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded"
+                    >Matches ****{{ parsedLast4 }}</span>
+                  </span>
+                  <CheckIcon v-if="selected" class="w-4 h-4 flex-shrink-0" />
                 </div>
               </ComboboxOption>
             </ComboboxOptions>
@@ -543,10 +573,21 @@ export default {
 
     <!-- Step 3: Preview -->
     <div v-if="step === 'preview'">
-      <p class="text-sm text-gray-600 mb-4">
+      <p class="text-sm text-gray-600 mb-2">
         <template v-if="resolvedAccount">
-          Uploading to <strong>{{ resolvedAccount.name }}</strong><template v-if="resolvedAccount.last4 || parsedLast4"> (****{{ resolvedAccount.last4 || parsedLast4 }})</template>.
+          <template v-if="matchingAccountIds.length === 1">
+            Auto-matched to <strong>{{ resolvedAccount.name }}</strong><template v-if="resolvedAccount.last4 || parsedLast4"> (****{{ resolvedAccount.last4 || parsedLast4 }})</template>.
+            <button
+              v-on:click="rejectAutoMatch"
+              class="text-blue-600 hover:text-blue-800 underline"
+            >Not the right account?</button>
+          </template>
+          <template v-else>
+            Uploading to <strong>{{ resolvedAccount.name }}</strong><template v-if="resolvedAccount.last4 || parsedLast4"> (****{{ resolvedAccount.last4 || parsedLast4 }})</template>.
+          </template>
         </template>
+      </p>
+      <p class="text-sm text-gray-600 mb-4">
         Review the parsed holdings below. New assets will be created automatically.
       </p>
 
