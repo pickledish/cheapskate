@@ -119,6 +119,8 @@ export default {
 
           if (matches.length === 1) {
             this.matchedAccount = matches[0]
+            // Prefetch accounts so rejectAutoMatch() is instant if user clicks "Not the right account?"
+            listAccounts().then(accts => this.allAccounts = accts)
             await this.onAccountResolved()
             return
           }
@@ -192,7 +194,10 @@ export default {
     async rejectAutoMatch() {
       this.matchedAccount = null
       this.selectedAccount = null
-      this.allAccounts = await listAccounts()
+      // might've already been loaded in prefetch
+      if (this.allAccounts.length === 0) {
+        this.allAccounts = await listAccounts()
+      }
       this.step = 'match'
     },
 
@@ -472,17 +477,22 @@ export default {
 
     <!-- Step 2: Account matching (only shown when no auto-match) -->
     <div v-if="step === 'match'">
-      <p class="text-sm text-gray-600 mb-4">
+      <p class="text-sm text-gray-600 mb-2">
         <template v-if="matchingAccountIds.length > 1">
           Multiple accounts match account number ending in <strong>{{ parsedLast4 }}</strong>.
-          Please select the correct one.
         </template>
         <template v-else-if="parsedLast4">
           No account found matching account number ending in <strong>{{ parsedLast4 }}</strong>.
-          Please select an existing account or create a new one.
         </template>
         <template v-else>
           Could not detect an account number in the statement.
+        </template>
+      </p>
+      <p class="text-sm text-gray-600 mb-4">
+        <template v-if="matchingAccountIds.length > 1">
+          Please select the correct one.
+        </template>
+        <template v-else>
           Please select an existing account or create a new one.
         </template>
       </p>
@@ -490,15 +500,16 @@ export default {
       <div class="space-y-4">
         <!-- Account combobox -->
         <div>
-          <Combobox v-model="selectedAccount" as="div" class="relative" immediate v-on:update:model-value="createNewAccount = false">
+          <Combobox v-model="selectedAccount" as="div" class="relative" v-on:update:model-value="createNewAccount = false">
             <div class="relative">
               <ComboboxInput
                 v-bind:display-value="displayAccount"
                 v-on:change="accountQuery = $event.target.value"
+                v-on:focus="$refs.comboboxButton.$el.click()"
                 placeholder="Search accounts..."
                 class="w-full px-3 py-2 pr-8 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
+              <ComboboxButton ref="comboboxButton" class="absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon class="w-4 h-4 text-gray-400" />
               </ComboboxButton>
             </div>
@@ -524,7 +535,7 @@ export default {
                     <span
                       v-if="matchingAccountIds.includes(acct.id)"
                       class="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded"
-                    >Matches ****{{ parsedLast4 }}</span>
+                    >Matches</span>
                   </span>
                   <CheckIcon v-if="selected" class="w-4 h-4 flex-shrink-0" />
                 </div>
