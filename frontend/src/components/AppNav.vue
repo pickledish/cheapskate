@@ -47,7 +47,20 @@ export default {
       <div class="flex justify-between h-16">
         <div class="flex">
           <div class="flex-shrink-0 flex items-center">
-            <span class="text-xl font-semibold text-gray-900"><span class="mr-2">🛼</span>Cheapskate</span>
+            <span class="text-xl font-semibold text-gray-900">
+              <span class="mr-2">🛼</span><span class="relative inline-block -translate-y-0.25">Cheapskate<svg class="absolute left-0 -bottom-2.5 w-full h-3 -rotate-3" viewBox="0 0 100 12" preserveAspectRatio="none">
+                  <path 
+                    d="M3 1 Q 25 3, 50 1 Q 75 0, 93 2
+                       C 100 2, 101 7, 90 6 Q 60 4, 35 6
+                       C 8 7, 6 10, 18 9 Q 42 8, 68 10"
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="1.25"
+                    stroke-linecap="round"
+                    class="text-amber-400"
+                  />
+                </svg></span>
+            </span>
           </div>
           <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
             <router-link
