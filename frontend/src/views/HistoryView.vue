@@ -319,8 +319,11 @@ export default {
               </div>
             </div>
             <hr class="my-3 border-gray-200" />
-            <div class="text-sm text-gray-600">
-              All holdings set to zero on {{ formatEffectiveDate(event.effectiveDate) }}.
+            <div class="text-sm text-gray-700">
+              <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
+              <ul class="list-disc list-inside text-gray-600 ml-2">
+                <li>All holdings set to zero</li>
+              </ul>
             </div>
           </template>
 

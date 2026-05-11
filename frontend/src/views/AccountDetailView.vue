@@ -1,6 +1,7 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
 import EditAccountModal from '@/components/modals/EditAccountModal.vue'
+import CloseAccountModal from '@/components/modals/CloseAccountModal.vue'
 import {
   getAccount,
   getProfile,
@@ -9,7 +10,6 @@ import {
   listAssets,
   listAssetAllocationsWithClass,
   listStatements,
-  insertStatement,
   upsertAssetHolding,
   updateAccount,
   deleteAccount
@@ -28,6 +28,7 @@ export default {
   components: {
     AppLayout,
     EditAccountModal,
+    CloseAccountModal,
     PencilSquareIcon,
     CheckIcon,
     ChevronUpDownIcon,
@@ -55,6 +56,7 @@ export default {
       error: null,
 
       showEditAccountModal: false,
+      showCloseAccountModal: false,
 
       // Inline editing state
       editing: false,
@@ -362,35 +364,9 @@ export default {
       }
     },
 
-    async closeAccount() {
-      if (!confirm(`Mark "${this.account.name}" as closed? All holdings will be set to zero and the account will be hidden from the accounts list. Historical data is preserved.`)) {
-        return
-      }
-
-      try {
-        const today = new Date().toISOString().split('T')[0]
-
-        if (this.holdings.length > 0) {
-          const { data: { session } } = await supabase.auth.getSession()
-          const statement = await insertStatement({ account_id: this.account.id, statement_date: today })
-
-          for (const h of this.holdings) {
-            await upsertAssetHolding({
-              asset_id: h.asset_id,
-              account_id: this.account.id,
-              holding_date: today,
-              quantity: 0,
-              statement_id: statement.id,
-              created_by: session.user.id
-            })
-          }
-        }
-
-        await updateAccount(this.account.id, { archived_at: today })
-        await this.loadData()
-      } catch (err) {
-        this.error = err.message
-      }
+    async onAccountClosed() {
+      this.showCloseAccountModal = false
+      await this.loadData()
     },
 
     async reopenAccount() {
@@ -465,9 +441,9 @@ export default {
               <MenuItem v-if="!isArchived" v-slot="{ active }">
                 <button
                   v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
-                  v-on:click="closeAccount"
+                  v-on:click="showCloseAccountModal = true"
                 >
-                  Close
+                  Mark as Closed
                 </button>
               </MenuItem>
               <MenuItem v-if="isArchived" v-slot="{ active }">
@@ -733,6 +709,13 @@ export default {
       v-bind:account="account"
       v-on:close="showEditAccountModal = false"
       v-on:updated="onAccountUpdated"
+    />
+    <CloseAccountModal
+      v-if="showCloseAccountModal"
+      v-bind:account="account"
+      v-bind:holdings="holdings"
+      v-on:close="showCloseAccountModal = false"
+      v-on:closed="onAccountClosed"
     />
   </AppLayout>
 </template>
