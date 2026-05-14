@@ -279,10 +279,10 @@ export default {
                 {{ ac.name }}
               </span>
             </div>
-            <!-- Last updated -->
+            <!-- Holdings as of date -->
             <p class="mt-3 text-xs text-gray-400">
               <span v-if="account.latestStatementDate">
-                Updated {{ relativeDate(account.latestStatementDate) }}
+                Data from {{ relativeDate(account.latestStatementDate) }}
               </span>
               <span v-else class="italic">No data yet</span>
             </p>

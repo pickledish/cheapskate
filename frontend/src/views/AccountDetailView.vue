@@ -491,7 +491,7 @@ export default {
                   </div>
                 </div>
                 <div>
-                  <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Last updated</div>
+                  <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">As of date</div>
                   <div class="mt-1 text-sm text-gray-900">{{ displayLastUpdatedDate }} <span class="text-gray-500">({{ displayLastUpdated }})</span></div>
                 </div>
               </div>

@@ -23,6 +23,16 @@ export async function listUpdates(): Promise<Update[]> {
   const { data, error } = await supabase
     .from('updates')
     .select('*')
+    .order('effective_date', { ascending: false })
+
+  if (error) throw error
+  return data || []
+}
+
+export async function listUpdatesForHistory(): Promise<Update[]> {
+  const { data, error } = await supabase
+    .from('updates')
+    .select('*')
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -31,7 +41,7 @@ export async function listUpdates(): Promise<Update[]> {
 
 export async function listUpdatesWithDetails(): Promise<UpdateWithDetails[]> {
   const [updates, prices, holdings] = await Promise.all([
-    listUpdates(),
+    listUpdatesForHistory(),
     listPriceUpdates(),
     listHoldingUpdates()
   ])
