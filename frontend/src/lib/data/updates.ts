@@ -29,19 +29,26 @@ export async function listUpdates(): Promise<Update[]> {
   return data || []
 }
 
-export async function listUpdatesForHistory(): Promise<Update[]> {
+export async function listUpdatesForHistory(year: number, month: number): Promise<Update[]> {
+  const startDate = `${year}-${String(month).padStart(2, '0')}-01`
+  const nextMonth = month === 12 ? 1 : month + 1
+  const nextYear = month === 12 ? year + 1 : year
+  const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`
+
   const { data, error } = await supabase
     .from('updates')
     .select('*')
+    .gte('created_at', startDate)
+    .lt('created_at', endDate)
     .order('created_at', { ascending: false })
 
   if (error) throw error
   return data || []
 }
 
-export async function listUpdatesWithDetails(): Promise<UpdateWithDetails[]> {
+export async function listUpdatesWithDetails(year: number, month: number): Promise<UpdateWithDetails[]> {
   const [updates, prices, holdings] = await Promise.all([
-    listUpdatesForHistory(),
+    listUpdatesForHistory(year, month),
     listPriceUpdates(),
     listHoldingUpdates()
   ])

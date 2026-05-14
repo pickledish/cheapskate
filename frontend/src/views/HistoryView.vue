@@ -10,32 +10,58 @@ import {
 } from '@/lib/data'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon } from '@heroicons/vue/24/outline'
+import { DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 import { TrashIcon } from '@heroicons/vue/24/solid'
 
 dayjs.extend(relativeTime)
 
 export default {
   name: 'HistoryView',
-  components: { AppLayout, DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon, TrashIcon },
+  components: { AppLayout, DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon },
   data() {
+    const now = dayjs()
     return {
       events: [],
       loading: true,
-      error: null
+      error: null,
+      selectedYear: now.year(),
+      selectedMonth: now.month() + 1
+    }
+  },
+  computed: {
+    monthLabel() {
+      return dayjs().year(this.selectedYear).month(this.selectedMonth - 1).format('MMM YYYY')
     }
   },
   async mounted() {
     await this.loadData()
   },
   methods: {
+    prevMonth() {
+      if (this.selectedMonth === 1) {
+        this.selectedMonth = 12
+        this.selectedYear--
+      } else {
+        this.selectedMonth--
+      }
+      this.loadData()
+    },
+    nextMonth() {
+      if (this.selectedMonth === 12) {
+        this.selectedMonth = 1
+        this.selectedYear++
+      } else {
+        this.selectedMonth++
+      }
+      this.loadData()
+    },
     async loadData() {
       this.loading = true
       this.error = null
 
       try {
         const [updates, accounts, assets, profiles] = await Promise.all([
-          listUpdatesWithDetails(),
+          listUpdatesWithDetails(this.selectedYear, this.selectedMonth),
           listAccounts(),
           listAssets(),
           listProfiles()
@@ -120,11 +146,22 @@ export default {
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900">Update History</h2>
-        <p class="mt-1 text-sm text-gray-600">
-          View all price and position updates, from statement uploads and manual entries. Undo mistakes.
-        </p>
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Update History</h2>
+          <p class="mt-1 text-sm text-gray-600">
+            View all price and position updates, from statement uploads and manual entries. Undo mistakes.
+          </p>
+        </div>
+        <div class="inline-flex items-center text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md">
+          <button @click="prevMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-l-md border-r border-gray-300">
+            <ChevronLeftIcon class="h-4 w-4" />
+          </button>
+          <span class="px-3 py-1.5 w-24 text-center">{{ monthLabel }}</span>
+          <button @click="nextMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-r-md border-l border-gray-300">
+            <ChevronRightIcon class="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       <div v-if="loading" class="text-gray-500">Loading...</div>
