@@ -1,15 +1,11 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
 import {
-  listAssetPrices,
-  listAssetHoldings,
-  listStatements,
+  listUpdatesWithDetails,
   listAccounts,
   listAssets,
   listProfiles,
-  deleteStatement,
-  deleteAssetPrice,
-  deleteAssetHolding,
+  deleteUpdate,
   updateAccount
 } from '@/lib/data'
 import dayjs from 'dayjs'
@@ -38,130 +34,39 @@ export default {
       this.error = null
 
       try {
-        const [prices, holdings, statements, accounts, assets, profiles] = await Promise.all([
-          listAssetPrices('desc'),
-          listAssetHoldings('desc'),
-          listStatements(),
+        const [updates, accounts, assets, profiles] = await Promise.all([
+          listUpdatesWithDetails(),
           listAccounts(),
           listAssets(),
           listProfiles()
         ])
 
-        this.processEvents(prices, holdings, statements, accounts, assets, profiles)
+        const accountMap = Object.fromEntries(accounts.map(a => [a.id, a.name]))
+        const assetMap = Object.fromEntries(assets.map(a => [a.id, { ticker: a.ticker, name: a.name }]))
+        const profileMap = Object.fromEntries(profiles.map(p => [p.id, p.name]))
+
+        this.events = updates.map(u => ({
+          id: u.id,
+          type: u.update_type,
+          accountId: u.account_id,
+          accountName: u.account_id ? accountMap[u.account_id] || 'Unknown' : null,
+          effectiveDate: u.effective_date,
+          createdAt: u.created_at,
+          creatorName: u.created_by ? profileMap[u.created_by] : null,
+          prices: u.prices.map(p => ({
+            assetName: assetMap[p.asset_id]?.ticker || assetMap[p.asset_id]?.name || 'Unknown',
+            price: p.price
+          })),
+          holdings: u.holdings.map(h => ({
+            assetName: assetMap[h.asset_id]?.ticker || assetMap[h.asset_id]?.name || 'Unknown',
+            quantity: h.quantity
+          }))
+        }))
       } catch (err) {
         this.error = err.message
       } finally {
         this.loading = false
       }
-    },
-
-    processEvents(prices, holdings, statements, accounts, assets, profiles) {
-      // Build lookup maps
-      const accountMap = Object.fromEntries(accounts.map(a => [a.id, { name: a.name, archived_at: a.archived_at }]))
-      const assetMap = Object.fromEntries(assets.map(a => [a.id, { ticker: a.ticker, name: a.name }]))
-      const statementMap = Object.fromEntries(statements.map(s => [s.id, { accountId: s.account_id, effectiveDate: s.statement_date, createdAt: s.created_at }]))
-      const profileMap = Object.fromEntries(profiles.map(p => [p.id, p.name]))
-
-      const events = []
-      const statementEvents = {} // statement_id -> event object
-
-      // Process prices
-      for (const p of prices) {
-        const asset = assetMap[p.asset_id] || {}
-
-        if (p.statement_id) {
-          // Group under statement
-          if (!statementEvents[p.statement_id]) {
-            const stmt = statementMap[p.statement_id]
-            statementEvents[p.statement_id] = {
-              type: 'statement',
-              statementId: p.statement_id,
-              accountId: stmt?.accountId,
-              createdAt: stmt?.createdAt || p.created_at,
-              effectiveDate: stmt?.effectiveDate || p.price_date,
-              accountName: accountMap[stmt?.accountId]?.name || 'Unknown',
-              creatorName: p.created_by ? profileMap[p.created_by] : null,
-              priceUpdates: [],
-              holdingUpdates: []
-            }
-          }
-          statementEvents[p.statement_id].priceUpdates.push({
-            assetName: asset.ticker || asset.name || 'Unknown',
-            price: p.price,
-            effectiveDate: p.price_date
-          })
-        } else {
-          // Manual price update
-          events.push({
-            type: 'manual_price',
-            assetId: p.asset_id,
-            createdAt: p.created_at,
-            effectiveDate: p.price_date,
-            assetName: asset.ticker || asset.name || 'Unknown',
-            price: p.price,
-            creatorName: p.created_by ? profileMap[p.created_by] : null
-          })
-        }
-      }
-
-      // Process holdings
-      for (const h of holdings) {
-        const asset = assetMap[h.asset_id] || {}
-
-        if (h.statement_id) {
-          // Group under statement
-          if (!statementEvents[h.statement_id]) {
-            const stmt = statementMap[h.statement_id]
-            statementEvents[h.statement_id] = {
-              type: 'statement',
-              statementId: h.statement_id,
-              accountId: stmt?.accountId,
-              createdAt: stmt?.createdAt || h.created_at,
-              effectiveDate: stmt?.effectiveDate || h.holding_date,
-              accountName: accountMap[stmt?.accountId]?.name || 'Unknown',
-              creatorName: h.created_by ? profileMap[h.created_by] : null,
-              priceUpdates: [],
-              holdingUpdates: []
-            }
-          }
-          statementEvents[h.statement_id].holdingUpdates.push({
-            assetName: asset.ticker || asset.name || 'Unknown',
-            quantity: h.quantity,
-            effectiveDate: h.holding_date,
-            accountName: accountMap[h.account_id]?.name || 'Unknown'
-          })
-        } else {
-          // Manual holdings update
-          events.push({
-            type: 'manual_holding',
-            assetId: h.asset_id,
-            accountId: h.account_id,
-            createdAt: h.created_at,
-            effectiveDate: h.holding_date,
-            assetName: asset.ticker || asset.name || 'Unknown',
-            quantity: h.quantity,
-            accountName: accountMap[h.account_id]?.name || 'Unknown',
-            creatorName: h.created_by ? profileMap[h.created_by] : null
-          })
-        }
-      }
-
-      // Detect archive events: all holdings zeroed + account archived on same date
-      for (const evt of Object.values(statementEvents)) {
-        const account = accountMap[evt.accountId]
-        const allZero = evt.holdingUpdates.length > 0 && evt.holdingUpdates.every(h => Number(h.quantity) === 0)
-        if (allZero && account?.archived_at === evt.effectiveDate) {
-          evt.type = 'closed'
-        }
-      }
-
-      // Merge statement events into events array
-      events.push(...Object.values(statementEvents))
-
-      // Sort by createdAt descending (most recent action first)
-      events.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-
-      this.events = events
     },
 
     formatRelativeDate(dateStr) {
@@ -183,16 +88,15 @@ export default {
       return Number(value).toLocaleString(undefined, { maximumFractionDigits: 4 })
     },
 
-    // Get price for an asset from statement's price updates
     getPriceForAsset(event, assetName) {
-      const priceUpdate = event.priceUpdates.find(p => p.assetName === assetName)
+      const priceUpdate = event.prices.find(p => p.assetName === assetName)
       return priceUpdate ? priceUpdate.price : null
     },
 
     async undoClose(event) {
       if (!confirm(`Undo close of "${event.accountName}"? This will restore the account and undo the zeroed-out holdings.`)) return
       try {
-        await deleteStatement(event.statementId)
+        await deleteUpdate(event.id)
         await updateAccount(event.accountId, { archived_at: null })
         await this.loadData()
       } catch (err) {
@@ -200,30 +104,10 @@ export default {
       }
     },
 
-    async doDeleteStatement(statementId) {
-      if (!confirm('Undo this statement upload?')) return
+    async doDeleteUpdate(updateId) {
+      if (!confirm('Undo this update?')) return
       try {
-        await deleteStatement(statementId)
-        await this.loadData()
-      } catch (err) {
-        this.error = err.message
-      }
-    },
-
-    async doDeletePrice(assetId, priceDate) {
-      if (!confirm('Undo this price update?')) return
-      try {
-        await deleteAssetPrice(assetId, priceDate)
-        await this.loadData()
-      } catch (err) {
-        this.error = err.message
-      }
-    },
-
-    async doDeleteHolding(assetId, accountId, holdingDate) {
-      if (!confirm('Undo this shares update?')) return
-      try {
-        await deleteAssetHolding(assetId, accountId, holdingDate)
+        await deleteUpdate(updateId)
         await this.loadData()
       } catch (err) {
         this.error = err.message
@@ -251,16 +135,15 @@ export default {
       </div>
 
       <div v-if="!loading && events.length > 0" class="space-y-4">
-        <!-- Statement Event Card -->
         <div
-          v-for="(event, index) in events"
-          :key="event.type + '-' + event.createdAt + '-' + index"
+          v-for="event in events"
+          :key="event.id"
           class="bg-white rounded-lg shadow p-4"
           :class="{
             'border-l-4 border-blue-500': event.type === 'statement',
-            'border-l-4 border-gray-400': event.type === 'closed',
+            'border-l-4 border-gray-400': event.type === 'mark_as_closed',
             'border-l-4 border-green-500': event.type === 'manual_price',
-            'border-l-4 border-purple-500': event.type === 'manual_holding'
+            'border-l-4 border-purple-500': event.type === 'manual_holdings'
           }"
         >
           <!-- Statement Upload -->
@@ -275,7 +158,7 @@ export default {
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
                 <button
-                  @click="doDeleteStatement(event.statementId)"
+                  @click="doDeleteUpdate(event.id)"
                   class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
                   title="Undo statement upload"
                 >
@@ -287,11 +170,10 @@ export default {
             <div class="text-sm text-gray-700">
               <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
               <ul class="list-disc list-inside space-y-0.5 text-gray-600 ml-2">
-                <li v-for="holding in event.holdingUpdates" :key="holding.assetName">
+                <li v-for="holding in event.holdings" :key="holding.assetName">
                   {{ holding.assetName }} is now {{ formatNumber(holding.quantity) }} shares<template v-if="getPriceForAsset(event, holding.assetName)"> at {{ formatCurrency(getPriceForAsset(event, holding.assetName)) }} per share</template>
                 </li>
-                <!-- Show price-only updates (assets with price but no holding in this statement) -->
-                <li v-for="price in event.priceUpdates.filter(p => !event.holdingUpdates.some(h => h.assetName === p.assetName))" :key="'price-' + price.assetName">
+                <li v-for="price in event.prices.filter(p => !event.holdings.some(h => h.assetName === p.assetName))" :key="'price-' + price.assetName">
                   {{ price.assetName }} is now {{ formatCurrency(price.price) }} per share
                 </li>
               </ul>
@@ -299,7 +181,7 @@ export default {
           </template>
 
           <!-- Account Closed -->
-          <template v-else-if="event.type === 'closed'">
+          <template v-else-if="event.type === 'mark_as_closed'">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <ArchiveBoxIcon class="h-5 w-5 text-gray-400" />
@@ -337,7 +219,7 @@ export default {
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
                 <button
-                  @click="doDeletePrice(event.assetId, event.effectiveDate)"
+                  @click="doDeleteUpdate(event.id)"
                   class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
                   title="Undo price update"
                 >
@@ -349,24 +231,26 @@ export default {
             <div class="text-sm text-gray-700">
               <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
               <ul class="list-disc list-inside text-gray-600 ml-2">
-                <li>{{ event.assetName }} is now {{ formatCurrency(event.price) }} per share</li>
+                <li v-for="price in event.prices" :key="price.assetName">
+                  {{ price.assetName }} is now {{ formatCurrency(price.price) }} per share
+                </li>
               </ul>
             </div>
           </template>
 
           <!-- Manual Holding Update -->
-          <template v-else-if="event.type === 'manual_holding'">
+          <template v-else-if="event.type === 'manual_holdings'">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <ChartBarIcon class="h-5 w-5 text-purple-500" />
                 <span class="font-medium text-gray-900">Shares Update</span>
-                <span class="text-gray-400">-</span>
-                <span class="font-medium text-gray-900">{{ event.accountName }}</span>
+                <span v-if="event.accountName" class="text-gray-400">-</span>
+                <span v-if="event.accountName" class="font-medium text-gray-900">{{ event.accountName }}</span>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
                 <button
-                  @click="doDeleteHolding(event.assetId, event.accountId, event.effectiveDate)"
+                  @click="doDeleteUpdate(event.id)"
                   class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
                   title="Undo shares update"
                 >
@@ -378,7 +262,9 @@ export default {
             <div class="text-sm text-gray-700">
               <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
               <ul class="list-disc list-inside text-gray-600 ml-2">
-                <li>{{ event.assetName }} is now {{ formatNumber(event.quantity) }} shares</li>
+                <li v-for="holding in event.holdings" :key="holding.assetName">
+                  {{ holding.assetName }} is now {{ formatNumber(holding.quantity) }} shares
+                </li>
               </ul>
             </div>
           </template>

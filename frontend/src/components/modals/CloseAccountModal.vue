@@ -1,7 +1,7 @@
 <script>
 import BaseModal from './BaseModal.vue'
 import { supabase } from '@/lib/supabase'
-import { insertStatement, upsertAssetHolding, updateAccount } from '@/lib/data'
+import { insertUpdate, insertHoldingUpdate, updateAccount } from '@/lib/data'
 
 export default {
   name: 'CloseAccountModal',
@@ -38,21 +38,23 @@ export default {
       this.error = null
 
       try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
+
         if (this.holdings.length > 0) {
-          const { data: { session } } = await supabase.auth.getSession()
-          const statement = await insertStatement({
+          const update = await insertUpdate({
+            family_id: user.user_metadata.family_id,
             account_id: this.account.id,
-            statement_date: this.effectiveDate
+            update_type: 'mark_as_closed',
+            effective_date: this.effectiveDate,
+            created_by: user.id
           })
 
           for (const h of this.holdings) {
-            await upsertAssetHolding({
+            await insertHoldingUpdate({
+              update_id: update.id,
               asset_id: h.asset_id,
-              account_id: this.account.id,
-              holding_date: this.effectiveDate,
-              quantity: 0,
-              statement_id: statement.id,
-              created_by: session.user.id
+              quantity: 0
             })
           }
         }

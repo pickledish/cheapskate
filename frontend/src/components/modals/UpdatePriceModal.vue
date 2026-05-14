@@ -1,7 +1,7 @@
 <script>
 import BaseModal from './BaseModal.vue'
 import { supabase } from '@/lib/supabase'
-import { upsertAssetPrice } from '@/lib/data'
+import { insertUpdate, insertPriceUpdate } from '@/lib/data'
 
 export default {
   name: 'UpdatePriceModal',
@@ -45,12 +45,18 @@ export default {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Not authenticated')
 
-        await upsertAssetPrice({
-          asset_id: this.asset.id,
-          price_date: this.date,
-          price: priceNum,
-          statement_id: null,  // manual update
+        const update = await insertUpdate({
+          family_id: user.user_metadata.family_id,
+          account_id: null,
+          update_type: 'manual_price',
+          effective_date: this.date,
           created_by: user.id
+        })
+
+        await insertPriceUpdate({
+          update_id: update.id,
+          asset_id: this.asset.id,
+          price: priceNum
         })
 
         this.$emit('updated')

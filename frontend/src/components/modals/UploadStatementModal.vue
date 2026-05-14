@@ -8,13 +8,13 @@ import {
   findAccountByLast4,
   insertAccount,
   updateAccount,
-  insertStatement,
+  insertUpdate,
+  insertPriceUpdate,
+  insertHoldingUpdate,
+  deleteUpdate,
   findAssetByTickerOrName,
   insertAsset,
-  upsertAssetPrice,
-  upsertAssetHolding,
-  deleteStatement,
-  listAssetHoldingsByAccount,
+  listHoldingUpdatesByAccount,
   listAssets
 } from '@/lib/data'
 
@@ -205,7 +205,7 @@ export default {
       try {
         // Fetch existing holdings for sold-position detection
         const [holdingsData, assetsData] = await Promise.all([
-          listAssetHoldingsByAccount(this.matchedAccount.id, 'desc'),
+          listHoldingUpdatesByAccount(this.matchedAccount.id, 'desc'),
           listAssets()
         ])
 
@@ -321,7 +321,7 @@ export default {
       this.loading = true
       this.error = null
 
-      let statement = null
+      let update = null
 
       try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -332,10 +332,13 @@ export default {
           await updateAccount(account.id, { last4: this.parsedLast4 })
         }
 
-        // 1. Create the statement record
-        statement = await insertStatement({
+        // 1. Create the update record
+        update = await insertUpdate({
+          family_id: user.user_metadata.family_id,
           account_id: account.id,
-          statement_date: this.statementDate
+          update_type: 'statement',
+          effective_date: this.statementDate,
+          created_by: user.id
         })
 
         // 2. Process each holding
@@ -353,8 +356,8 @@ export default {
                 name: holding.name
               })
             } catch (createError) {
-              // Rollback: delete the statement
-              await deleteStatement(statement.id)
+              // Rollback: delete the update
+              await deleteUpdate(update.id)
               throw createError
             }
           }
@@ -362,34 +365,29 @@ export default {
           // Compute price (null for sold positions)
           const price = this.computePrice(holding)
 
-          // Insert/update price (skip for sold positions where price is null)
+          // Insert price (skip for sold positions where price is null)
           if (price != null) {
             try {
-              await upsertAssetPrice({
+              await insertPriceUpdate({
+                update_id: update.id,
                 asset_id: asset.id,
-                price_date: this.statementDate,
-                price: price,
-                statement_id: statement.id,
-                created_by: user.id
+                price: price
               })
             } catch (priceError) {
-              await deleteStatement(statement.id)
+              await deleteUpdate(update.id)
               throw priceError
             }
           }
 
-          // Insert/update holding
+          // Insert holding
           try {
-            await upsertAssetHolding({
+            await insertHoldingUpdate({
+              update_id: update.id,
               asset_id: asset.id,
-              account_id: account.id,
-              holding_date: this.statementDate,
-              quantity: holding.quantity,
-              statement_id: statement.id,
-              created_by: user.id
+              quantity: holding.quantity
             })
           } catch (holdingError) {
-            await deleteStatement(statement.id)
+            await deleteUpdate(update.id)
             throw holdingError
           }
         }

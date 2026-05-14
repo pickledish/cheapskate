@@ -2,7 +2,7 @@
 import AppLayout from '@/components/AppLayout.vue'
 import AllocationHistoryChart from '@/components/charts/AllocationHistoryChart.vue'
 import AllocationComparisonGrid from '@/components/charts/AllocationComparisonGrid.vue'
-import { listAssetHoldings, listAssetPrices, listAccounts, listAssetClasses, listAssetAllocations } from '@/lib/data'
+import { listHoldingUpdatesWithContext, listPriceUpdatesWithContext, listAccounts, listAssetClasses, listAssetAllocations } from '@/lib/data'
 
 export default {
   name: 'RebalancingView',
@@ -33,8 +33,8 @@ export default {
 
       try {
         const [holdings, prices, accounts, assetClasses, allocations] = await Promise.all([
-          listAssetHoldings('asc'),
-          listAssetPrices('asc'),
+          listHoldingUpdatesWithContext('asc'),
+          listPriceUpdatesWithContext('asc'),
           listAccounts(),
           listAssetClasses(),
           listAssetAllocations()

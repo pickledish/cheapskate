@@ -1,7 +1,7 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
 import NetWorthBarChart from '@/components/charts/NetWorthBarChart.vue'
-import { listAssetHoldings, listAssetPrices, listAccounts, listProfiles, listAssets, listAssetClasses, listAssetAllocations } from '@/lib/data'
+import { listHoldingUpdatesWithContext, listPriceUpdatesWithContext, listAccounts, listProfiles, listAssets, listAssetClasses, listAssetAllocations } from '@/lib/data'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
 
@@ -50,8 +50,8 @@ export default {
       this.loading = true
 
       const [holdings, prices, accounts, profiles, assets, assetClasses, allocations] = await Promise.all([
-        listAssetHoldings('asc'),
-        listAssetPrices('asc'),
+        listHoldingUpdatesWithContext('asc'),
+        listPriceUpdatesWithContext('asc'),
         listAccounts(),
         listProfiles(),
         listAssets(),

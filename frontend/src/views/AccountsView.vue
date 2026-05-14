@@ -7,9 +7,9 @@ import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import { supabase } from '@/lib/supabase'
 import {
   listAccounts,
-  listStatements,
-  listAssetHoldings,
-  listAssetPrices,
+  listUpdates,
+  listHoldingUpdatesWithContext,
+  listPriceUpdatesWithContext,
   listAssets,
   listAssetAllocationsWithClass
 } from '@/lib/data'
@@ -68,17 +68,17 @@ export default {
       this.error = null
       try {
         // Load all data in parallel
-        const [accountsData, statementsData, holdingsData, pricesData, assetsData, allocationsData] = await Promise.all([
+        const [accountsData, updatesData, holdingsData, pricesData, assetsData, allocationsData] = await Promise.all([
           listAccounts(),
-          listStatements(),
-          listAssetHoldings('desc'),
-          listAssetPrices('desc'),
+          listUpdates(),
+          listHoldingUpdatesWithContext('desc'),
+          listPriceUpdatesWithContext('desc'),
           listAssets(),
           listAssetAllocationsWithClass()
         ])
 
-        // Track if any statements exist (for onboarding continue card)
-        this.hasAnyStatements = statementsData.length > 0
+        // Track if any updates exist (for onboarding continue card)
+        this.hasAnyStatements = updatesData.length > 0
 
         // Build map of asset_id -> asset info
         const assetMap = {}
@@ -100,11 +100,11 @@ export default {
           })
         }
 
-        // Build map of account_id -> most recent statement_date
+        // Build map of account_id -> most recent effective_date
         const latestStatementByAccount = {}
-        for (const stmt of statementsData) {
-          if (!latestStatementByAccount[stmt.account_id]) {
-            latestStatementByAccount[stmt.account_id] = stmt.statement_date
+        for (const update of updatesData) {
+          if (update.account_id && !latestStatementByAccount[update.account_id]) {
+            latestStatementByAccount[update.account_id] = update.effective_date
           }
         }
 

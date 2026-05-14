@@ -34,14 +34,33 @@ export {
 } from './profiles'
 export type { Profile } from './profiles'
 
-// Statements
+// Updates
 export {
-  listStatements,
-  getStatement,
-  insertStatement,
-  deleteStatement
-} from './statements'
-export type { Statement } from './statements'
+  listUpdates,
+  listUpdatesWithDetails,
+  listUpdatesByAccount,
+  insertUpdate,
+  deleteUpdate
+} from './updates'
+export type { Update, UpdateWithDetails, UpdateType } from './updates'
+
+// Price Updates
+export {
+  listPriceUpdates,
+  insertPriceUpdate,
+  listPriceUpdatesWithContext,
+  listPriceUpdatesByAsset
+} from './price-updates'
+export type { PriceUpdate, PriceUpdateWithContext } from './price-updates'
+
+// Holding Updates
+export {
+  listHoldingUpdates,
+  insertHoldingUpdate,
+  listHoldingUpdatesWithContext,
+  listHoldingUpdatesByAccount
+} from './holding-updates'
+export type { HoldingUpdate, HoldingUpdateWithContext } from './holding-updates'
 
 // Asset Classes
 export {
@@ -64,21 +83,3 @@ export {
   deleteAssetAllocationsByAsset
 } from './asset-allocations'
 export type { AssetAllocation, AssetAllocationWithClass } from './asset-allocations'
-
-// Asset Holdings
-export {
-  listAssetHoldings,
-  listAssetHoldingsByAccount,
-  upsertAssetHolding,
-  deleteAssetHolding
-} from './asset-holdings'
-export type { AssetHolding } from './asset-holdings'
-
-// Asset Prices
-export {
-  listAssetPrices,
-  listAssetPricesByAsset,
-  upsertAssetPrice,
-  deleteAssetPrice
-} from './asset-prices'
-export type { AssetPrice } from './asset-prices'

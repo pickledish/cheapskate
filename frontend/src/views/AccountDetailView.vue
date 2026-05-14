@@ -5,12 +5,13 @@ import CloseAccountModal from '@/components/modals/CloseAccountModal.vue'
 import {
   getAccount,
   getProfile,
-  listAssetHoldingsByAccount,
-  listAssetPrices,
+  listHoldingUpdatesByAccount,
+  listPriceUpdatesWithContext,
   listAssets,
   listAssetAllocationsWithClass,
-  listStatements,
-  upsertAssetHolding,
+  listUpdatesByAccount,
+  insertUpdate,
+  insertHoldingUpdate,
   updateAccount,
   deleteAccount
 } from '@/lib/data'
@@ -120,12 +121,12 @@ export default {
         }
         this.account = accountData
 
-        const [holdingsData, pricesData, assetsData, allocationsData, statementsData, ownerProfile] = await Promise.all([
-          listAssetHoldingsByAccount(accountId, 'desc'),
-          listAssetPrices('desc'),
+        const [holdingsData, pricesData, assetsData, allocationsData, updatesData, ownerProfile] = await Promise.all([
+          listHoldingUpdatesByAccount(accountId, 'desc'),
+          listPriceUpdatesWithContext('desc'),
           listAssets(),
           listAssetAllocationsWithClass(),
-          listStatements(),
+          listUpdatesByAccount(accountId),
           accountData.created_by ? getProfile(accountData.created_by) : Promise.resolve(null)
         ])
 
@@ -216,8 +217,7 @@ export default {
         }
         this.assetClasses = classes
 
-        const accountStatements = statementsData.filter(s => s.account_id === accountId)
-        this.latestStatementDate = accountStatements.length > 0 ? accountStatements[0].statement_date : null
+        this.latestStatementDate = updatesData.length > 0 ? updatesData[0].effective_date : null
 
       } catch (err) {
         this.error = err.message
@@ -316,20 +316,16 @@ export default {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Not authenticated')
 
-        const upserts = []
+        const holdingsToSave = []
 
         // Existing holdings with changed quantities
         for (const h of this.holdings) {
           const newQty = parseFloat(this.editQuantities[h.asset_id])
           if (isNaN(newQty) || newQty < 0) continue
           if (newQty !== h.quantity) {
-            upserts.push({
+            holdingsToSave.push({
               asset_id: h.asset_id,
-              account_id: this.account.id,
-              holding_date: this.editDate,
-              quantity: newQty,
-              statement_id: null,
-              created_by: user.id
+              quantity: newQty
             })
           }
         }
@@ -339,18 +335,28 @@ export default {
           if (!row.asset) continue
           const qty = parseFloat(row.quantity)
           if (isNaN(qty) || qty <= 0) continue
-          upserts.push({
+          holdingsToSave.push({
             asset_id: row.asset.id,
-            account_id: this.account.id,
-            holding_date: this.editDate,
-            quantity: qty,
-            statement_id: null,
-            created_by: user.id
+            quantity: qty
           })
         }
 
-        for (const u of upserts) {
-          await upsertAssetHolding(u)
+        if (holdingsToSave.length > 0) {
+          const update = await insertUpdate({
+            family_id: user.user_metadata.family_id,
+            account_id: this.account.id,
+            update_type: 'manual_holdings',
+            effective_date: this.editDate,
+            created_by: user.id
+          })
+
+          for (const h of holdingsToSave) {
+            await insertHoldingUpdate({
+              update_id: update.id,
+              asset_id: h.asset_id,
+              quantity: h.quantity
+            })
+          }
         }
 
         this.editing = false

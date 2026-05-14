@@ -6,7 +6,7 @@ import UpdatePriceModal from '@/components/modals/UpdatePriceModal.vue'
 import OnboardingModal from '@/components/modals/OnboardingModal.vue'
 import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import { supabase } from '@/lib/supabase'
-import { listAssets, listAssetPrices, listAssetAllocationsWithClass, listAssetClasses, deleteAsset } from '@/lib/data'
+import { listAssets, listPriceUpdatesWithContext, listAssetAllocationsWithClass, listAssetClasses, deleteAsset } from '@/lib/data'
 import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -90,7 +90,7 @@ export default {
         // Load all data in parallel
         const [assetsData, pricesData, allocationsData, classesData] = await Promise.all([
           listAssets(),
-          listAssetPrices('desc'),
+          listPriceUpdatesWithContext('desc'),
           listAssetAllocationsWithClass(),
           listAssetClasses()
         ])
