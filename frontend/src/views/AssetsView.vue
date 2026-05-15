@@ -343,7 +343,7 @@ export default {
         <!-- Add asset button -->
         <button
           v-on:click="showAddAssetModal = true"
-          class="mt-4 w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+          class="mt-4 w-full bg-canvas border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
         >
           <span class="text-xl mr-2">+</span>
           <span class="text-sm font-medium">Add Asset</span>

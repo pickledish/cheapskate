@@ -92,7 +92,7 @@ export default {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50">
+  <div class="min-h-screen flex items-center justify-center bg-canvas">
     <div class="max-w-md w-full p-8 bg-white rounded-lg shadow-md">
       <h1 class="text-2xl font-bold text-center mb-6 text-gray-900">
         Welcome to Cheapskate

@@ -68,6 +68,7 @@
 /* Override Tailwind's default sans font and scale up text sizes ~6% */
 @theme {
   --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+  --color-canvas: #f6f7f8;
 
   /* Scaled text sizes (default * 1.0625) */
   --text-xs: 0.797rem;
