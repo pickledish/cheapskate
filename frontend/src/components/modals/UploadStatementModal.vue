@@ -1,7 +1,7 @@
 <script>
 import BaseModal from './BaseModal.vue'
-import { Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/vue'
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/24/solid'
+import { Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
+import { CheckIcon, ChevronUpDownIcon, ChevronUpIcon } from '@heroicons/vue/24/solid'
 import { supabase } from '@/lib/supabase'
 import {
   listAccounts,
@@ -20,7 +20,7 @@ import {
 
 export default {
   name: 'UploadStatementModal',
-  components: { BaseModal, Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, CheckIcon, ChevronUpDownIcon },
+  components: { BaseModal, Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, Menu, MenuButton, MenuItems, MenuItem, CheckIcon, ChevronUpDownIcon, ChevronUpIcon },
   emits: ['close', 'uploaded'],
   data() {
     return {
@@ -29,6 +29,7 @@ export default {
 
       // File state
       file: null,
+      parseMode: 'cloud', // 'cloud' | 'local'
 
       // Parsed data
       holdings: [],
@@ -55,6 +56,10 @@ export default {
   computed: {
     todayDate() {
       return new Date().toISOString().split('T')[0]
+    },
+    parseButtonText() {
+      if (this.loading) return 'Parsing...'
+      return this.parseMode === 'local' ? 'Parse with Local LLM' : 'Parse with Gemini'
     },
     modalTitle() {
       if (this.step === 'match') return 'Select Account'
@@ -87,6 +92,19 @@ export default {
     onFileChange(event) {
       this.file = event.target.files[0]
       this.error = null
+    },
+
+    triggerParse() {
+      if (this.parseMode === 'local') {
+        this.parseFileWithLocalLlm()
+      } else {
+        this.parseFile()
+      }
+    },
+
+    async parseFileWithLocalLlm() {
+      // TODO: Wire up to local LLM endpoint
+      await this.parseFile()
     },
 
     async parseFile() {
@@ -463,13 +481,47 @@ export default {
         >
           Cancel
         </button>
-        <button
-          v-on:click="parseFile"
-          v-bind:disabled="!file || loading"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-        >
-          {{ loading ? 'Parsing...' : 'Parse PDF' }}
-        </button>
+        <div class="inline-flex rounded-md">
+          <button
+            v-on:click="triggerParse"
+            v-bind:disabled="!file || loading"
+            class="px-4 py-2 bg-blue-600 text-white rounded-l-md hover:bg-blue-700 disabled:opacity-50"
+          >
+            {{ parseButtonText }}
+          </button>
+          <Menu as="div" class="relative flex">
+            <MenuButton
+              v-bind:disabled="!file || loading"
+              class="px-2 bg-blue-600 text-white border-l border-blue-500 rounded-r-md hover:bg-blue-700 disabled:opacity-50 flex items-center"
+            >
+              <ChevronUpIcon class="w-4 h-4" />
+            </MenuButton>
+            <MenuItems class="absolute right-0 bottom-full mb-1 w-48 bg-white rounded-md shadow-lg z-50 py-1">
+              <MenuItem v-slot="{ active }">
+                <button
+                  v-on:click="parseMode = 'cloud'"
+                  v-bind:class="[
+                    'w-full text-left px-4 py-2 text-sm',
+                    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                  ]"
+                >
+                  Parse with Gemini
+                </button>
+              </MenuItem>
+              <MenuItem v-slot="{ active }">
+                <button
+                  v-on:click="parseMode = 'local'"
+                  v-bind:class="[
+                    'w-full text-left px-4 py-2 text-sm',
+                    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                  ]"
+                >
+                  Parse with Local LLM
+                </button>
+              </MenuItem>
+            </MenuItems>
+          </Menu>
+        </div>
       </div>
     </div>
 
