@@ -16,13 +16,14 @@ export type { Account } from './accounts'
 // Assets
 export {
   listAssets,
+  listAssetsWithAllocations,
   getAsset,
   findAssetByTickerOrName,
   insertAsset,
   updateAsset,
   deleteAsset
 } from './assets'
-export type { Asset } from './assets'
+export type { Asset, AssetWithAllocations, AssetAllocationInfo } from './assets'
 
 // Profiles
 export {
@@ -46,16 +47,13 @@ export type { Update, UpdateWithDetails, UpdateType } from './updates'
 
 // Price Updates
 export {
-  listPriceUpdates,
   insertPriceUpdate,
-  listPriceUpdatesWithContext,
-  listPriceUpdatesByAsset
+  listPriceUpdatesWithContext
 } from './price-updates'
 export type { PriceUpdate, PriceUpdateWithContext } from './price-updates'
 
 // Holding Updates
 export {
-  listHoldingUpdates,
   insertHoldingUpdate,
   listHoldingUpdatesWithContext,
   listHoldingUpdatesByAccount
@@ -77,9 +75,7 @@ export type { AssetClass } from './asset-classes'
 // Asset Allocations
 export {
   listAssetAllocations,
-  listAssetAllocationsByAsset,
-  listAssetAllocationsWithClass,
   insertAssetAllocation,
   deleteAssetAllocationsByAsset
 } from './asset-allocations'
-export type { AssetAllocation, AssetAllocationWithClass } from './asset-allocations'
+export type { AssetAllocation } from './asset-allocations'

@@ -1,7 +1,7 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
 import NetWorthBarChart from '@/components/charts/NetWorthBarChart.vue'
-import { listHoldingUpdatesWithContext, listPriceUpdatesWithContext, listAccounts, listProfiles, listAssets, listAssetClasses, listAssetAllocations } from '@/lib/data'
+import { listHoldingUpdatesWithContext, listPriceUpdatesWithContext, listAccounts, listProfiles, listAssetsWithAllocations, listAssetClasses } from '@/lib/data'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
 
@@ -49,22 +49,33 @@ export default {
     async loadData() {
       this.loading = true
 
-      const [holdings, prices, accounts, profiles, assets, assetClasses, allocations] = await Promise.all([
+      const [holdings, prices, accounts, profiles, assetsWithAllocs, assetClasses] = await Promise.all([
         listHoldingUpdatesWithContext('asc'),
         listPriceUpdatesWithContext('asc'),
         listAccounts(),
         listProfiles(),
-        listAssets(),
-        listAssetClasses(),
-        listAssetAllocations()
+        listAssetsWithAllocations(),
+        listAssetClasses()
       ])
 
       this.holdingsData = holdings
       this.pricesData = prices
       this.accountsData = accounts
       this.profilesData = profiles
-      this.assetsData = assets
+      this.assetsData = assetsWithAllocs
       this.assetClassesData = assetClasses
+
+      // Transform allocations from nested structure to flat array for computeGroupedByAssetClass
+      const allocations = []
+      for (const asset of assetsWithAllocs) {
+        for (const alloc of asset.allocations) {
+          allocations.push({
+            asset_id: asset.id,
+            asset_class_id: alloc.asset_class_id,
+            percentage: alloc.percentage
+          })
+        }
+      }
       this.allocationsData = allocations
 
       this.computeChartData()

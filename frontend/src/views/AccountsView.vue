@@ -10,8 +10,7 @@ import {
   listUpdates,
   listHoldingUpdatesWithContext,
   listPriceUpdatesWithContext,
-  listAssets,
-  listAssetAllocationsWithClass
+  listAssetsWithAllocations
 } from '@/lib/data'
 import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
@@ -68,36 +67,28 @@ export default {
       this.error = null
       try {
         // Load all data in parallel
-        const [accountsData, updatesData, holdingsData, pricesData, assetsData, allocationsData] = await Promise.all([
+        const [accountsData, updatesData, holdingsData, pricesData, assetsData] = await Promise.all([
           listAccounts(),
           listUpdates(),
           listHoldingUpdatesWithContext('desc'),
           listPriceUpdatesWithContext('desc'),
-          listAssets(),
-          listAssetAllocationsWithClass()
+          listAssetsWithAllocations()
         ])
 
         // Track if any updates exist (for onboarding continue card)
         this.hasAnyStatements = updatesData.length > 0
 
-        // Build map of asset_id -> asset info
-        const assetMap = {}
-        for (const a of assetsData) {
-          assetMap[a.id] = { ticker: a.ticker, name: a.name }
-        }
-
         // Build map of asset_id -> allocations (class info)
         const allocationsByAsset = {}
-        for (const a of allocationsData) {
-          if (!allocationsByAsset[a.asset_id]) {
-            allocationsByAsset[a.asset_id] = []
+        for (const a of assetsData) {
+          if (a.allocations.length > 0) {
+            allocationsByAsset[a.id] = a.allocations.map(alloc => ({
+              name: alloc.asset_classes.name,
+              color: alloc.asset_classes.color,
+              sort_order: alloc.asset_classes.sort_order,
+              percentage: parseFloat(alloc.percentage)
+            }))
           }
-          allocationsByAsset[a.asset_id].push({
-            name: a.asset_classes.name,
-            color: a.asset_classes.color,
-            sort_order: a.asset_classes.sort_order,
-            percentage: parseFloat(a.percentage)
-          })
         }
 
         // Build map of account_id -> most recent effective_date

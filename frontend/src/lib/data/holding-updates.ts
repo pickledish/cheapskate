@@ -16,15 +16,6 @@ export interface HoldingUpdateWithContext {
   created_at: string
 }
 
-export async function listHoldingUpdates(): Promise<HoldingUpdate[]> {
-  const { data, error } = await supabase
-    .from('holding_updates')
-    .select('*')
-
-  if (error) throw error
-  return data || []
-}
-
 export async function insertHoldingUpdate(holding: {
   update_id: number
   asset_id: number

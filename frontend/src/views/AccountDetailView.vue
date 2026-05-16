@@ -7,8 +7,7 @@ import {
   getProfile,
   listHoldingUpdatesByAccount,
   listPriceUpdatesWithContext,
-  listAssets,
-  listAssetAllocationsWithClass,
+  listAssetsWithAllocations,
   listUpdatesByAccount,
   insertUpdate,
   insertHoldingUpdate,
@@ -121,11 +120,10 @@ export default {
         }
         this.account = accountData
 
-        const [holdingsData, pricesData, assetsData, allocationsData, updatesData, ownerProfile] = await Promise.all([
+        const [holdingsData, pricesData, assetsData, updatesData, ownerProfile] = await Promise.all([
           listHoldingUpdatesByAccount(accountId, 'desc'),
           listPriceUpdatesWithContext('desc'),
-          listAssets(),
-          listAssetAllocationsWithClass(),
+          listAssetsWithAllocations(),
           listUpdatesByAccount(accountId),
           accountData.created_by ? getProfile(accountData.created_by) : Promise.resolve(null)
         ])
@@ -140,18 +138,17 @@ export default {
         }
 
         const allocationsByAsset = {}
-        for (const a of allocationsData) {
-          if (!allocationsByAsset[a.asset_id]) {
-            allocationsByAsset[a.asset_id] = []
+        for (const a of assetsData) {
+          if (a.allocations.length > 0) {
+            allocationsByAsset[a.id] = a.allocations
+              .map(alloc => ({
+                name: alloc.asset_classes.name,
+                color: alloc.asset_classes.color,
+                sort_order: alloc.asset_classes.sort_order,
+                percentage: parseFloat(alloc.percentage)
+              }))
+              .sort((x, y) => x.sort_order - y.sort_order)
           }
-          allocationsByAsset[a.asset_id].push({
-            name: a.asset_classes.name,
-            color: a.asset_classes.color,
-            sort_order: a.asset_classes.sort_order
-          })
-        }
-        for (const assetId in allocationsByAsset) {
-          allocationsByAsset[assetId].sort((a, b) => a.sort_order - b.sort_order)
         }
         this.allocationsByAsset = allocationsByAsset
 
@@ -199,12 +196,10 @@ export default {
             unclassifiedValue += h.value
           } else {
             for (const alloc of allocations) {
-              const pct = allocationsData.find(a => a.asset_id === h.asset_id && a.asset_classes.name === alloc.name)
-              const percentage = pct ? parseFloat(pct.percentage) : 1
               if (!classValues[alloc.name]) {
                 classValues[alloc.name] = { value: 0, color: alloc.color, sort_order: alloc.sort_order }
               }
-              classValues[alloc.name].value += h.value * percentage
+              classValues[alloc.name].value += h.value * alloc.percentage
             }
           }
         }

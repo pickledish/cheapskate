@@ -1,6 +1,6 @@
 import { supabase } from '../supabase'
-import { listPriceUpdates, type PriceUpdate } from './price-updates'
-import { listHoldingUpdates, type HoldingUpdate } from './holding-updates'
+import { type PriceUpdate } from './price-updates'
+import { type HoldingUpdate } from './holding-updates'
 
 export type UpdateType = 'statement' | 'manual_price' | 'manual_holdings' | 'mark_as_closed'
 
@@ -29,7 +29,7 @@ export async function listUpdates(): Promise<Update[]> {
   return data || []
 }
 
-export async function listUpdatesForHistory(year: number, month: number): Promise<Update[]> {
+export async function listUpdatesWithDetails(year: number, month: number): Promise<UpdateWithDetails[]> {
   const startDate = `${year}-${String(month).padStart(2, '0')}-01`
   const nextMonth = month === 12 ? 1 : month + 1
   const nextYear = month === 12 ? year + 1 : year
@@ -37,38 +37,27 @@ export async function listUpdatesForHistory(year: number, month: number): Promis
 
   const { data, error } = await supabase
     .from('updates')
-    .select('*')
+    .select(`
+      *,
+      price_updates (*),
+      holding_updates (*)
+    `)
     .gte('created_at', startDate)
     .lt('created_at', endDate)
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return data || []
-}
 
-export async function listUpdatesWithDetails(year: number, month: number): Promise<UpdateWithDetails[]> {
-  const [updates, prices, holdings] = await Promise.all([
-    listUpdatesForHistory(year, month),
-    listPriceUpdates(),
-    listHoldingUpdates()
-  ])
-
-  const pricesByUpdate: Record<number, PriceUpdate[]> = {}
-  for (const p of prices) {
-    const arr = pricesByUpdate[p.update_id] ?? (pricesByUpdate[p.update_id] = [])
-    arr.push(p)
-  }
-
-  const holdingsByUpdate: Record<number, HoldingUpdate[]> = {}
-  for (const h of holdings) {
-    const arr = holdingsByUpdate[h.update_id] ?? (holdingsByUpdate[h.update_id] = [])
-    arr.push(h)
-  }
-
-  return updates.map(u => ({
-    ...u,
-    prices: pricesByUpdate[u.id] || [],
-    holdings: holdingsByUpdate[u.id] || []
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    family_id: row.family_id,
+    account_id: row.account_id,
+    update_type: row.update_type,
+    effective_date: row.effective_date,
+    created_by: row.created_by,
+    created_at: row.created_at,
+    prices: row.price_updates || [],
+    holdings: row.holding_updates || []
   }))
 }
 

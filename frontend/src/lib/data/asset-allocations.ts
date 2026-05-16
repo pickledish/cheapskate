@@ -6,14 +6,6 @@ export interface AssetAllocation {
   percentage: number
 }
 
-export interface AssetAllocationWithClass extends AssetAllocation {
-  asset_classes: {
-    name: string
-    color: string
-    sort_order: number
-  }
-}
-
 export async function listAssetAllocations(): Promise<AssetAllocation[]> {
   const { data, error } = await supabase
     .from('asset_allocations')
@@ -21,25 +13,6 @@ export async function listAssetAllocations(): Promise<AssetAllocation[]> {
 
   if (error) throw error
   return data || []
-}
-
-export async function listAssetAllocationsByAsset(assetId: number): Promise<AssetAllocation[]> {
-  const { data, error } = await supabase
-    .from('asset_allocations')
-    .select('asset_id, asset_class_id, percentage')
-    .eq('asset_id', assetId)
-
-  if (error) throw error
-  return data || []
-}
-
-export async function listAssetAllocationsWithClass(): Promise<AssetAllocationWithClass[]> {
-  const { data, error } = await supabase
-    .from('asset_allocations')
-    .select('asset_id, asset_class_id, percentage, asset_classes(name, color, sort_order)')
-
-  if (error) throw error
-  return (data || []) as unknown as AssetAllocationWithClass[]
 }
 
 export async function insertAssetAllocation(allocation: {

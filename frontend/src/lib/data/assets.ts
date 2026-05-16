@@ -9,6 +9,20 @@ export interface Asset {
   family_id: string
 }
 
+export interface AssetAllocationInfo {
+  asset_class_id: number
+  percentage: number
+  asset_classes: {
+    name: string
+    color: string
+    sort_order: number
+  }
+}
+
+export interface AssetWithAllocations extends Asset {
+  allocations: AssetAllocationInfo[]
+}
+
 export async function listAssets(): Promise<Asset[]> {
   const { data, error } = await supabase
     .from('assets')
@@ -17,6 +31,28 @@ export async function listAssets(): Promise<Asset[]> {
 
   if (error) throw error
   return data || []
+}
+
+export async function listAssetsWithAllocations(): Promise<AssetWithAllocations[]> {
+  const { data, error } = await supabase
+    .from('assets')
+    .select(`
+      *,
+      asset_allocations (*, asset_classes (*))
+    `)
+    .order('name')
+
+  if (error) throw error
+
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    ticker: row.ticker,
+    name: row.name,
+    created_by: row.created_by,
+    created_at: row.created_at,
+    family_id: row.family_id,
+    allocations: row.asset_allocations || []
+  }))
 }
 
 export async function getAsset(id: number): Promise<Asset | null> {

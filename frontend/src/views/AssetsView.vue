@@ -6,7 +6,7 @@ import UpdatePriceModal from '@/components/modals/UpdatePriceModal.vue'
 import OnboardingModal from '@/components/modals/OnboardingModal.vue'
 import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import { supabase } from '@/lib/supabase'
-import { listAssets, listPriceUpdatesWithContext, listAssetAllocationsWithClass, listAssetClasses, deleteAsset } from '@/lib/data'
+import { listAssetsWithAllocations, listPriceUpdatesWithContext, listAssetClasses, deleteAsset } from '@/lib/data'
 import { getColorClasses } from '@/lib/tagColors'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -88,10 +88,9 @@ export default {
       this.error = null
       try {
         // Load all data in parallel
-        const [assetsData, pricesData, allocationsData, classesData] = await Promise.all([
-          listAssets(),
+        const [assetsData, pricesData, classesData] = await Promise.all([
+          listAssetsWithAllocations(),
           listPriceUpdatesWithContext('desc'),
-          listAssetAllocationsWithClass(),
           listAssetClasses()
         ])
 
@@ -111,43 +110,24 @@ export default {
           }
         }
 
-        // Build map of asset_id -> [{ name, color }], sorted by sort_order (for display)
-        // Also build map of asset_id -> [{asset_class_id, percentage}] (for editing)
-        const classesByAsset = {}
-        const allocationsByAsset = {}
-        for (const a of allocationsData) {
-          if (!classesByAsset[a.asset_id]) {
-            classesByAsset[a.asset_id] = []
-          }
-          classesByAsset[a.asset_id].push({
-            name: a.asset_classes.name,
-            color: a.asset_classes.color,
-            sort_order: a.asset_classes.sort_order
-          })
-
-          if (!allocationsByAsset[a.asset_id]) {
-            allocationsByAsset[a.asset_id] = []
-          }
-          allocationsByAsset[a.asset_id].push({
-            asset_class_id: a.asset_class_id,
-            percentage: Math.round(a.percentage * 100)
-          })
-        }
-        // Sort each asset's classes by sort_order and keep name + color
-        for (const assetId in classesByAsset) {
-          classesByAsset[assetId] = classesByAsset[assetId]
-            .sort((a, b) => a.sort_order - b.sort_order)
-            .map(c => ({ name: c.name, color: c.color }))
-        }
-
         // Merge metadata into assets
-        this.assets = assetsData.map(asset => ({
-          ...asset,
-          latestPrice: latestPriceByAsset[asset.id]?.price || null,
-          latestPriceDate: latestPriceByAsset[asset.id]?.date || null,
-          assetClasses: classesByAsset[asset.id] || [],
-          allocations: allocationsByAsset[asset.id] || []
-        }))
+        this.assets = assetsData.map(asset => {
+          // Sort allocations by sort_order for display
+          const sortedAllocs = [...asset.allocations].sort(
+            (a, b) => a.asset_classes.sort_order - b.asset_classes.sort_order
+          )
+
+          return {
+            ...asset,
+            latestPrice: latestPriceByAsset[asset.id]?.price || null,
+            latestPriceDate: latestPriceByAsset[asset.id]?.date || null,
+            assetClasses: sortedAllocs.map(a => ({ name: a.asset_classes.name, color: a.asset_classes.color })),
+            allocations: asset.allocations.map(a => ({
+              asset_class_id: a.asset_class_id,
+              percentage: Math.round(parseFloat(a.percentage) * 100)
+            }))
+          }
+        })
 
       } catch (err) {
         this.error = err.message
