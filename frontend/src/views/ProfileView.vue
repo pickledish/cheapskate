@@ -1,10 +1,9 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
-import EditNameModal from '@/components/modals/EditNameModal.vue'
 import ChangeFamilyModal from '@/components/modals/ChangeFamilyModal.vue'
 import DeleteAccountModal from '@/components/modals/DeleteAccountModal.vue'
 import { supabase } from '@/lib/supabase'
-import { getProfile, listProfilesByFamily } from '@/lib/data'
+import { getProfile, listProfilesByFamily, updateProfile, updatePreferences } from '@/lib/data'
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 import { ClipboardIcon } from '@heroicons/vue/24/outline'
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
@@ -14,7 +13,6 @@ export default {
   name: 'ProfileView',
   components: {
     AppLayout,
-    EditNameModal,
     ChangeFamilyModal,
     DeleteAccountModal,
     ClipboardIcon,
@@ -28,19 +26,25 @@ export default {
   data() {
     return {
       // User data
+      userId: null,
       userEmail: null,
-      userName: null,
+      userName: '',
       familyId: null,
       familyMembers: [],
 
+      // Original values for change detection
+      originalName: '',
+      originalLlmProvider: 'disabled',
+      originalLlmPort: '11434',
+
       // UI state
       loading: true,
+      saving: false,
       error: null,
       familyIdRevealed: false,
       copyFeedback: false,
 
       // Modal state
-      showEditNameModal: false,
       showChangeFamilyModal: false,
       showDeleteAccountModal: false,
 
@@ -57,6 +61,13 @@ export default {
   computed: {
     selectedLlmOption() {
       return this.localLlmOptions.find(o => o.id === this.localLlmProvider)
+    },
+    hasProfileChanges() {
+      return this.userName !== this.originalName
+    },
+    hasLlmChanges() {
+      return this.localLlmProvider !== this.originalLlmProvider ||
+        this.localLlmPort !== this.originalLlmPort
     }
   },
   async mounted() {
@@ -72,6 +83,7 @@ export default {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Not authenticated')
 
+        this.userId = user.id
         this.userEmail = user.email
         this.familyId = user.user_metadata?.family_id
 
@@ -81,8 +93,19 @@ export default {
           listProfilesByFamily(this.familyId)
         ])
 
-        this.userName = profile?.name || 'Unknown'
+        // Set current values
+        this.userName = profile?.name || ''
         this.familyMembers = members
+
+        // Load local LLM preferences
+        const llmConfig = profile?.preferences?.local_llm
+        this.localLlmProvider = llmConfig?.api || 'disabled'
+        this.localLlmPort = llmConfig?.port || '11434'
+
+        // Store original values for change detection
+        this.originalName = this.userName
+        this.originalLlmProvider = this.localLlmProvider
+        this.originalLlmPort = this.localLlmPort
 
       } catch (err) {
         this.error = err.message
@@ -113,20 +136,45 @@ export default {
       this.$router.push('/login')
     },
 
+    async saveProfile() {
+      if (!this.hasProfileChanges) return
+
+      this.saving = true
+      this.error = null
+
+      try {
+        await updateProfile(this.userId, { name: this.userName })
+        this.originalName = this.userName
+      } catch (err) {
+        this.error = err.message
+      } finally {
+        this.saving = false
+      }
+    },
+
+    async saveLlmSettings() {
+      if (!this.hasLlmChanges) return
+
+      this.saving = true
+      this.error = null
+
+      try {
+        await updatePreferences(this.userId, {
+          local_llm: {
+            api: this.localLlmProvider,
+            port: this.localLlmPort
+          }
+        })
+        this.originalLlmProvider = this.localLlmProvider
+        this.originalLlmPort = this.localLlmPort
+      } catch (err) {
+        this.error = err.message
+      } finally {
+        this.saving = false
+      }
+    },
+
     // Modal handlers
-    openEditNameModal() {
-      this.showEditNameModal = true
-    },
-
-    closeEditNameModal() {
-      this.showEditNameModal = false
-    },
-
-    async onNameUpdated() {
-      this.closeEditNameModal()
-      await this.loadData()
-    },
-
     openChangeFamilyModal() {
       this.showChangeFamilyModal = true
     },
@@ -182,23 +230,42 @@ export default {
             <!-- Name row -->
             <div class="flex items-center justify-between">
               <div>
-                <dt class="text-sm text-gray-500">Display Name</dt>
-                <dd class="text-gray-900">{{ userName }}</dd>
+                <p class="font-medium text-gray-900">Display Name</p>
+                <p class="text-sm text-gray-500">How you appear to other family members</p>
               </div>
-              <button
-                v-on:click="openEditNameModal"
-                class="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                Edit
-              </button>
+              <input
+                v-model="userName"
+                type="text"
+                class="w-48 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 shrink-0 ml-4"
+              />
             </div>
+
+            <hr class="border-gray-200" />
+
             <!-- Email row -->
-            <div>
-              <dt class="text-sm text-gray-500">Email</dt>
-              <dd class="text-gray-900">{{ userEmail }}</dd>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-gray-900">Email</p>
+                <p class="text-sm text-gray-500">Your Google account email</p>
+              </div>
+              <input
+                type="text"
+                v-bind:value="userEmail"
+                disabled
+                class="w-64 px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-100 text-gray-400 cursor-not-allowed shrink-0 ml-4"
+              />
             </div>
           </div>
         </section>
+        <div v-if="hasProfileChanges" class="flex justify-end">
+          <button
+            v-on:click="saveProfile"
+            v-bind:disabled="saving"
+            class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
 
         <!-- Family Section -->
         <section class="bg-white rounded-lg shadow overflow-hidden">
@@ -355,6 +422,15 @@ export default {
             </div>
           </div>
         </section>
+        <div v-if="hasLlmChanges" class="flex justify-end -mt-4">
+          <button
+            v-on:click="saveLlmSettings"
+            v-bind:disabled="saving"
+            class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
 
         <!-- Danger Zone -->
         <section class="bg-white rounded-lg shadow overflow-hidden">
@@ -393,17 +469,11 @@ export default {
             </div>
           </div>
         </section>
+
       </template>
     </div>
 
     <!-- Modals -->
-    <EditNameModal
-      v-if="showEditNameModal"
-      v-bind:current-name="userName"
-      v-on:close="closeEditNameModal"
-      v-on:updated="onNameUpdated"
-    />
-
     <ChangeFamilyModal
       v-if="showChangeFamilyModal"
       v-on:close="closeChangeFamilyModal"
