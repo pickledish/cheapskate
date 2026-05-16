@@ -8,7 +8,7 @@ const env = import.meta.env.DEV ? 'Development' : 'Production'
   <footer class="py-4 text-center text-xs text-gray-400">
     <span>Cheapskate</span>
     <span class="mx-2">·</span>
-    <span>{{ env }} Build</span>
+    <span>{{ env }}</span>
     <span class="mx-2">·</span>
     <span>Commit {{ commitHash }}</span>
     <span class="mx-2">·</span>
