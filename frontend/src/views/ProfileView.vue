@@ -267,6 +267,88 @@ export default {
           </button>
         </div>
 
+        <!-- Local LLM Section -->
+        <section class="bg-white rounded-lg shadow">
+          <div class="bg-gray-600 px-6 py-3 rounded-t-lg">
+            <h2 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Local LLM</h2>
+          </div>
+          <div class="p-6 space-y-4">
+            <!-- Provider row -->
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-gray-900">Provider</p>
+                <p class="text-sm text-gray-500">Parse PDFs locally instead of using the cloud service</p>
+              </div>
+              <Listbox v-model="localLlmProvider" as="div" class="relative shrink-0 ml-4">
+                <ListboxButton
+                  class="relative w-44 px-3 py-2 text-left text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <span>{{ selectedLlmOption?.name }}</span>
+                  <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                    <ChevronUpDownIcon class="w-4 h-4 text-gray-400" />
+                  </span>
+                </ListboxButton>
+                <transition
+                  enter-active-class="transition duration-100 ease-out"
+                  enter-from-class="transform scale-95 opacity-0"
+                  enter-to-class="transform scale-100 opacity-100"
+                  leave-active-class="transition duration-75 ease-in"
+                  leave-from-class="transform scale-100 opacity-100"
+                  leave-to-class="transform scale-95 opacity-0"
+                >
+                  <ListboxOptions
+                    class="absolute right-0 z-10 mt-1 w-44 max-h-60 overflow-auto bg-white border border-gray-200 rounded-md shadow-lg focus:outline-none"
+                  >
+                    <ListboxOption
+                      v-for="option in localLlmOptions"
+                      v-bind:key="option.id"
+                      v-bind:value="option.id"
+                      v-slot="{ active, selected }"
+                    >
+                      <div
+                        v-bind:class="[
+                          'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
+                          active ? 'bg-gray-100' : '',
+                          selected ? 'text-blue-600 font-medium' : 'text-gray-700'
+                        ]"
+                      >
+                        {{ option.name }}
+                        <CheckIcon v-if="selected" class="w-4 h-4" />
+                      </div>
+                    </ListboxOption>
+                  </ListboxOptions>
+                </transition>
+              </Listbox>
+            </div>
+
+            <hr class="border-gray-200" />
+
+            <!-- Port row -->
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-gray-900" v-bind:class="{ 'text-gray-400': localLlmProvider === 'disabled' }">Port</p>
+                <p class="text-sm text-gray-500" v-bind:class="{ 'text-gray-400': localLlmProvider === 'disabled' }">Local server port (default: 11434 for Ollama)</p>
+              </div>
+              <input
+                v-model="localLlmPort"
+                type="text"
+                placeholder="11434"
+                v-bind:disabled="localLlmProvider === 'disabled'"
+                class="w-24 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed shrink-0 ml-4"
+              />
+            </div>
+          </div>
+        </section>
+        <div v-if="hasLlmChanges" class="flex justify-end">
+          <button
+            v-on:click="saveLlmSettings"
+            v-bind:disabled="saving"
+            class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+
         <!-- Family Section -->
         <section class="bg-white rounded-lg shadow overflow-hidden">
           <div class="bg-gray-600 px-6 py-3">
@@ -349,88 +431,6 @@ export default {
             </div>
           </div>
         </section>
-
-        <!-- Local LLM Section -->
-        <section class="bg-white rounded-lg shadow">
-          <div class="bg-gray-600 px-6 py-3 rounded-t-lg">
-            <h2 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Local LLM</h2>
-          </div>
-          <div class="p-6 space-y-4">
-            <!-- Provider row -->
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="font-medium text-gray-900">Provider</p>
-                <p class="text-sm text-gray-500">Parse PDFs locally instead of using the cloud service</p>
-              </div>
-              <Listbox v-model="localLlmProvider" as="div" class="relative shrink-0 ml-4">
-                <ListboxButton
-                  class="relative w-44 px-3 py-2 text-left text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <span>{{ selectedLlmOption?.name }}</span>
-                  <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                    <ChevronUpDownIcon class="w-4 h-4 text-gray-400" />
-                  </span>
-                </ListboxButton>
-                <transition
-                  enter-active-class="transition duration-100 ease-out"
-                  enter-from-class="transform scale-95 opacity-0"
-                  enter-to-class="transform scale-100 opacity-100"
-                  leave-active-class="transition duration-75 ease-in"
-                  leave-from-class="transform scale-100 opacity-100"
-                  leave-to-class="transform scale-95 opacity-0"
-                >
-                  <ListboxOptions
-                    class="absolute right-0 z-10 mt-1 w-44 max-h-60 overflow-auto bg-white border border-gray-200 rounded-md shadow-lg focus:outline-none"
-                  >
-                    <ListboxOption
-                      v-for="option in localLlmOptions"
-                      v-bind:key="option.id"
-                      v-bind:value="option.id"
-                      v-slot="{ active, selected }"
-                    >
-                      <div
-                        v-bind:class="[
-                          'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
-                          active ? 'bg-gray-100' : '',
-                          selected ? 'text-blue-600 font-medium' : 'text-gray-700'
-                        ]"
-                      >
-                        {{ option.name }}
-                        <CheckIcon v-if="selected" class="w-4 h-4" />
-                      </div>
-                    </ListboxOption>
-                  </ListboxOptions>
-                </transition>
-              </Listbox>
-            </div>
-
-            <hr class="border-gray-200" />
-
-            <!-- Port row -->
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="font-medium text-gray-900" v-bind:class="{ 'text-gray-400': localLlmProvider === 'disabled' }">Port</p>
-                <p class="text-sm text-gray-500" v-bind:class="{ 'text-gray-400': localLlmProvider === 'disabled' }">Local server port (default: 11434 for Ollama)</p>
-              </div>
-              <input
-                v-model="localLlmPort"
-                type="text"
-                placeholder="11434"
-                v-bind:disabled="localLlmProvider === 'disabled'"
-                class="w-24 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed shrink-0 ml-4"
-              />
-            </div>
-          </div>
-        </section>
-        <div v-if="hasLlmChanges" class="flex justify-end -mt-4">
-          <button
-            v-on:click="saveLlmSettings"
-            v-bind:disabled="saving"
-            class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
-          >
-            {{ saving ? 'Saving...' : 'Save' }}
-          </button>
-        </div>
 
         <!-- Danger Zone -->
         <section class="bg-white rounded-lg shadow overflow-hidden">
