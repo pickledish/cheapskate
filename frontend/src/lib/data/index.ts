@@ -31,9 +31,10 @@ export {
   getProfile,
   listProfilesByFamily,
   insertProfile,
-  updateProfile
+  updateProfile,
+  updatePreferences
 } from './profiles'
-export type { Profile } from './profiles'
+export type { Profile, UserPreferences, LocalLlmConfig } from './profiles'
 
 // Updates
 export {

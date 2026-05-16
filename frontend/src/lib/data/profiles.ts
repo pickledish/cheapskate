@@ -1,10 +1,20 @@
 import { supabase } from '../supabase'
 
+export interface LocalLlmConfig {
+  api: 'disabled' | 'ollama' | 'openai'
+  port: string
+}
+
+export interface UserPreferences {
+  local_llm?: LocalLlmConfig
+}
+
 export interface Profile {
   id: string
   name: string
   family_id: string
   created_at: string
+  preferences: UserPreferences
 }
 
 export async function listProfiles(): Promise<Profile[]> {
@@ -62,6 +72,15 @@ export async function updateProfile(id: string, updates: { name: string }): Prom
   const { error } = await supabase
     .from('profiles')
     .update({ name: updates.name })
+    .eq('id', id)
+
+  if (error) throw error
+}
+
+export async function updatePreferences(id: string, preferences: UserPreferences): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ preferences })
     .eq('id', id)
 
   if (error) throw error
