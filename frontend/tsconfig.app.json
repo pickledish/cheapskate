@@ -7,7 +7,8 @@
     /* Path aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@shared/*": ["../supabase/functions/_shared/*"]
     },
 
     /* Linting */

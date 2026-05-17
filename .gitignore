@@ -20,3 +20,6 @@ supabase/.env.local
 .idea/
 .vscode/
 *.swp
+
+# Deno
+supabase/functions/**/deno.lock

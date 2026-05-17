@@ -1,68 +1,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { GoogleGenAI } from "@google/genai";
-import { z } from "zod";
+import { GoogleGenAI, type Schema } from "@google/genai";
+import {
+  ParsePdfResponseSchema,
+  geminiSchema,
+  buildPrompt,
+  type ParsePdfResponse,
+} from "../_shared/parse-pdf-schema.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-
-// Define the schema once - used for both API request and response validation
-const HoldingSchema = z.object({
-  name: z.string().describe("Asset identifier: ticker symbol (e.g., AAPL, VTI) or descriptive name (e.g., 'Target Date 2060 Fund'). For cash, use '$CASH'."),
-  quantity: z.number().describe("Number of shares/units as a decimal. For $CASH, this is the dollar amount."),
-  total_value: z.number().describe("Total market value of this holding in dollars. Required for all holdings."),
-  price: z.number().optional().describe("Per-share/per-unit price if explicitly shown. Optional - will be computed from total_value/quantity if not provided."),
-});
-
-const ParsePdfResponseSchema = z.object({
-  holdings: z.array(HoldingSchema).describe("Array of all holdings/positions found in the statement"),
-  statement_date: z.string().optional().describe("Statement date in YYYY-MM-DD format, if found"),
-  last4: z.string().optional().describe("Last 4 digits of the account number, if found"),
-});
-
-type ParsePdfResponse = z.infer<typeof ParsePdfResponseSchema>;
-
-// Gemini-compatible JSON Schema (subset of full JSON Schema)
-// Manually defined to avoid unsupported fields like additionalProperties
-const geminiSchema = {
-  type: "object",
-  properties: {
-    holdings: {
-      type: "array",
-      description: "Array of all holdings/positions found in the statement",
-      items: {
-        type: "object",
-        properties: {
-          name: {
-            type: "string",
-            description: "Asset identifier: ticker symbol (e.g., AAPL, VTI) or descriptive name (e.g., 'Target Date 2060 Fund'). For cash, use '$CASH'.",
-          },
-          quantity: {
-            type: "number",
-            description: "Number of shares/units as a decimal. For $CASH, this is the dollar amount.",
-          },
-          total_value: {
-            type: "number",
-            description: "Total market value of this holding in dollars. Required for all holdings.",
-          },
-          price: {
-            type: "number",
-            description: "Per-share/per-unit price if explicitly shown. Optional - will be computed from total_value/quantity if not provided.",
-          },
-        },
-        required: ["name", "quantity", "total_value"],
-      },
-    },
-    statement_date: {
-      type: "string",
-      description: "Statement date in YYYY-MM-DD format, if found",
-    },
-    last4: {
-      type: "string",
-      description: "Last 4 digits of the account number, if found",
-    },
-  },
-  required: ["holdings"],
-};
 
 interface ParsePdfRequest {
   pdf_base64: string;
@@ -120,28 +66,8 @@ Deno.serve(async (req) => {
       .from("assets")
       .select("ticker, name");
 
-    // Build the prompt with optional existing securities context
-    let promptText = `Analyze this investment statement PDF and extract all holdings/positions.
-
-Rules:
-- Extract every holding/position with its name, quantity (shares/units), and total market value
-- For the name field, use the ticker symbol if one is shown (e.g., AAPL, VTI), otherwise use a descriptive name
-- For each holding, also extract the per-share price if it's explicitly shown
-- For cash or money-market balances, use name "$CASH" with quantity AND total_value both equal to the dollar amount
-- For debt or liability balances (loans, mortgages, credit cards), use name "$DEBT" with quantity equal to the dollar amount owed and total_value as the negative of that amount
-- Only include actual holdings, not transaction history
-- Extract the statement date if visible
-- Extract the last 4 digits of the account number if visible`;
-
-    if (existingAssets && existingAssets.length > 0) {
-      const knownAssets = existingAssets
-        .map((s) => s.ticker ?? s.name)
-        .join(", ");
-      promptText += `
-
-Known assets: ${knownAssets}
-If you are reasonably confident that a holding in this statement represents the same asset as one listed above, use that exact name from the list.`;
-    }
+    const knownAssets = existingAssets?.map((s) => s.ticker ?? s.name);
+    const promptText = buildPrompt(knownAssets);
 
     // Initialize Gemini client with API key (works for both AI Studio and Vertex AI)
     // For Vertex AI: set GOOGLE_GENAI_USE_VERTEXAI=true (API key includes project info)
@@ -173,7 +99,7 @@ If you are reasonably confident that a holding in this statement represents the 
       ],
       config: {
         responseMimeType: "application/json",
-        responseSchema: geminiSchema,
+        responseSchema: geminiSchema as Schema,
       },
       // be sure to use no tools like grounding with google search
     });
