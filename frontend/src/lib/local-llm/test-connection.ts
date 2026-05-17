@@ -50,12 +50,11 @@ export async function testConnection(
           message: 'Connection timed out. Is the server running?'
         }
       }
+
       if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-        return {
-          success: false,
-          message: `Cannot connect to ${baseUrl}. Is the server running?`
-        }
+        return await diagnoseNetworkError(baseUrl)
       }
+
       return {
         success: false,
         message: err.message
@@ -66,6 +65,50 @@ export async function testConnection(
       success: false,
       message: 'Unknown error occurred'
     }
+  }
+}
+
+async function diagnoseNetworkError(baseUrl: string): Promise<TestResult> {
+  const isChrome = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent)
+  const isPublicOrigin = !['localhost', '127.0.0.1', '[::1]'].some(h => window.location.hostname === h)
+
+  const serverReachable = await checkServerReachable(baseUrl)
+
+  if (!serverReachable) {
+    return {
+      success: false,
+      message: `Connection refused: No server is running at ${baseUrl}. Make sure your LLM server is started.`
+    }
+  }
+
+  if (isChrome && isPublicOrigin) {
+    return {
+      success: false,
+      message: `Private Network Access blocked (Chrome security). Try Firefox/Safari, or see: chrome://flags/#block-insecure-private-network-requests`
+    }
+  }
+
+  return {
+    success: false,
+    message: `CORS blocked: The server at ${baseUrl} is running but doesn't allow requests from this origin. Enable CORS in your LLM server settings.`
+  }
+}
+
+async function checkServerReachable(baseUrl: string): Promise<boolean> {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 2000)
+
+    await fetch(baseUrl, {
+      method: 'HEAD',
+      mode: 'no-cors',
+      signal: controller.signal
+    })
+
+    clearTimeout(timeoutId)
+    return true
+  } catch {
+    return false
   }
 }
 
