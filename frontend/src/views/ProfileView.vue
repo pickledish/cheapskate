@@ -4,6 +4,7 @@ import ChangeFamilyModal from '@/components/modals/ChangeFamilyModal.vue'
 import DeleteAccountModal from '@/components/modals/DeleteAccountModal.vue'
 import { supabase } from '@/lib/supabase'
 import { getProfile, listProfilesByFamily, updateProfile, updatePreferences } from '@/lib/data'
+import { testConnection } from '@/lib/local-llm'
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 import { ClipboardIcon } from '@heroicons/vue/24/outline'
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
@@ -47,6 +48,9 @@ export default {
       // Modal state
       showChangeFamilyModal: false,
       showDeleteAccountModal: false,
+
+      // Local LLM state
+      testing: false,
 
       // Local LLM config
       localLlmOptions: [
@@ -174,6 +178,18 @@ export default {
       }
     },
 
+    async testLlmConnection() {
+      if (this.localLlmProvider === 'disabled') return
+
+      this.testing = true
+      try {
+        const result = await testConnection(this.localLlmProvider, this.localLlmPort)
+        alert(result.message)
+      } finally {
+        this.testing = false
+      }
+    },
+
     // Modal handlers
     openChangeFamilyModal() {
       this.showChangeFamilyModal = true
@@ -261,7 +277,7 @@ export default {
           <button
             v-on:click="saveProfile"
             v-bind:disabled="saving"
-            class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            class="px-4 py-2 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 hover:border-blue-700 disabled:opacity-50 transition-colors"
           >
             {{ saving ? 'Saving...' : 'Save' }}
           </button>
@@ -339,11 +355,18 @@ export default {
             </div>
           </div>
         </section>
-        <div v-if="hasLlmChanges" class="flex justify-end">
+        <div v-if="hasLlmChanges" class="flex justify-end gap-2">
+          <button
+            v-on:click="testLlmConnection"
+            v-bind:disabled="testing || localLlmProvider === 'disabled'"
+            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm font-medium disabled:opacity-50 transition-colors"
+          >
+            {{ testing ? 'Testing...' : 'Test' }}
+          </button>
           <button
             v-on:click="saveLlmSettings"
             v-bind:disabled="saving"
-            class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            class="px-4 py-2 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 hover:border-blue-700 disabled:opacity-50 transition-colors"
           >
             {{ saving ? 'Saving...' : 'Save' }}
           </button>
