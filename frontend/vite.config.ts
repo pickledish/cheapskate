@@ -20,6 +20,9 @@ export default defineConfig({
       '@shared': resolve(__dirname, '../supabase/functions/_shared')
     }
   },
+  optimizeDeps: {
+    include: ['zod']
+  },
   define: {
     __COMMIT_HASH__: JSON.stringify(getGitCommitHash()),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),

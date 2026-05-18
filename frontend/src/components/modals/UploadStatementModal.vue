@@ -15,8 +15,10 @@ import {
   findAssetByTickerOrName,
   insertAsset,
   listHoldingUpdatesByAccount,
-  listAssets
+  listAssets,
+  getProfile
 } from '@/lib/data'
+import { parseWithLocalLlm } from '@/lib/local-llm'
 
 export default {
   name: 'UploadStatementModal',
@@ -94,19 +96,6 @@ export default {
       this.error = null
     },
 
-    triggerParse() {
-      if (this.parseMode === 'local') {
-        this.parseFileWithLocalLlm()
-      } else {
-        this.parseFile()
-      }
-    },
-
-    async parseFileWithLocalLlm() {
-      // TODO: Wire up to local LLM endpoint
-      await this.parseFile()
-    },
-
     async parseFile() {
       if (!this.file) {
         this.error = 'Please select a file'
@@ -117,49 +106,74 @@ export default {
       this.error = null
 
       try {
-        // Convert file to base64
-        const base64 = await this.fileToBase64(this.file)
+        const result = this.parseMode === 'local'
+          ? await this.parseWithLocal()
+          : await this.parseWithCloud()
 
-        // Call parse-pdf edge function
-        const { data: result, error: invokeError } = await supabase.functions.invoke('parse-pdf', {
-          body: { pdf_base64: base64 }
-        })
-        if (invokeError) throw invokeError
-
-        this.holdings = result.holdings || []
-        this.statementDate = result.statement_date || this.todayDate
-        this.parsedLast4 = result.last4 || null
-
-        // Try to auto-match by last4
-        if (this.parsedLast4) {
-          const matches = await findAccountByLast4(this.parsedLast4)
-          this.matchingAccountIds = matches.map(a => a.id)
-
-          if (matches.length === 1) {
-            this.matchedAccount = matches[0]
-            // Prefetch accounts so rejectAutoMatch() is instant if user clicks "Not the right account?"
-            listAccounts().then(accts => this.allAccounts = accts)
-            await this.onAccountResolved()
-            return
-          }
-
-          if (matches.length > 1) {
-            // Multiple matches - show account selection with matches highlighted
-            this.allAccounts = await listAccounts()
-            this.step = 'match'
-            return
-          }
-        }
-
-        // No match -- show account selection
-        this.allAccounts = await listAccounts()
-        this.step = 'match'
-
+        await this.handleParseResult(result)
       } catch (err) {
         this.error = err.message
       } finally {
         this.loading = false
       }
+    },
+
+    async parseWithCloud() {
+      const base64 = await this.fileToBase64(this.file)
+      const { data, error } = await supabase.functions.invoke('parse-pdf', {
+        body: { pdf_base64: base64 }
+      })
+      if (error) throw error
+      return data
+    },
+
+    async parseWithLocal() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const profile = await getProfile(user.id)
+      const llmConfig = profile?.preferences?.local_llm
+
+      if (!llmConfig || llmConfig.api === 'disabled') {
+        throw new Error('Local LLM not configured. Go to Profile & Settings to set it up.')
+      }
+
+      const pdfArrayBuffer = await this.file.arrayBuffer()
+      const existingAssets = await listAssets()
+      const knownAssets = existingAssets.map(a => a.ticker ?? a.name)
+
+      return parseWithLocalLlm({
+        config: { provider: llmConfig.api, port: llmConfig.port },
+        pdfArrayBuffer,
+        knownAssets
+      })
+    },
+
+    async handleParseResult(result) {
+      this.holdings = result.holdings || []
+      this.statementDate = result.statement_date || this.todayDate
+      this.parsedLast4 = result.last4 || null
+
+      if (this.parsedLast4) {
+        const matches = await findAccountByLast4(this.parsedLast4)
+        this.matchingAccountIds = matches.map(a => a.id)
+
+        if (matches.length === 1) {
+          this.matchedAccount = matches[0]
+          listAccounts().then(accts => this.allAccounts = accts)
+          await this.onAccountResolved()
+          return
+        }
+
+        if (matches.length > 1) {
+          this.allAccounts = await listAccounts()
+          this.step = 'match'
+          return
+        }
+      }
+
+      this.allAccounts = await listAccounts()
+      this.step = 'match'
     },
 
     async confirmAccountSelection() {
@@ -483,7 +497,7 @@ export default {
         </button>
         <div class="inline-flex rounded-md">
           <button
-            v-on:click="triggerParse"
+            v-on:click="parseFile"
             v-bind:disabled="!file || loading"
             class="px-4 py-2 bg-blue-600 text-white rounded-l-md hover:bg-blue-700 disabled:opacity-50"
           >
