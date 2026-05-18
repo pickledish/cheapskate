@@ -17,7 +17,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
-      '@shared': resolve(__dirname, '../supabase/functions/_shared')
+      '@shared': resolve(__dirname, '../supabase/functions/_shared'),
+      'zod': resolve(__dirname, 'node_modules/zod')
     }
   },
   optimizeDeps: {
