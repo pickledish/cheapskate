@@ -1,7 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist'
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import PdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker'
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
+pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker()
 
 export interface PdfToImagesOptions {
   /** Scale factor for rendering. 1.0 = 72 DPI, 2.0 = 144 DPI. Default: 2.0 */
