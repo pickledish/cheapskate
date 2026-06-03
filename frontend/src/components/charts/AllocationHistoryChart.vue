@@ -32,6 +32,7 @@ export default {
           trigger: 'item',
           transitionDuration: 0,
           formatter: (p) => {
+            if (!p.name || p.value == null) return ''
             const pct = (p.value * 100).toFixed(1)
             return `<strong>${p.name}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${pct}%`
           }
@@ -55,7 +56,11 @@ export default {
         yAxis: {
           type: 'category',
           data: this.labels,
-          axisLabel: { color: '#374151' }
+          axisLabel: { color: '#374151' },
+          axisPointer: {
+            show: true,
+            type: 'shadow'
+          }
         },
         series: this.series.map((s) => ({
           name: s.name,
