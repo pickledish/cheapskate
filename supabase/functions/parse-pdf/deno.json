@@ -1,6 +1,6 @@
 {
   "imports": {
-    "@google/genai": "npm:@google/genai@0.7.0",
+    "@openrouter/sdk": "npm:@openrouter/sdk",
     "zod": "npm:zod@3.24.1"
   }
 }

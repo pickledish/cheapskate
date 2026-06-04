@@ -6,7 +6,7 @@ Track your net worth and portfolio composition across brokerage accounts, retire
 
 - **Supabase** - Database, auth, and edge functions ([supabase.com](https://supabase.com))
 - **Google Cloud** - OAuth for "Sign in with Google" ([console.cloud.google.com](https://console.cloud.google.com))
-- **Google Gemini** - PDF statement parsing via [AI Studio](https://aistudio.google.com/apikey) or [Vertex AI](https://console.cloud.google.com/vertex-ai)
+- **OpenRouter** - PDF statement parsing via LLM ([openrouter.ai](https://openrouter.ai))
 - **Bunny CDN** - Frontend hosting ([bunny.net](https://bunny.net)) — or any static host
 
 ## Project Structure
@@ -16,7 +16,7 @@ cheapskate/
 ├── supabase/
 │   ├── migrations/      # Database schema (tables, RLS policies)
 │   └── functions/       # Edge Functions (Deno/TypeScript)
-│       └── parse-pdf/   # PDF statement parsing via Gemini
+│       └── parse-pdf/   # PDF statement parsing via OpenRouter
 └── frontend/            # Vue 3 + Vite app
 ```
 
@@ -42,9 +42,9 @@ cp supabase/.env.example supabase/.env
 supabase functions serve --env-file ./supabase/.env
 ```
 
-**AI Studio** (default): Get an API key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey), set `GOOGLE_API_KEY`.
+Get an API key from [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys) and set `OPENROUTER_API_KEY` in your env file.
 
-**Vertex AI** (optional): Get an API key from [Google Cloud Console](https://console.cloud.google.com/apis/credentials), set `GOOGLE_API_KEY` and `GOOGLE_GENAI_USE_VERTEXAI=true`.
+Optionally set `OPENROUTER_MODEL` to use a different model (defaults to `google/gemini-2.5-flash`). Browse available models at [openrouter.ai/models](https://openrouter.ai/models).
 
 ### 3. Set Up Google Sign-In
 
@@ -157,7 +157,7 @@ All tables use Row Level Security (RLS) — users can only access data belonging
 
 ### parse-pdf
 
-Parses investment statement PDFs using Gemini 3 Flash.
+Parses investment statement PDFs using OpenRouter (defaults to Gemini 2.5 Flash).
 
 - **Endpoint:** `POST /functions/v1/parse-pdf`
 - **Auth:** Requires Supabase user JWT in Authorization header

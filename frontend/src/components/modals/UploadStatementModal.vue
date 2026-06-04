@@ -61,7 +61,7 @@ export default {
     },
     parseButtonText() {
       if (this.loading) return 'Parsing...'
-      return this.parseMode === 'local' ? 'Parse with Local LLM' : 'Parse with Gemini'
+      return this.parseMode === 'local' ? 'Parse with Local LLM' : 'Parse with Cloud AI'
     },
     modalTitle() {
       if (this.step === 'match') return 'Select Account'
@@ -471,10 +471,10 @@ export default {
           <DisclosurePanel static class="overflow-hidden">
             <div class="mt-2">
               <p class="text-sm text-blue-800 mb-2">
-                Cheapskate extracts and stores only ticker symbols, share quantities, and account last-4 digits from your statement — no full account numbers, addresses, or other personal information.
+                Cheapskate extracts and stores only ticker symbols, share quantities, and account last-4 digits from your statement -- no full account numbers, addresses, or other personal information.
               </p>
               <p class="text-sm text-blue-800">
-                Gemini is also configured in <a href="https://docs.cloud.google.com/vertex-ai/generative-ai/docs/vertex-ai-zero-data-retention" class="font-semibold underline hover:text-blue-900">zero-retention mode</a>, so your document is deleted from Google's servers as soon as the parsing is completed.
+                The AI provider is configured with <a href="https://openrouter.ai/docs/guides/features/zdr" class="font-semibold underline hover:text-blue-900">zero data retention</a>, so your document is not stored or used for training after parsing.
               </p>
             </div>
           </DisclosurePanel>
@@ -519,7 +519,7 @@ export default {
                     active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                   ]"
                 >
-                  Parse with Gemini
+                  Parse with Cloud AI
                 </button>
               </MenuItem>
               <MenuItem v-slot="{ active }">

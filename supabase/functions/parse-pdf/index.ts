@@ -1,14 +1,15 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { GoogleGenAI, type Schema } from "@google/genai";
+import { OpenRouter } from "@openrouter/sdk";
 import {
   ParsePdfResponseSchema,
-  geminiSchema,
+  responseSchema,
   buildPrompt,
   type ParsePdfResponse,
 } from "../_shared/parse-pdf-schema.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const DEFAULT_MODEL = "google/gemini-2.5-flash";
 
 interface ParsePdfRequest {
   pdf_base64: string;
@@ -69,46 +70,47 @@ Deno.serve(async (req) => {
     const knownAssets = existingAssets?.map((s) => s.ticker ?? s.name);
     const promptText = buildPrompt(knownAssets);
 
-    // Initialize Gemini client with API key (works for both AI Studio and Vertex AI)
-    // For Vertex AI: set GOOGLE_GENAI_USE_VERTEXAI=true (API key includes project info)
-    const apiKey = Deno.env.get("GOOGLE_API_KEY");
-    const useVertexAI = Deno.env.get("GOOGLE_GENAI_USE_VERTEXAI") === "true";
-    const ai = new GoogleGenAI(useVertexAI
-      ? { apiKey, vertexai: true }
-      : { apiKey });
-
-    // Call Gemini with the PDF and structured output schema
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              // be sure to pass data inline, not files API (stored)
-              inlineData: {
-                mimeType: "application/pdf",
-                data: pdf_base64,
-              },
-            },
-            {
-              text: promptText,
-            },
-          ],
-        },
-      ],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: geminiSchema as Schema,
-      },
-      // be sure to use no tools like grounding with google search
+    // Initialize OpenRouter client
+    const client = new OpenRouter({
+      apiKey: Deno.env.get("OPENROUTER_API_KEY"),
     });
 
-    // Parse and validate the response using the same schema
-    const responseText = response.text;
+    // Call OpenRouter with the PDF and structured output schema
+    const model = Deno.env.get("OPENROUTER_MODEL") ?? DEFAULT_MODEL;
+    const response = await client.chat.send({
+      chatRequest: {
+        model,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: promptText },
+              {
+                type: "file",
+                file: {
+                  filename: "statement.pdf",
+                  fileData: `data:application/pdf;base64,${pdf_base64}`,
+                },
+              },
+            ],
+          },
+        ],
+        responseFormat: {
+          type: "json_schema",
+          jsonSchema: {
+            name: "holdings",
+            strict: true,
+            schema: responseSchema,
+          },
+        },
+      },
+    });
+
+    // Parse and validate the response
+    const responseText = response.choices?.[0]?.message?.content;
     if (!responseText) {
       return new Response(
-        JSON.stringify({ error: "No response from Gemini" }),
+        JSON.stringify({ error: "No response from LLM" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -120,7 +122,7 @@ Deno.serve(async (req) => {
     } catch (parseError) {
       return new Response(
         JSON.stringify({
-          error: "Failed to parse or validate Gemini response",
+          error: "Failed to parse or validate LLM response",
           details: parseError instanceof Error ? parseError.message : "Unknown error",
           raw_response: responseText,
         }),
@@ -158,5 +160,9 @@ Deno.serve(async (req) => {
     --data '{"pdf_base64":"<base64-encoded-pdf>"}'
 
   Note: The anon key will NOT work - you need a real user session token.
+
+  Environment variables required:
+    - OPENROUTER_API_KEY: Your OpenRouter API key (get from openrouter.ai/settings/keys)
+    - OPENROUTER_MODEL (optional): Model to use, defaults to google/gemini-2.5-flash
 
 */

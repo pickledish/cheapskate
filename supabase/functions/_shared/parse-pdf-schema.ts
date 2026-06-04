@@ -16,9 +16,8 @@ export const ParsePdfResponseSchema = z.object({
 export type Holding = z.infer<typeof HoldingSchema>;
 export type ParsePdfResponse = z.infer<typeof ParsePdfResponseSchema>;
 
-// Gemini-compatible JSON Schema (subset of full JSON Schema)
-// Manually defined to avoid unsupported fields like additionalProperties
-export const geminiSchema = {
+// JSON Schema for structured LLM output (OpenRouter/OpenAI compatible)
+export const responseSchema = {
   type: "object",
   properties: {
     holdings: {
@@ -45,6 +44,7 @@ export const geminiSchema = {
           },
         },
         required: ["name", "quantity", "total_value"],
+        additionalProperties: false,
       },
     },
     statement_date: {
@@ -57,7 +57,11 @@ export const geminiSchema = {
     },
   },
   required: ["holdings"],
+  additionalProperties: false,
 };
+
+// Backwards compatibility alias
+export const geminiSchema = responseSchema;
 
 const promptTemplate = `Analyze this investment statement PDF and extract all holdings/positions.
 
