@@ -65,6 +65,8 @@ async function getFirstModelOpenAI(baseUrl: string): Promise<string> {
   return firstModel
 }
 
+const FORMAT_PROMPT = 'Now output your findings as JSON.'
+
 async function callOllama(
   baseUrl: string,
   model: string,
@@ -73,30 +75,55 @@ async function callOllama(
 ): Promise<ParsePdfResponse> {
   const images = imageDataUrls.map(stripDataUrlPrefix)
 
-  const response = await fetch(`${baseUrl}/api/chat`, {
+  const userMessage = { role: 'user', content: prompt, images }
+
+  // First call: let the model think without JSON constraints
+  const thinkResponse = await fetch(`${baseUrl}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      messages: [userMessage],
+      stream: false,
+    }),
+  })
+
+  if (!thinkResponse.ok) {
+    const errorText = await thinkResponse.text()
+    throw new Error(`Ollama error: ${thinkResponse.status} - ${errorText}`)
+  }
+
+  const thinkResult = await thinkResponse.json()
+  const thinkingContent = thinkResult.message?.content
+
+  if (!thinkingContent) {
+    throw new Error('No response content from Ollama')
+  }
+
+  // Second call: ask for JSON output with schema constraint
+  // Include full conversation history for KV cache reuse
+  const formatResponse = await fetch(`${baseUrl}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model,
       messages: [
-        {
-          role: 'user',
-          content: prompt,
-          images,
-        },
+        userMessage,
+        { role: 'assistant', content: thinkingContent },
+        { role: 'user', content: FORMAT_PROMPT },
       ],
       format: geminiSchema,
       stream: false,
     }),
   })
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Ollama error: ${response.status} - ${errorText}`)
+  if (!formatResponse.ok) {
+    const errorText = await formatResponse.text()
+    throw new Error(`Ollama error: ${formatResponse.status} - ${errorText}`)
   }
 
-  const result = await response.json()
-  const content = result.message?.content
+  const formatResult = await formatResponse.json()
+  const content = formatResult.message?.content
 
   if (!content) {
     throw new Error('No response content from Ollama')
@@ -116,19 +143,48 @@ async function callOpenAI(
     image_url: { url },
   }))
 
-  const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+  const userMessage = {
+    role: 'user',
+    content: [
+      ...imageContent,
+      { type: 'text', text: prompt },
+    ],
+  }
+
+  // First call: let the model think without JSON constraints
+  const thinkResponse = await fetch(`${baseUrl}/v1/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      messages: [userMessage],
+    }),
+  })
+
+  if (!thinkResponse.ok) {
+    const errorText = await thinkResponse.text()
+    throw new Error(`OpenAI-compatible API error: ${thinkResponse.status} - ${errorText}`)
+  }
+
+  const thinkResult = await thinkResponse.json()
+  const thinkMessage = thinkResult.choices?.[0]?.message
+  const thinkingContent = thinkMessage?.content || thinkMessage?.reasoning_content
+
+  if (!thinkingContent) {
+    throw new Error('No response content from OpenAI-compatible API')
+  }
+
+  // Second call: ask for JSON output with schema constraint
+  // Include full conversation history for KV cache reuse
+  const formatResponse = await fetch(`${baseUrl}/v1/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model,
       messages: [
-        {
-          role: 'user',
-          content: [
-            ...imageContent,
-            { type: 'text', text: prompt },
-          ],
-        },
+        userMessage,
+        { role: 'assistant', content: thinkingContent },
+        { role: 'user', content: FORMAT_PROMPT },
       ],
       response_format: {
         type: 'json_schema',
@@ -140,14 +196,14 @@ async function callOpenAI(
     }),
   })
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`OpenAI-compatible API error: ${response.status} - ${errorText}`)
+  if (!formatResponse.ok) {
+    const errorText = await formatResponse.text()
+    throw new Error(`OpenAI-compatible API error: ${formatResponse.status} - ${errorText}`)
   }
 
-  const result = await response.json()
-  const message = result.choices?.[0]?.message
-  const content = message?.content || message?.reasoning_content
+  const formatResult = await formatResponse.json()
+  const formatMessage = formatResult.choices?.[0]?.message
+  const content = formatMessage?.content || formatMessage?.reasoning_content
 
   if (!content) {
     throw new Error('No response content from OpenAI-compatible API')
