@@ -210,7 +210,10 @@ export default {
 
     relativeDate(dateStr) {
       if (!dateStr) return null
-      return dayjs(dateStr).fromNow()
+      const days = dayjs().diff(dayjs(dateStr), 'day')
+      if (days === 0) return 'today'
+      if (days === 1) return '1 day ago'
+      return `${days} days ago`
     },
 
     getClassColor(colorName) {
