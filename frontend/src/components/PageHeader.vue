@@ -15,13 +15,13 @@ export default {
 </script>
 
 <template>
-  <div class="flex items-center justify-between gap-3">
-    <div class="min-w-0">
-      <h2 class="text-2xl font-bold text-gray-900">{{ title }}</h2>
-      <p v-if="description" class="mt-1 text-sm text-gray-600 hidden sm:block">
-        {{ description }}
-      </p>
+  <div class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 sm:gap-y-1">
+    <h2 class="min-w-0 text-2xl font-bold text-gray-900">{{ title }}</h2>
+    <div class="shrink-0 sm:row-span-2 self-center">
+      <slot name="actions" />
     </div>
-    <slot name="actions" />
+    <p v-if="description" class="col-span-2 sm:col-span-1 text-sm text-gray-600">
+      {{ description }}
+    </p>
   </div>
 </template>
