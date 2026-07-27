@@ -438,7 +438,7 @@ export default {
       <div v-if="loading" class="text-gray-500">Loading...</div>
 
       <template v-if="!loading && account">
-        <PageHeader :title="account.name">
+        <PageHeader :title="account.name" :description="isArchived ? 'CLOSED' : null">
           <template #actions>
             <Menu as="div" class="relative inline-block text-left shrink-0">
               <MenuButton class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
