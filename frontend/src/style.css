@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Clip page-level horizontal overflow; nested overflow-x-auto (tables) still scrolls */
+@layer base {
+  html,
+  body {
+    overflow-x: clip;
+  }
+}
+
 /* Source Sans 3 - self-hosted static fonts */
 @font-face {
   font-family: 'Source Sans 3';
