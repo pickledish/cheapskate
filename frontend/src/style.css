@@ -1,10 +1,9 @@
 @import "tailwindcss";
 
-/* Hide page-level horizontal overflow; nested overflow-x-auto (tables) still scrolls */
+/* Stop iOS viewport rubber-band / horizontal pan from nested overflow-x scrollers */
 @layer base {
-  html,
-  body {
-    overflow-x: hidden;
+  html {
+    overscroll-behavior-x: none;
   }
 }
 
