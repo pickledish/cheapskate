@@ -1,11 +1,18 @@
 <script>
 import { supabase } from '@/lib/supabase'
 import { UserCircleIcon } from '@heroicons/vue/24/solid'
+import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 
 export default {
   name: 'AppNav',
   components: {
-    UserCircleIcon
+    UserCircleIcon,
+    Bars3Icon,
+    XMarkIcon,
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel
   },
   data() {
     return {
@@ -13,6 +20,18 @@ export default {
       goalsCompleted: false,
       accountsCompleted: false,
       assetsCompleted: false
+    }
+  },
+  computed: {
+    navItems() {
+      return [
+        { to: '/goals', label: 'Goals', enabled: true },
+        { to: '/accounts', label: 'Accounts', enabled: this.goalsCompleted },
+        { to: '/assets', label: 'Assets', enabled: this.accountsCompleted },
+        { to: '/rebalancing', label: 'Rebalancing', enabled: this.assetsCompleted },
+        { to: '/', label: 'Net Worth', enabled: this.assetsCompleted },
+        { to: '/history', label: 'History', enabled: this.assetsCompleted }
+      ]
     }
   },
   async mounted() {
@@ -36,6 +55,17 @@ export default {
       return isActive
         ? 'border-blue-500 text-gray-900'
         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+    },
+    mobileNavClass(path, enabled) {
+      const isActive = path === '/'
+        ? this.$route.path === '/'
+        : this.$route.path.startsWith(path)
+      if (!enabled) {
+        return 'border-transparent text-gray-300 cursor-not-allowed pointer-events-none'
+      }
+      return isActive
+        ? 'border-blue-500 bg-blue-50 text-gray-900'
+        : 'border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-700'
     }
   }
 }
@@ -43,7 +73,13 @@ export default {
 
 <template>
   <nav class="bg-white border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Remount on navigate so the mobile menu closes -->
+    <Disclosure
+      v-bind:key="$route.fullPath"
+      as="div"
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+      v-slot="{ open }"
+    >
       <div class="flex justify-between h-16">
         <div class="flex">
           <div class="flex-shrink-0 flex items-center">
@@ -64,55 +100,23 @@ export default {
           </div>
           <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
             <router-link
-              to="/goals"
+              v-for="item in navItems"
+              v-bind:key="'desktop-' + item.to"
+              v-bind:to="item.to"
               class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              v-bind:class="navClass('/goals', true)"
+              v-bind:class="navClass(item.to, item.enabled)"
+              v-bind:tabindex="item.enabled ? 0 : -1"
             >
-              Goals
-            </router-link>
-            <router-link
-              to="/accounts"
-              class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              v-bind:class="navClass('/accounts', goalsCompleted)"
-              v-bind:tabindex="goalsCompleted ? 0 : -1"
-            >
-              Accounts
-            </router-link>
-            <router-link
-              to="/assets"
-              class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              v-bind:class="navClass('/assets', accountsCompleted)"
-              v-bind:tabindex="accountsCompleted ? 0 : -1"
-            >
-              Assets
-            </router-link>
-            <router-link
-              to="/rebalancing"
-              class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              v-bind:class="navClass('/rebalancing', assetsCompleted)"
-              v-bind:tabindex="assetsCompleted ? 0 : -1"
-            >
-              Rebalancing
-            </router-link>
-            <router-link
-              to="/"
-              class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              v-bind:class="navClass('/', assetsCompleted)"
-              v-bind:tabindex="assetsCompleted ? 0 : -1"
-            >
-              Net Worth
-            </router-link>
-            <router-link
-              to="/history"
-              class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              v-bind:class="navClass('/history', assetsCompleted)"
-              v-bind:tabindex="assetsCompleted ? 0 : -1"
-            >
-              History
+              {{ item.label }}
             </router-link>
           </div>
         </div>
         <div class="flex">
+          <DisclosureButton class="sm:hidden self-center inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+            <span class="sr-only">Open main menu</span>
+            <Bars3Icon v-if="!open" class="w-6 h-6" />
+            <XMarkIcon v-else class="w-6 h-6" />
+          </DisclosureButton>
           <router-link
             to="/profile"
             class="inline-flex items-center gap-2 px-1 pt-1 border-b-2 text-sm font-medium"
@@ -123,6 +127,27 @@ export default {
           </router-link>
         </div>
       </div>
-    </div>
+
+      <!-- Mobile menu: same grid-rows slide as UploadStatementModal privacy disclosure -->
+      <div
+        class="sm:hidden grid transition-all duration-200 ease-out"
+        v-bind:class="open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'"
+      >
+        <DisclosurePanel static class="overflow-hidden">
+          <div class="border-t border-gray-200 py-2 space-y-1">
+            <router-link
+              v-for="item in navItems"
+              v-bind:key="'mobile-' + item.to"
+              v-bind:to="item.to"
+              class="block border-l-4 py-2 pl-3 pr-4 text-sm font-medium"
+              v-bind:class="mobileNavClass(item.to, item.enabled)"
+              v-bind:tabindex="item.enabled ? 0 : -1"
+            >
+              {{ item.label }}
+            </router-link>
+          </div>
+        </DisclosurePanel>
+      </div>
+    </Disclosure>
   </nav>
 </template>
