@@ -90,7 +90,7 @@ export default {
         <input
           v-model="date"
           type="date"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full min-w-0 max-w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-date-and-time-value]:min-h-[1.5em] [&::-webkit-datetime-edit]:inline-flex [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit-year-field]:p-0 [&::-webkit-datetime-edit-month-field]:p-0 [&::-webkit-datetime-edit-day-field]:p-0 [&::-webkit-datetime-edit-hour-field]:p-0 [&::-webkit-datetime-edit-minute-field]:p-0 [&::-webkit-datetime-edit-second-field]:p-0 [&::-webkit-datetime-edit-millisecond-field]:p-0 [&::-webkit-datetime-edit-meridiem-field]:p-0"
         />
       </div>
 
