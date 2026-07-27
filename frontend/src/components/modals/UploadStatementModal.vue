@@ -490,56 +490,6 @@ export default {
         v-on:change="onFileChange"
         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
       />
-
-      <div class="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <button
-          v-on:click="$emit('close')"
-          class="px-4 py-2 text-gray-700 hover:text-gray-900"
-        >
-          Cancel
-        </button>
-        <div class="inline-flex w-full sm:w-auto rounded-md">
-          <button
-            v-on:click="parseFile"
-            v-bind:disabled="!file || loading"
-            class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-l-md hover:bg-blue-700 disabled:opacity-50"
-          >
-            {{ parseButtonText }}
-          </button>
-          <Menu as="div" class="relative flex">
-            <MenuButton
-              v-bind:disabled="!file || loading"
-              class="px-2 bg-blue-600 text-white border-l border-blue-500 rounded-r-md hover:bg-blue-700 disabled:opacity-50 flex items-center"
-            >
-              <ChevronUpIcon class="w-4 h-4" />
-            </MenuButton>
-            <MenuItems class="absolute right-0 bottom-full mb-1 w-48 bg-white rounded-md shadow-lg z-50 py-1">
-              <MenuItem v-slot="{ active }">
-                <button
-                  v-on:click="parseMode = 'cloud'"
-                  v-bind:class="[
-                    'w-full text-left px-4 py-2 text-sm',
-                    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                  ]"
-                >
-                  Parse with Cloud AI
-                </button>
-              </MenuItem>
-              <MenuItem v-slot="{ active }">
-                <button
-                  v-on:click="parseMode = 'local'"
-                  v-bind:class="[
-                    'w-full text-left px-4 py-2 text-sm',
-                    active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                  ]"
-                >
-                  Parse with Local LLM
-                </button>
-              </MenuItem>
-            </MenuItems>
-          </Menu>
-        </div>
-      </div>
     </div>
 
     <!-- Step 2: Account matching (only shown when no auto-match) -->
@@ -631,22 +581,6 @@ export default {
           </div>
         </label>
       </div>
-
-      <div class="mt-4 flex justify-end space-x-2">
-        <button
-          v-on:click="step = 'upload'"
-          class="px-4 py-2 text-gray-700 hover:text-gray-900"
-        >
-          Back
-        </button>
-        <button
-          v-on:click="confirmAccountSelection"
-          v-bind:disabled="loading || (!selectedAccount && !createNewAccount)"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-        >
-          {{ loading ? 'Loading...' : 'Continue' }}
-        </button>
-      </div>
     </div>
 
     <!-- Step 3: Preview -->
@@ -682,7 +616,7 @@ export default {
       </div>
 
       <!-- Holdings table -->
-      <div class="border rounded-md mb-4 max-h-64 overflow-x-auto overflow-y-auto">
+      <div class="border rounded-md max-h-64 overflow-x-auto overflow-y-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50 sticky top-0">
             <tr>
@@ -716,27 +650,93 @@ export default {
           </tbody>
         </table>
       </div>
-
-      <div class="flex justify-end space-x-2">
-        <button
-          v-on:click="step = 'upload'"
-          class="px-4 py-2 text-gray-700 hover:text-gray-900"
-        >
-          Back
-        </button>
-        <button
-          v-on:click="saveStatement"
-          v-bind:disabled="holdings.length === 0"
-          class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-        >
-          Save Statement
-        </button>
-      </div>
     </div>
 
     <!-- Step 4: Saving -->
     <div v-if="step === 'saving'" class="text-center py-8">
       <p class="text-gray-600">Saving statement...</p>
     </div>
+
+    <template v-if="step !== 'saving'" #secondary>
+      <!-- Step 1: Upload -->
+      <button
+        v-if="step === 'upload'"
+        v-on:click="$emit('close')"
+        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+      >
+        Cancel
+      </button>
+      <!-- Step 2: Account matching / Step 3: Preview -->
+      <button
+        v-else
+        v-on:click="step = 'upload'"
+        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+      >
+        Back
+      </button>
+    </template>
+
+    <template v-if="step !== 'saving'" #primary>
+      <!-- Step 1: Upload -->
+      <div v-if="step === 'upload'" class="inline-flex rounded-md">
+        <button
+          v-on:click="parseFile"
+          v-bind:disabled="!file || loading"
+          class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-l-md hover:bg-blue-700 disabled:opacity-50"
+        >
+          {{ parseButtonText }}
+        </button>
+        <Menu as="div" class="relative flex">
+          <MenuButton
+            v-bind:disabled="!file || loading"
+            class="px-2 bg-blue-600 text-white border-l border-blue-500 rounded-r-md hover:bg-blue-700 disabled:opacity-50 flex items-center"
+          >
+            <ChevronUpIcon class="w-4 h-4" />
+          </MenuButton>
+          <MenuItems class="absolute right-0 bottom-full mb-1 w-48 bg-white rounded-md shadow-lg z-50 py-1">
+            <MenuItem v-slot="{ active }">
+              <button
+                v-on:click="parseMode = 'cloud'"
+                v-bind:class="[
+                  'w-full text-left px-4 py-2 text-sm',
+                  active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                ]"
+              >
+                Parse with Cloud AI
+              </button>
+            </MenuItem>
+            <MenuItem v-slot="{ active }">
+              <button
+                v-on:click="parseMode = 'local'"
+                v-bind:class="[
+                  'w-full text-left px-4 py-2 text-sm',
+                  active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                ]"
+              >
+                Parse with Local LLM
+              </button>
+            </MenuItem>
+          </MenuItems>
+        </Menu>
+      </div>
+      <!-- Step 2: Account matching -->
+      <button
+        v-else-if="step === 'match'"
+        v-on:click="confirmAccountSelection"
+        v-bind:disabled="loading || (!selectedAccount && !createNewAccount)"
+        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+      >
+        {{ loading ? 'Loading...' : 'Continue' }}
+      </button>
+      <!-- Step 3: Preview -->
+      <button
+        v-else-if="step === 'preview'"
+        v-on:click="saveStatement"
+        v-bind:disabled="holdings.length === 0"
+        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+      >
+        Save Statement
+      </button>
+    </template>
   </BaseModal>
 </template>

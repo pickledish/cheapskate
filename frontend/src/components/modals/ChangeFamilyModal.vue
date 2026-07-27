@@ -136,13 +136,15 @@ export default {
       </label>
     </div>
 
-    <div class="mt-6 flex justify-end gap-2">
+    <template #secondary>
       <button
         v-on:click="$emit('close')"
         class="px-4 py-2 text-gray-700 hover:text-gray-900"
       >
         Cancel
       </button>
+    </template>
+    <template #primary>
       <button
         v-on:click="executeChange"
         v-bind:disabled="!canSubmit || loading"
@@ -150,6 +152,6 @@ export default {
       >
         {{ loading ? 'Processing...' : 'Change Family' }}
       </button>
-    </div>
+    </template>
   </BaseModal>
 </template>

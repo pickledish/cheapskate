@@ -87,14 +87,15 @@ export default {
 
     </div>
 
-    <!-- Actions -->
-    <div class="mt-6 flex justify-end space-x-2">
+    <template #secondary>
       <button
         v-on:click="$emit('close')"
         class="px-4 py-2 text-gray-700 hover:text-gray-900"
       >
         Cancel
       </button>
+    </template>
+    <template #primary>
       <button
         v-on:click="save"
         v-bind:disabled="loading"
@@ -102,6 +103,6 @@ export default {
       >
         {{ loading ? 'Creating...' : 'Create Asset' }}
       </button>
-    </div>
+    </template>
   </BaseModal>
 </template>

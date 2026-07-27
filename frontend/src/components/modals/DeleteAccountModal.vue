@@ -72,14 +72,15 @@ export default {
       />
     </div>
 
-    <!-- Actions -->
-    <div class="flex justify-end gap-2">
+    <template #secondary>
       <button
         v-on:click="$emit('close')"
         class="px-4 py-2 text-gray-700 hover:text-gray-900"
       >
         Cancel
       </button>
+    </template>
+    <template #primary>
       <button
         v-on:click="deleteAccount"
         v-bind:disabled="!canDelete || loading"
@@ -87,6 +88,6 @@ export default {
       >
         {{ loading ? 'Deleting...' : 'Delete My Account' }}
       </button>
-    </div>
+    </template>
   </BaseModal>
 </template>

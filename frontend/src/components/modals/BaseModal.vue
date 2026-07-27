@@ -48,6 +48,19 @@ export default {
       <div class="px-6 py-4">
         <slot></slot>
       </div>
+
+      <!-- Actions -->
+      <div
+        v-if="$slots.primary || $slots.secondary"
+        class="px-6 pb-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"
+      >
+        <div v-if="$slots.secondary" class="self-center sm:self-auto">
+          <slot name="secondary" />
+        </div>
+        <div v-if="$slots.primary" class="w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
+          <slot name="primary" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
