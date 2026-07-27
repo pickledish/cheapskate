@@ -37,6 +37,7 @@ export default {
       loading: true,
       error: null,
       searchQuery: '',
+      menuAnchors: {},
 
       // Modal state
       showAddAssetModal: false,
@@ -184,6 +185,24 @@ export default {
       return getColorClasses(colorName)
     },
 
+    setMenuAnchor(index, el) {
+      if (el) {
+        this.menuAnchors[index] = el
+      } else {
+        delete this.menuAnchors[index]
+      }
+    },
+
+    menuDropdownStyle(index) {
+      const el = this.menuAnchors[index]
+      if (!el) return {}
+      const rect = el.getBoundingClientRect()
+      return {
+        top: `${rect.bottom + 4}px`,
+        right: `${document.documentElement.clientWidth - rect.right}px`
+      }
+    },
+
     async doDeleteAsset(asset) {
       if (!confirm(`Delete "${asset.name}"? This will also delete all price history and holdings for this asset.`)) {
         return
@@ -204,10 +223,10 @@ export default {
   <AppLayout>
     <div class="space-y-6">
       <!-- Header -->
-      <div class="flex items-center justify-between">
-        <div>
+      <div class="flex items-center justify-between gap-3">
+        <div class="min-w-0">
           <h2 class="text-2xl font-bold text-gray-900">Assets</h2>
-          <p class="mt-1 text-sm text-gray-600">
+          <p class="mt-1 text-sm text-gray-600 hidden sm:block">
             Manage distinct assets and update metadata, like asset class. Manually update individual asset prices.
           </p>
         </div>
@@ -215,7 +234,7 @@ export default {
           v-model="searchQuery"
           type="text"
           placeholder="Search assets..."
-          class="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+          class="shrink-0 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
         />
       </div>
       <!-- Error display -->
@@ -228,23 +247,23 @@ export default {
 
       <!-- Assets table -->
       <div v-if="!loading">
-        <div v-if="assets.length > 0" class="bg-white shadow rounded-lg">
+        <div v-if="assets.length > 0" class="bg-white shadow rounded-lg overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
-                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                   Name
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                   Ticker
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                   Asset Class
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                   Latest Price
                 </th>
-                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                   Actions
                 </th>
               </tr>
@@ -260,12 +279,12 @@ export default {
                 <td class="px-6 py-4 whitespace-nowrap bg-white">
                   <div class="text-sm text-gray-500">{{ asset.ticker || '-' }}</div>
                 </td>
-                <td class="px-6 py-4 bg-white">
-                  <div v-if="asset.assetClasses.length" class="flex flex-wrap gap-1">
+                <td class="px-6 py-4 whitespace-nowrap bg-white">
+                  <div v-if="asset.assetClasses.length" class="flex flex-nowrap gap-1">
                     <span
                       v-for="ac in asset.assetClasses"
                       v-bind:key="ac.name"
-                      class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                      class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                       v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
                     >
                       {{ ac.name }}
@@ -283,36 +302,47 @@ export default {
                   class="px-6 py-4 whitespace-nowrap text-right text-sm bg-white"
                   v-bind:class="{ 'rounded-br-lg': index === filteredAssets.length - 1 }"
                 >
-                  <Menu as="div" class="relative inline-block text-left">
-                    <MenuButton class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded cursor-pointer">
-                      <Bars3Icon class="w-5 h-5" />
-                    </MenuButton>
-                    <MenuItems class="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg focus:outline-none z-50 py-1 flex flex-col">
-                      <MenuItem v-slot="{ active }">
-                        <button
-                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
-                          v-on:click="openEditModal(asset)"
-                        >
-                          Edit
-                        </button>
-                      </MenuItem>
-                      <MenuItem v-slot="{ active }">
-                        <button
-                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
-                          v-on:click="openUpdatePriceModal(asset)"
-                        >
-                          Update Price
-                        </button>
-                      </MenuItem>
-                      <MenuItem v-slot="{ active }">
-                        <button
-                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
-                          v-on:click="doDeleteAsset(asset)"
-                        >
-                          Delete
-                        </button>
-                      </MenuItem>
-                    </MenuItems>
+                  <Menu v-slot="{ open }" as="div" class="relative inline-block text-left">
+                    <div
+                      class="inline-block"
+                      v-bind:ref="(el) => setMenuAnchor(index, el)"
+                    >
+                      <MenuButton class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded cursor-pointer">
+                        <Bars3Icon class="w-5 h-5" />
+                      </MenuButton>
+                    </div>
+                    <!-- Portal out of the table: overflow-x-auto clips absolute menus -->
+                    <Teleport to="body">
+                      <MenuItems
+                        v-bind:style="open ? menuDropdownStyle(index) : undefined"
+                        class="fixed z-50 w-36 bg-white rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
+                      >
+                        <MenuItem v-slot="{ active }">
+                          <button
+                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                            v-on:click="openEditModal(asset)"
+                          >
+                            Edit
+                          </button>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                          <button
+                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                            v-on:click="openUpdatePriceModal(asset)"
+                          >
+                            Update Price
+                          </button>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                          <button
+                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
+                            v-on:click="doDeleteAsset(asset)"
+                          >
+                            Delete
+                          </button>
+                        </MenuItem>
+                      </MenuItems>
+                    </Teleport>
                   </Menu>
                 </td>
               </tr>
