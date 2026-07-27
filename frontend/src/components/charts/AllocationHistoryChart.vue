@@ -12,7 +12,7 @@ export default {
   name: 'AllocationHistoryChart',
   components: { VChart },
   props: {
-    // Array of month labels (e.g., ['Jan 24', 'Feb 24', ...])
+    // Array of month labels (e.g., ['Jan 2024', 'Feb 2024', ...])
     labels: {
       type: Array,
       required: true
@@ -24,7 +24,18 @@ export default {
       required: true
     }
   },
+  data() {
+    return {
+      isMobile: false,
+      mobileQuery: null
+    }
+  },
   computed: {
+    axisLabels() {
+      if (!this.isMobile) return this.labels
+      // "Jan 2024" → "Jan 24" to free horizontal space for the bars
+      return this.labels.map((label) => label.replace(/\s+(\d{2})(\d{2})$/, " $2"))
+    },
     chartOption() {
       return {
         animation: false,
@@ -33,13 +44,15 @@ export default {
           transitionDuration: 0,
           formatter: (p) => {
             if (!p.name || p.value == null) return ''
+            // Use the full label in tooltips even when the axis shows a short form
+            const fullLabel = this.labels[p.dataIndex] || p.name
             const pct = (p.value * 100).toFixed(1)
-            return `<strong>${p.name}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${pct}%`
+            return `<strong>${fullLabel}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${pct}%`
           }
         },
         legend: { show: false },
         grid: {
-          left: '3%',
+          left: this.isMobile ? 0 : '3%',
           right: '3%',
           top: '3%',
           bottom: '3%',
@@ -48,14 +61,17 @@ export default {
         xAxis: {
           type: 'value',
           max: 1,
+          interval: this.isMobile ? 0.5 : 0.2,
           axisLabel: {
             color: '#374151',
+            // Keep "100%" inside the canvas without extra right padding
+            alignMaxLabel: 'right',
             formatter: (value) => `${(value * 100).toFixed(0)}%`
           }
         },
         yAxis: {
           type: 'category',
-          data: this.labels,
+          data: this.axisLabels,
           axisLabel: { color: '#374151' },
           axisPointer: {
             show: true,
@@ -82,6 +98,19 @@ export default {
       const rowHeight = 32
       const basePadding = 60
       return Math.max(basePadding + this.labels.length * rowHeight, 100)
+    }
+  },
+  mounted() {
+    this.mobileQuery = window.matchMedia('(max-width: 639px)')
+    this.isMobile = this.mobileQuery.matches
+    this.mobileQuery.addEventListener('change', this.onMobileChange)
+  },
+  beforeUnmount() {
+    this.mobileQuery?.removeEventListener('change', this.onMobileChange)
+  },
+  methods: {
+    onMobileChange(event) {
+      this.isMobile = event.matches
     }
   }
 }

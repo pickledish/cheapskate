@@ -235,9 +235,9 @@ export default {
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <div>
+      <div class="min-w-0">
         <h2 class="text-2xl font-bold text-gray-900">Rebalancing</h2>
-        <p class="text-sm text-gray-600 mt-1">
+        <p class="mt-1 text-sm text-gray-600 hidden sm:block">
           Compare "current" and "goal" allocations to each asset class. Visualize portfolio composition over time.
         </p>
       </div>

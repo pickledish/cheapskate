@@ -52,11 +52,11 @@ export default {
 </script>
 
 <template>
-  <div class="flex justify-between gap-4">
+  <div class="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] justify-items-center gap-4">
     <div
       v-for="alloc in allocations"
       :key="alloc.name"
-      class="bg-gray-50 rounded-lg p-3 flex flex-col flex-1 min-w-0"
+      class="bg-gray-50 rounded-lg p-3 flex flex-col w-full max-w-[160px] min-w-0"
     >
       <!-- Asset class name -->
       <div class="text-sm font-medium text-gray-700 mb-2 truncate text-center" :title="alloc.name">
