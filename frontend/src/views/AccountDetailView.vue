@@ -63,7 +63,8 @@ export default {
       editDate: '',
       editQuantities: {},
       newRows: [],
-      saving: false
+      saving: false,
+      comboboxAnchors: {}
     }
   },
   computed: {
@@ -294,6 +295,25 @@ export default {
       return `${asset.ticker} - ${asset.name}`
     },
 
+    setComboboxAnchor(index, el) {
+      if (el) {
+        this.comboboxAnchors[index] = el
+      } else {
+        delete this.comboboxAnchors[index]
+      }
+    },
+
+    comboboxDropdownStyle(index) {
+      const el = this.comboboxAnchors[index]
+      if (!el) return {}
+      const rect = el.getBoundingClientRect()
+      return {
+        top: `${rect.bottom + 4}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`
+      }
+    },
+
     getNewRowClasses(assetId) {
       return (this.allocationsByAsset[assetId] || []).map(c => ({ name: c.name, color: c.color }))
     },
@@ -474,11 +494,11 @@ export default {
                 <div>
                   <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Account value</div>
                   <div class="mt-1 text-2xl font-semibold text-gray-900">{{ displayTotalHoldings }}</div>
-                  <div v-if="assetClasses.length" class="mt-2 flex flex-wrap gap-1.5">
+                  <div v-if="assetClasses.length" class="mt-2 flex flex-nowrap gap-1.5 overflow-x-auto">
                     <span
                       v-for="ac in assetClasses"
                       v-bind:key="ac.name"
-                      class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                      class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                       v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
                     >
                       {{ ac.name }}
@@ -520,23 +540,23 @@ export default {
         </div>
 
         <!-- Holdings table -->
-        <div v-if="holdings.length > 0 || editing" class="bg-white shadow rounded-lg">
+        <div v-if="holdings.length > 0 || editing" class="bg-white shadow rounded-lg overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
-                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider w-96">
+                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap min-w-48 max-w-48">
                   Name
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                   Ticker
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                   Asset Class
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider w-40">
+                <th class="bg-gray-600 px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap w-40">
                   Quantity
                 </th>
-                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider">
+                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                   Total Value
                 </th>
               </tr>
@@ -544,19 +564,19 @@ export default {
             <tbody class="divide-y divide-gray-200">
               <!-- Existing holdings -->
               <tr v-for="holding in holdings" v-bind:key="holding.asset_id">
-                <td class="px-6 py-3 whitespace-nowrap bg-white">
-                  <div class="h-8 flex items-center text-sm font-medium text-gray-900">{{ holding.name }}</div>
+                <td class="px-6 py-3 whitespace-nowrap bg-white max-w-48">
+                  <div class="h-8 flex items-center text-sm font-medium text-gray-900 truncate">{{ holding.name }}</div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-white">
                   <div class="h-8 flex items-center text-sm text-gray-500">{{ holding.ticker || '-' }}</div>
                 </td>
-                <td class="px-6 py-3 bg-white">
+                <td class="px-6 py-3 whitespace-nowrap bg-white">
                   <div class="h-8 flex items-center">
-                    <div v-if="holding.assetClasses.length" class="flex flex-wrap gap-1">
+                    <div v-if="holding.assetClasses.length" class="flex flex-nowrap gap-1">
                       <span
                         v-for="ac in holding.assetClasses"
                         v-bind:key="ac.name"
-                        class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                        class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                         v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
                       >
                         {{ ac.name }}
@@ -584,55 +604,64 @@ export default {
 
               <!-- Phantom rows for new holdings (edit mode only) -->
               <tr v-if="editing" v-for="(row, index) in newRows" v-bind:key="'new-' + index">
-                <td class="px-6 py-3 bg-white">
-                  <div class="h-8 flex items-center">
-                  <Combobox v-model="row.asset" as="div" class="relative w-full" v-on:update:model-value="onNewRowAssetSelected(index)">
-                    <div class="relative">
+                <td class="px-6 py-3 bg-white max-w-48">
+                  <div class="h-8 flex items-center min-w-0">
+                  <Combobox v-slot="{ open }" v-model="row.asset" as="div" class="relative w-full min-w-0" v-on:update:model-value="onNewRowAssetSelected(index)">
+                    <div
+                      class="relative min-w-0"
+                      v-bind:ref="(el) => setComboboxAnchor(index, el)"
+                    >
                       <ComboboxInput
                         v-bind:display-value="(a) => a ? a.name : ''"
                         v-on:change="row.query = $event.target.value"
                         placeholder="Search assets..."
-                        class="w-full h-8 px-3 pr-8 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full min-w-0 h-8 px-3 pr-8 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
                         <ChevronUpDownIcon class="w-4 h-4 text-gray-400" />
                       </ComboboxButton>
                     </div>
-                    <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg focus:outline-none">
-                      <div v-if="filteredAssetsForRow(index).length === 0" class="px-3 py-2 text-sm text-gray-500">
-                        No assets found
-                      </div>
-                      <ComboboxOption
-                        v-for="asset in filteredAssetsForRow(index)"
-                        v-bind:key="asset.id"
-                        v-bind:value="asset"
-                        v-slot="{ active, selected }"
+                    <!-- Portal out of the table: overflow-x-auto clips absolute dropdowns -->
+                    <Teleport to="body">
+                      <ComboboxOptions
+                        v-bind:style="open ? comboboxDropdownStyle(index) : undefined"
+                        class="fixed z-50 max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg focus:outline-none"
                       >
-                        <div
-                          v-bind:class="[
-                            'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
-                            active ? 'bg-gray-100' : '',
-                            selected ? 'text-blue-600 font-medium' : 'text-gray-700'
-                          ]"
-                        >
-                          <span>{{ asset.ticker ? `${asset.ticker} - ${asset.name}` : asset.name }}</span>
-                          <CheckIcon v-if="selected" class="w-4 h-4" />
+                        <div v-if="filteredAssetsForRow(index).length === 0" class="px-3 py-2 text-sm text-gray-500">
+                          No assets found
                         </div>
-                      </ComboboxOption>
-                    </ComboboxOptions>
+                        <ComboboxOption
+                          v-for="asset in filteredAssetsForRow(index)"
+                          v-bind:key="asset.id"
+                          v-bind:value="asset"
+                          v-slot="{ active, selected }"
+                        >
+                          <div
+                            v-bind:class="[
+                              'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
+                              active ? 'bg-gray-100' : '',
+                              selected ? 'text-blue-600 font-medium' : 'text-gray-700'
+                            ]"
+                          >
+                            <span>{{ asset.ticker ? `${asset.ticker} - ${asset.name}` : asset.name }}</span>
+                            <CheckIcon v-if="selected" class="w-4 h-4" />
+                          </div>
+                        </ComboboxOption>
+                      </ComboboxOptions>
+                    </Teleport>
                   </Combobox>
                   </div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-white">
                   <div class="h-8 flex items-center text-sm text-gray-500">{{ row.asset?.ticker || '-' }}</div>
                 </td>
-                <td class="px-6 py-3 bg-white">
+                <td class="px-6 py-3 whitespace-nowrap bg-white">
                   <div class="h-8 flex items-center">
-                    <div v-if="row.asset && getNewRowClasses(row.asset.id).length" class="flex flex-wrap gap-1">
+                    <div v-if="row.asset && getNewRowClasses(row.asset.id).length" class="flex flex-nowrap gap-1">
                       <span
                         v-for="ac in getNewRowClasses(row.asset.id)"
                         v-bind:key="ac.name"
-                        class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                        class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                         v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
                       >
                         {{ ac.name }}
@@ -671,8 +700,8 @@ export default {
             <PencilSquareIcon class="w-4 h-4" />
             Edit Holdings
           </button>
-          <div v-else class="flex items-center gap-3">
-            <label class="flex items-center gap-2 text-sm text-gray-600">
+          <div v-else class="w-full flex flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <label class="flex items-center justify-center gap-2 text-sm text-gray-600 sm:justify-start">
               Effective date
               <input
                 v-model="editDate"
@@ -680,19 +709,21 @@ export default {
                 class="px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </label>
-            <button
-              v-on:click="cancelEdit"
-              class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              v-on:click="saveEdits"
-              v-bind:disabled="saving"
-              class="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              {{ saving ? 'Saving...' : 'Save' }}
-            </button>
+            <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <button
+                v-on:click="cancelEdit"
+                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors self-center sm:self-auto"
+              >
+                Cancel
+              </button>
+              <button
+                v-on:click="saveEdits"
+                v-bind:disabled="saving"
+                class="w-full sm:w-auto px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {{ saving ? 'Saving...' : 'Save' }}
+              </button>
+            </div>
           </div>
         </div>
 
