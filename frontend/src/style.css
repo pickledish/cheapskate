@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
-/* Clip page-level horizontal overflow; nested overflow-x-auto (tables) still scrolls */
+/* Hide page-level horizontal overflow; nested overflow-x-auto (tables) still scrolls */
 @layer base {
   html,
   body {
-    overflow-x: clip;
+    overflow-x: hidden;
   }
 }
 
