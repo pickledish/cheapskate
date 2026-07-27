@@ -28,7 +28,7 @@ export default {
     class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
     v-on:click="onBackdropClick"
   >
-    <div v-bind:class="['bg-white rounded-lg shadow-xl w-full mx-4', maxWidth]">
+    <div v-bind:class="['bg-white rounded-lg shadow-xl w-full min-w-0 mx-4', maxWidth]">
       <!-- Header -->
       <div class="px-6 py-4 border-b border-gray-200">
         <div class="flex items-center justify-between">

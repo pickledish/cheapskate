@@ -65,7 +65,6 @@ export default {
     },
     modalTitle() {
       if (this.step === 'match') return 'Select Account'
-      if (this.matchedAccount) return `Upload Statement - ${this.matchedAccount.name}`
       return 'Upload Statement'
     },
     filteredAccounts() {
@@ -439,7 +438,11 @@ export default {
 </script>
 
 <template>
-  <BaseModal v-bind:title="modalTitle" max-width="max-w-2xl" v-on:close="$emit('close')">
+  <BaseModal
+    v-bind:title="modalTitle"
+    max-width="max-w-2xl"
+    v-on:close="$emit('close')"
+  >
     <!-- Error display -->
     <div v-if="error" class="mb-4 p-3 bg-red-50 text-red-800 rounded-md text-sm">
       {{ error }}
@@ -451,7 +454,7 @@ export default {
         Select a PDF statement to upload. It will be parsed using AI to extract holdings.
       </p>
 
-      <Disclosure v-slot="{ open }" default-open as="div" class="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <Disclosure v-slot="{ open }" as="div" class="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <DisclosureButton class="w-full flex items-center justify-between text-left">
           <h4 class="text-sm font-medium text-blue-900">Privacy Notice</h4>
           <svg
@@ -488,18 +491,18 @@ export default {
         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
       />
 
-      <div class="mt-4 flex justify-end space-x-2">
+      <div class="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <button
           v-on:click="$emit('close')"
           class="px-4 py-2 text-gray-700 hover:text-gray-900"
         >
           Cancel
         </button>
-        <div class="inline-flex rounded-md">
+        <div class="inline-flex w-full sm:w-auto rounded-md">
           <button
             v-on:click="parseFile"
             v-bind:disabled="!file || loading"
-            class="px-4 py-2 bg-blue-600 text-white rounded-l-md hover:bg-blue-700 disabled:opacity-50"
+            class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-l-md hover:bg-blue-700 disabled:opacity-50"
           >
             {{ parseButtonText }}
           </button>
@@ -679,24 +682,24 @@ export default {
       </div>
 
       <!-- Holdings table -->
-      <div class="border rounded-md overflow-hidden mb-4 max-h-64 overflow-y-auto">
+      <div class="border rounded-md mb-4 max-h-64 overflow-x-auto overflow-y-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50 sticky top-0">
             <tr>
-              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Value</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Price</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Name</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Qty</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Value</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Price</th>
               <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"></th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="(holding, index) in holdings" v-bind:key="index">
-              <td class="px-4 py-2 text-sm text-gray-900">{{ holding.name }}</td>
-              <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ formatNumber(holding.quantity) }}</td>
-              <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ formatCurrency(holding.total_value) }}</td>
-              <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ formatCurrency(computePrice(holding)) }}</td>
-              <td class="px-4 py-2 text-right">
+              <td class="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{{ holding.name }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">{{ formatNumber(holding.quantity) }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">{{ formatCurrency(holding.total_value) }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">{{ formatCurrency(computePrice(holding)) }}</td>
+              <td class="px-4 py-2 text-right whitespace-nowrap">
                 <button
                   v-on:click="removeHolding(index)"
                   class="text-red-600 hover:text-red-800 text-sm"
