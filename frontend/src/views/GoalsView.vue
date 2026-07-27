@@ -42,7 +42,8 @@ export default {
 
       // Onboarding state
       showOnboardingModal: false,
-      goalsCompleted: false
+      goalsCompleted: false,
+      menuAnchors: {}
     }
   },
   async mounted() {
@@ -139,6 +140,24 @@ export default {
       return getColorClasses(colorName)
     },
 
+    setMenuAnchor(index, el) {
+      if (el) {
+        this.menuAnchors[index] = el
+      } else {
+        delete this.menuAnchors[index]
+      }
+    },
+
+    menuDropdownStyle(index) {
+      const el = this.menuAnchors[index]
+      if (!el) return {}
+      const rect = el.getBoundingClientRect()
+      return {
+        top: `${rect.bottom + 4}px`,
+        right: `${document.documentElement.clientWidth - rect.right}px`
+      }
+    },
+
     async onReorder() {
       // Update sort_order for all items based on new array positions
       try {
@@ -159,16 +178,16 @@ export default {
   <AppLayout>
     <div class="space-y-6">
       <!-- Header -->
-      <div class="flex justify-between items-center">
-        <div>
+      <div class="flex items-center justify-between gap-3">
+        <div class="min-w-0">
           <h2 class="text-2xl font-bold text-gray-900">Goals</h2>
-          <p class="mt-1 text-sm text-gray-600">
+          <p class="mt-1 text-sm text-gray-600 hidden sm:block">
             Create and manage asset classes. Define a "goal" portfolio allocation for the rebalancing view.
           </p>
         </div>
         <button
           v-on:click="showAddModal = true"
-          class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+          class="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
         >
           Add Asset Class
         </button>
@@ -183,23 +202,23 @@ export default {
       <div v-if="loading" class="text-gray-500">Loading...</div>
 
       <!-- Main content area -->
-      <div v-if="!loading && assetClasses.length > 0" class="flex gap-6">
+      <div v-if="!loading && assetClasses.length > 0" class="flex flex-col-reverse gap-6 md:flex-row">
         <!-- Asset classes table -->
-        <div class="w-7/12 bg-white shadow rounded-lg self-start">
+        <div class="w-full md:w-7/12 bg-white shadow rounded-lg self-start overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead>
             <tr>
               <th class="bg-gray-600 rounded-tl-lg w-10"></th>
-              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                 Name
               </th>
-              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                 Assets
               </th>
-              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider">
+              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                 Goal
               </th>
-              <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider">
+              <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
                 Actions
               </th>
             </tr>
@@ -245,28 +264,39 @@ export default {
                 class="px-6 py-2 whitespace-nowrap text-right bg-white"
                 v-bind:class="{ 'rounded-br-lg': index === assetClasses.length - 1 && !hasAnyGoals }"
               >
-                <Menu as="div" class="relative inline-block text-left">
-                  <MenuButton class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded cursor-pointer">
-                    <Bars3Icon class="w-5 h-5" />
-                  </MenuButton>
-                  <MenuItems class="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg focus:outline-none z-50 py-1 flex flex-col">
-                    <MenuItem v-slot="{ active }">
-                      <button
-                        v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
-                        v-on:click="openEditModal(assetClass)"
-                      >
-                        Edit
-                      </button>
-                    </MenuItem>
-                    <MenuItem v-slot="{ active }">
-                      <button
-                        v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
-                        v-on:click="doDeleteAssetClass(assetClass)"
-                      >
-                        Delete
-                      </button>
-                    </MenuItem>
-                  </MenuItems>
+                <Menu v-slot="{ open }" as="div" class="relative inline-block text-left">
+                  <div
+                    class="inline-block"
+                    v-bind:ref="(el) => setMenuAnchor(index, el)"
+                  >
+                    <MenuButton class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded cursor-pointer">
+                      <Bars3Icon class="w-5 h-5" />
+                    </MenuButton>
+                  </div>
+                  <!-- Portal out of the table: overflow-x-auto clips absolute menus -->
+                  <Teleport to="body">
+                    <MenuItems
+                      v-bind:style="open ? menuDropdownStyle(index) : undefined"
+                      class="fixed z-50 w-32 bg-white rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
+                    >
+                      <MenuItem v-slot="{ active }">
+                        <button
+                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                          v-on:click="openEditModal(assetClass)"
+                        >
+                          Edit
+                        </button>
+                      </MenuItem>
+                      <MenuItem v-slot="{ active }">
+                        <button
+                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
+                          v-on:click="doDeleteAssetClass(assetClass)"
+                        >
+                          Delete
+                        </button>
+                      </MenuItem>
+                    </MenuItems>
+                  </Teleport>
                 </Menu>
               </td>
             </tr>
@@ -288,7 +318,7 @@ export default {
         </div>
 
         <!-- Right side panel -->
-        <div class="w-5/12 bg-white shadow rounded-lg overflow-hidden self-start">
+        <div class="w-full md:w-5/12 bg-white shadow rounded-lg overflow-hidden self-start">
           <div class="bg-gray-600 px-6 py-3">
             <h3 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Target Allocation</h3>
           </div>
