@@ -1,5 +1,6 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import ChangeFamilyModal from '@/components/modals/ChangeFamilyModal.vue'
 import DeleteAccountModal from '@/components/modals/DeleteAccountModal.vue'
 import { supabase } from '@/lib/supabase'
@@ -14,6 +15,7 @@ export default {
   name: 'ProfileView',
   components: {
     AppLayout,
+    PageHeader,
     ChangeFamilyModal,
     DeleteAccountModal,
     ClipboardIcon,
@@ -222,11 +224,10 @@ export default {
 <template>
   <AppLayout>
     <div class="max-w-2xl mx-auto space-y-6">
-      <!-- Page Header -->
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900">Profile & Settings</h2>
-        <p class="text-sm text-gray-600 mt-1">Manage account and family settings. Sign out or delete your account.</p>
-      </div>
+      <PageHeader
+        title="Profile & Settings"
+        description="Manage account and family settings. Sign out or delete your account."
+      />
 
       <!-- Error display -->
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">

@@ -1,5 +1,6 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import {
   listUpdatesWithDetails,
   listAccounts,
@@ -17,7 +18,7 @@ dayjs.extend(relativeTime)
 
 export default {
   name: 'HistoryView',
-  components: { AppLayout, DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon },
+  components: { AppLayout, PageHeader, DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon },
   data() {
     const now = dayjs()
     return {
@@ -146,23 +147,22 @@ export default {
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900">Update History</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            View all price and position updates, from statement uploads and manual entries. Undo mistakes.
-          </p>
-        </div>
-        <div class="inline-flex items-center text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md">
-          <button @click="prevMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-l-md border-r border-gray-300">
-            <ChevronLeftIcon class="h-4 w-4" />
-          </button>
-          <span class="px-3 py-1.5 w-24 text-center">{{ monthLabel }}</span>
-          <button @click="nextMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-r-md border-l border-gray-300">
-            <ChevronRightIcon class="h-4 w-4" />
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Update History"
+        description="View all price and position updates, from statement uploads and manual entries. Undo mistakes."
+      >
+        <template #actions>
+          <div class="inline-flex items-center text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shrink-0">
+            <button @click="prevMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-l-md border-r border-gray-300">
+              <ChevronLeftIcon class="h-4 w-4" />
+            </button>
+            <span class="px-3 py-1.5 w-24 text-center">{{ monthLabel }}</span>
+            <button @click="nextMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-r-md border-l border-gray-300">
+              <ChevronRightIcon class="h-4 w-4" />
+            </button>
+          </div>
+        </template>
+      </PageHeader>
 
       <div v-if="loading" class="text-gray-500">Loading...</div>
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">{{ error }}</div>

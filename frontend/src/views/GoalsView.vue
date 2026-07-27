@@ -1,5 +1,6 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import AddAssetClassModal from '@/components/modals/AddAssetClassModal.vue'
 import EditAssetClassModal from '@/components/modals/EditAssetClassModal.vue'
 import OnboardingModal from '@/components/modals/OnboardingModal.vue'
@@ -16,6 +17,7 @@ export default {
   name: 'GoalsView',
   components: {
     AppLayout,
+    PageHeader,
     AddAssetClassModal,
     EditAssetClassModal,
     OnboardingModal,
@@ -177,21 +179,19 @@ export default {
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <!-- Header -->
-      <div class="flex items-center justify-between gap-3">
-        <div class="min-w-0">
-          <h2 class="text-2xl font-bold text-gray-900">Goals</h2>
-          <p class="mt-1 text-sm text-gray-600 hidden sm:block">
-            Create and manage asset classes. Define a "goal" portfolio allocation for the rebalancing view.
-          </p>
-        </div>
-        <button
-          v-on:click="showAddModal = true"
-          class="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-        >
-          Add Asset Class
-        </button>
-      </div>
+      <PageHeader
+        title="Goals"
+        description='Create and manage asset classes. Define a "goal" portfolio allocation for the rebalancing view.'
+      >
+        <template #actions>
+          <button
+            v-on:click="showAddModal = true"
+            class="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Add Asset Class
+          </button>
+        </template>
+      </PageHeader>
 
       <!-- Error display -->
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">

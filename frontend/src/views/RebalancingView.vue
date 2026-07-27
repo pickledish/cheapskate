@@ -1,12 +1,13 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import AllocationHistoryChart from '@/components/charts/AllocationHistoryChart.vue'
 import AllocationComparisonGrid from '@/components/charts/AllocationComparisonGrid.vue'
 import { listHoldingUpdatesWithContext, listPriceUpdatesWithContext, listAccounts, listAssetClasses, listAssetAllocations } from '@/lib/data'
 
 export default {
   name: 'RebalancingView',
-  components: { AppLayout, AllocationHistoryChart, AllocationComparisonGrid },
+  components: { AppLayout, PageHeader, AllocationHistoryChart, AllocationComparisonGrid },
   data() {
     return {
       loading: true,
@@ -235,12 +236,10 @@ export default {
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <div class="min-w-0">
-        <h2 class="text-2xl font-bold text-gray-900">Rebalancing</h2>
-        <p class="mt-1 text-sm text-gray-600 hidden sm:block">
-          Compare "current" and "goal" allocations to each asset class. Visualize portfolio composition over time.
-        </p>
-      </div>
+      <PageHeader
+        title="Rebalancing"
+        description='Compare "current" and "goal" allocations to each asset class. Visualize portfolio composition over time.'
+      />
 
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">
         {{ error }}

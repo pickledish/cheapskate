@@ -1,5 +1,6 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import EditAccountModal from '@/components/modals/EditAccountModal.vue'
 import CloseAccountModal from '@/components/modals/CloseAccountModal.vue'
 import {
@@ -27,6 +28,7 @@ export default {
   name: 'AccountDetailView',
   components: {
     AppLayout,
+    PageHeader,
     EditAccountModal,
     CloseAccountModal,
     PencilSquareIcon,
@@ -436,56 +438,49 @@ export default {
       <div v-if="loading" class="text-gray-500">Loading...</div>
 
       <template v-if="!loading && account">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div class="min-w-0">
-            <div class="flex flex-wrap items-center gap-3">
-              <h2 class="text-2xl font-bold text-gray-900">{{ account.name }}</h2>
-              <span v-if="isArchived" class="inline-block rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-800">
-                Closed
-              </span>
-            </div>
-          </div>
-
-          <Menu as="div" class="relative inline-block text-left shrink-0">
-            <MenuButton class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              Manage Account
-            </MenuButton>
-            <MenuItems class="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col">
-              <MenuItem v-slot="{ active }">
-                <button
-                  v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
-                  v-on:click="showEditAccountModal = true"
-                >
-                  Edit
-                </button>
-              </MenuItem>
-              <MenuItem v-if="!isArchived" v-slot="{ active }">
-                <button
-                  v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
-                  v-on:click="showCloseAccountModal = true"
-                >
-                  Mark as Closed
-                </button>
-              </MenuItem>
-              <MenuItem v-if="isArchived" v-slot="{ active }">
-                <button
-                  v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
-                  v-on:click="reopenAccount"
-                >
-                  Reopen
-                </button>
-              </MenuItem>
-              <MenuItem v-slot="{ active }">
-                <button
-                  v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
-                  v-on:click="doDeleteAccount"
-                >
-                  Delete
-                </button>
-              </MenuItem>
-            </MenuItems>
-          </Menu>
-        </div>
+        <PageHeader :title="account.name">
+          <template #actions>
+            <Menu as="div" class="relative inline-block text-left shrink-0">
+              <MenuButton class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                Manage Account
+              </MenuButton>
+              <MenuItems class="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col">
+                <MenuItem v-slot="{ active }">
+                  <button
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                    v-on:click="showEditAccountModal = true"
+                  >
+                    Edit
+                  </button>
+                </MenuItem>
+                <MenuItem v-if="!isArchived" v-slot="{ active }">
+                  <button
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                    v-on:click="showCloseAccountModal = true"
+                  >
+                    Mark as Closed
+                  </button>
+                </MenuItem>
+                <MenuItem v-if="isArchived" v-slot="{ active }">
+                  <button
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                    v-on:click="reopenAccount"
+                  >
+                    Reopen
+                  </button>
+                </MenuItem>
+                <MenuItem v-slot="{ active }">
+                  <button
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
+                    v-on:click="doDeleteAccount"
+                  >
+                    Delete
+                  </button>
+                </MenuItem>
+              </MenuItems>
+            </Menu>
+          </template>
+        </PageHeader>
 
         <div class="bg-white shadow rounded-lg overflow-hidden">
           <div class="p-4">

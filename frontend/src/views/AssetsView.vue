@@ -1,5 +1,6 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import AddAssetModal from '@/components/modals/AddAssetModal.vue'
 import EditAssetModal from '@/components/modals/EditAssetModal.vue'
 import UpdatePriceModal from '@/components/modals/UpdatePriceModal.vue'
@@ -19,6 +20,7 @@ export default {
   name: 'AssetsView',
   components: {
     AppLayout,
+    PageHeader,
     AddAssetModal,
     EditAssetModal,
     UpdatePriceModal,
@@ -222,21 +224,19 @@ export default {
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <!-- Header -->
-      <div class="flex items-center justify-between gap-3">
-        <div class="min-w-0">
-          <h2 class="text-2xl font-bold text-gray-900">Assets</h2>
-          <p class="mt-1 text-sm text-gray-600 hidden sm:block">
-            Manage distinct assets and update metadata, like asset class. Manually update individual asset prices.
-          </p>
-        </div>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search assets..."
-          class="shrink-0 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
-        />
-      </div>
+      <PageHeader
+        title="Assets"
+        description="Manage distinct assets and update metadata, like asset class. Manually update individual asset prices."
+      >
+        <template #actions>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search assets..."
+            class="shrink-0 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+          />
+        </template>
+      </PageHeader>
       <!-- Error display -->
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">
         {{ error }}

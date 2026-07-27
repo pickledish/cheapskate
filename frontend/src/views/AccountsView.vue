@@ -1,5 +1,6 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import AddAccountModal from '@/components/modals/AddAccountModal.vue'
 import UploadStatementModal from '@/components/modals/UploadStatementModal.vue'
 import OnboardingModal from '@/components/modals/OnboardingModal.vue'
@@ -22,6 +23,7 @@ export default {
   name: 'AccountsView',
   components: {
     AppLayout,
+    PageHeader,
     AddAccountModal,
     UploadStatementModal,
     OnboardingModal,
@@ -226,21 +228,19 @@ export default {
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <!-- Header -->
-      <div class="flex items-center justify-between gap-3">
-        <div class="min-w-0">
-          <h2 class="text-2xl font-bold text-gray-900">Accounts</h2>
-          <p class="mt-1 text-sm text-gray-600 hidden sm:block">
-            Create and manage accounts. Update holdings manually, or upload statements to be parsed automatically.
-          </p>
-        </div>
-        <button
-          v-on:click="showUploadStatementModal = true"
-          class="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-        >
-          Upload Statement
-        </button>
-      </div>
+      <PageHeader
+        title="Accounts"
+        description="Create and manage accounts. Update holdings manually, or upload statements to be parsed automatically."
+      >
+        <template #actions>
+          <button
+            v-on:click="showUploadStatementModal = true"
+            class="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Upload Statement
+          </button>
+        </template>
+      </PageHeader>
 
       <!-- Error display -->
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">

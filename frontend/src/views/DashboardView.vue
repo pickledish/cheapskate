@@ -1,5 +1,6 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import NetWorthBarChart from '@/components/charts/NetWorthBarChart.vue'
 import { listHoldingUpdatesWithContext, listPriceUpdatesWithContext, listAccounts, listProfiles, listAssetsWithAllocations, listAssetClasses } from '@/lib/data'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
@@ -7,7 +8,7 @@ import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
 
 export default {
   name: 'DashboardView',
-  components: { AppLayout, NetWorthBarChart, Menu, MenuButton, MenuItems, MenuItem, ChevronDownIcon, CheckIcon },
+  components: { AppLayout, PageHeader, NetWorthBarChart, Menu, MenuButton, MenuItems, MenuItem, ChevronDownIcon, CheckIcon },
   data() {
     return {
       monthLabels: [],
@@ -280,48 +281,46 @@ export default {
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <!-- Header -->
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900">Net Worth</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            Track your total net worth over time. Group by account, owner, asset, or asset class.
-          </p>
-        </div>
-        <Menu as="div" class="relative">
-          <MenuButton class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
-            Group by: {{ selectedGroupByLabel }}
-            <ChevronDownIcon class="w-4 h-4 text-gray-500" />
-          </MenuButton>
-          <transition
-            enter-active-class="transition duration-100 ease-out"
-            enter-from-class="transform scale-95 opacity-0"
-            enter-to-class="transform scale-100 opacity-100"
-            leave-active-class="transition duration-75 ease-in"
-            leave-from-class="transform scale-100 opacity-100"
-            leave-to-class="transform scale-95 opacity-0"
-          >
-            <MenuItems class="absolute right-0 z-10 mt-1 w-40 origin-top-right bg-white border border-gray-200 rounded-md shadow-lg focus:outline-none">
-              <div class="py-1">
-                <MenuItem v-for="option in groupByOptions" :key="option.value" v-slot="{ active }">
-                  <button
-                    type="button"
-                    :class="[
-                      'flex items-center justify-between w-full px-3 py-2 text-sm text-left',
-                      active ? 'bg-gray-100' : '',
-                      groupBy === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'
-                    ]"
-                    @click="groupBy = option.value"
-                  >
-                    {{ option.label }}
-                    <CheckIcon v-if="groupBy === option.value" class="w-4 h-4" />
-                  </button>
-                </MenuItem>
-              </div>
-            </MenuItems>
-          </transition>
-        </Menu>
-      </div>
+      <PageHeader
+        title="Net Worth"
+        description="Track your total net worth over time. Group by account, owner, asset, or asset class."
+      >
+        <template #actions>
+          <Menu as="div" class="relative shrink-0">
+            <MenuButton class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+              Group by: {{ selectedGroupByLabel }}
+              <ChevronDownIcon class="w-4 h-4 text-gray-500" />
+            </MenuButton>
+            <transition
+              enter-active-class="transition duration-100 ease-out"
+              enter-from-class="transform scale-95 opacity-0"
+              enter-to-class="transform scale-100 opacity-100"
+              leave-active-class="transition duration-75 ease-in"
+              leave-from-class="transform scale-100 opacity-100"
+              leave-to-class="transform scale-95 opacity-0"
+            >
+              <MenuItems class="absolute right-0 z-10 mt-1 w-40 origin-top-right bg-white border border-gray-200 rounded-md shadow-lg focus:outline-none">
+                <div class="py-1">
+                  <MenuItem v-for="option in groupByOptions" :key="option.value" v-slot="{ active }">
+                    <button
+                      type="button"
+                      :class="[
+                        'flex items-center justify-between w-full px-3 py-2 text-sm text-left',
+                        active ? 'bg-gray-100' : '',
+                        groupBy === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'
+                      ]"
+                      @click="groupBy = option.value"
+                    >
+                      {{ option.label }}
+                      <CheckIcon v-if="groupBy === option.value" class="w-4 h-4" />
+                    </button>
+                  </MenuItem>
+                </div>
+              </MenuItems>
+            </transition>
+          </Menu>
+        </template>
+      </PageHeader>
 
       <!-- Loading state -->
       <div v-if="loading" class="text-gray-500">Loading...</div>
