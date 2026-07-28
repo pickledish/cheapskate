@@ -156,7 +156,7 @@ export default {
             <button @click="prevMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-l-md border-r border-gray-300">
               <ChevronLeftIcon class="h-4 w-4" />
             </button>
-            <span class="px-3 py-1.5 w-24 text-center">{{ monthLabel }}</span>
+            <span class="px-3 py-1.5 w-22 text-center">{{ monthLabel }}</span>
             <button @click="nextMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-r-md border-l border-gray-300">
               <ChevronRightIcon class="h-4 w-4" />
             </button>
@@ -208,10 +208,10 @@ export default {
               <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
               <ul class="list-disc list-inside space-y-0.5 text-gray-600 ml-2">
                 <li v-for="holding in event.holdings" :key="holding.assetName">
-                  {{ holding.assetName }} is now {{ formatNumber(holding.quantity) }} shares<template v-if="getPriceForAsset(event, holding.assetName)"> at {{ formatCurrency(getPriceForAsset(event, holding.assetName)) }} per share</template>
+                  {{ holding.assetName }} is now {{ formatNumber(holding.quantity) }} shares<template v-if="getPriceForAsset(event, holding.assetName)"> at {{ formatCurrency(getPriceForAsset(event, holding.assetName)) }}<span class="hidden sm:inline"> per share</span></template>
                 </li>
                 <li v-for="price in event.prices.filter(p => !event.holdings.some(h => h.assetName === p.assetName))" :key="'price-' + price.assetName">
-                  {{ price.assetName }} is now {{ formatCurrency(price.price) }} per share
+                  {{ price.assetName }} is now {{ formatCurrency(price.price) }}<span class="hidden sm:inline"> per share</span>
                 </li>
               </ul>
             </div>
@@ -269,7 +269,7 @@ export default {
               <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
               <ul class="list-disc list-inside text-gray-600 ml-2">
                 <li v-for="price in event.prices" :key="price.assetName">
-                  {{ price.assetName }} is now {{ formatCurrency(price.price) }} per share
+                  {{ price.assetName }} is now {{ formatCurrency(price.price) }}<span class="hidden sm:inline"> per share</span>
                 </li>
               </ul>
             </div>
