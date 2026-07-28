@@ -442,7 +442,7 @@ export default {
           <template #actions>
             <Menu as="div" class="relative inline-block text-left shrink-0">
               <MenuButton class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                Manage Account
+                Manage<span class="hidden sm:inline">&nbsp;Account</span>
               </MenuButton>
               <MenuItems class="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col">
                 <MenuItem v-slot="{ active }">
