@@ -73,25 +73,28 @@ export default {
 
 <template>
   <div class="bg-white rounded-lg shadow p-4 border-l-4" :class="config.borderClass">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <component :is="config.icon" class="h-5 w-5" :class="config.iconClass" />
-        <span class="font-medium text-gray-900">{{ config.title }}</span>
-        <template v-if="accountName">
-          <span class="text-gray-400">-</span>
-          <span class="font-medium text-gray-900">{{ accountName }}</span>
-        </template>
+    <div>
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <component :is="config.icon" class="h-5 w-5 shrink-0" :class="config.iconClass" />
+          <span class="font-medium text-gray-900 shrink-0 whitespace-nowrap">{{ config.title }}</span>
+          <template v-if="accountName">
+            <span class="text-gray-400 shrink-0">-</span>
+            <span class="font-medium text-gray-900 truncate min-w-0">{{ accountName }}</span>
+          </template>
+        </div>
+        <div class="hidden sm:flex items-center gap-2 shrink-0">
+          <span class="text-sm text-gray-500">{{ relativeLabel }}<template v-if="creatorName"> by {{ creatorName }}</template></span>
+          <button
+            v-on:click="$emit('undo')"
+            class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
+            :title="config.undoTitle"
+          >
+            <TrashIcon class="w-5 h-5" />
+          </button>
+        </div>
       </div>
-      <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-500">{{ relativeLabel }}<template v-if="creatorName"> by {{ creatorName }}</template></span>
-        <button
-          v-on:click="$emit('undo')"
-          class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
-          :title="config.undoTitle"
-        >
-          <TrashIcon class="w-5 h-5" />
-        </button>
-      </div>
+      <div class="sm:hidden ml-7 text-sm text-gray-500">{{ relativeLabel }}<template v-if="creatorName"> by {{ creatorName }}</template></div>
     </div>
     <hr class="my-3 border-gray-200" />
     <slot />
