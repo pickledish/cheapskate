@@ -1,6 +1,7 @@
 <script>
 import AppLayout from '@/components/AppLayout.vue'
 import PageHeader from '@/components/PageHeader.vue'
+import HistoryEventCard from '@/components/HistoryEventCard.vue'
 import {
   listUpdatesWithDetails,
   listAccounts,
@@ -10,15 +11,17 @@ import {
   updateAccount
 } from '@/lib/data'
 import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import { DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
-import { TrashIcon } from '@heroicons/vue/24/solid'
-
-dayjs.extend(relativeTime)
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 
 export default {
   name: 'HistoryView',
-  components: { AppLayout, PageHeader, DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon },
+  components: {
+    AppLayout,
+    PageHeader,
+    HistoryEventCard,
+    ChevronLeftIcon,
+    ChevronRightIcon
+  },
   data() {
     const now = dayjs()
     return {
@@ -96,10 +99,6 @@ export default {
       }
     },
 
-    formatRelativeDate(dateStr) {
-      return dayjs(dateStr).fromNow()
-    },
-
     formatEffectiveDate(dateStr) {
       return dayjs(dateStr).format('MMM D YYYY')
     },
@@ -139,6 +138,14 @@ export default {
       } catch (err) {
         this.error = err.message
       }
+    },
+
+    onUndo(event) {
+      if (event.type === 'mark_as_closed') {
+        this.undoClose(event)
+      } else {
+        this.doDeleteUpdate(event.id)
+      }
     }
   }
 }
@@ -156,7 +163,7 @@ export default {
             <button @click="prevMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-l-md border-r border-gray-300">
               <ChevronLeftIcon class="h-4 w-4" />
             </button>
-            <span class="px-3 py-1.5 w-22 text-center">{{ monthLabel }}</span>
+            <span class="px-3 py-1.5 w-24 text-center">{{ monthLabel }}</span>
             <button @click="nextMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-r-md border-l border-gray-300">
               <ChevronRightIcon class="h-4 w-4" />
             </button>
@@ -172,140 +179,42 @@ export default {
       </div>
 
       <div v-if="!loading && events.length > 0" class="space-y-4">
-        <div
+        <HistoryEventCard
           v-for="event in events"
           :key="event.id"
-          class="bg-white rounded-lg shadow p-4"
-          :class="{
-            'border-l-4 border-blue-500': event.type === 'statement',
-            'border-l-4 border-gray-400': event.type === 'mark_as_closed',
-            'border-l-4 border-green-500': event.type === 'manual_price',
-            'border-l-4 border-purple-500': event.type === 'manual_holdings'
-          }"
+          :type="event.type"
+          :account-name="event.accountName"
+          :created-at="event.createdAt"
+          :creator-name="event.creatorName"
+          v-on:undo="onUndo(event)"
         >
-          <!-- Statement Upload -->
-          <template v-if="event.type === 'statement'">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <DocumentTextIcon class="h-5 w-5 text-blue-500" />
-                <span class="font-medium text-gray-900">Statement Upload</span>
-                <span class="text-gray-400">-</span>
-                <span class="font-medium text-gray-900">{{ event.accountName }}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
-                <button
-                  @click="doDeleteUpdate(event.id)"
-                  class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
-                  title="Undo statement upload"
-                >
-                  <TrashIcon class="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <hr class="my-3 border-gray-200" />
-            <div class="text-sm text-gray-700">
-              <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
-              <ul class="list-disc list-inside space-y-0.5 text-gray-600 ml-2">
+          <div class="text-sm text-gray-700">
+            <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
+            <ul class="list-disc list-inside space-y-0.5 text-gray-600 ml-2">
+              <template v-if="event.type === 'statement'">
                 <li v-for="holding in event.holdings" :key="holding.assetName">
                   {{ holding.assetName }} is now {{ formatNumber(holding.quantity) }} shares<template v-if="getPriceForAsset(event, holding.assetName)"> at {{ formatCurrency(getPriceForAsset(event, holding.assetName)) }}<span class="hidden sm:inline"> per share</span></template>
                 </li>
                 <li v-for="price in event.prices.filter(p => !event.holdings.some(h => h.assetName === p.assetName))" :key="'price-' + price.assetName">
                   {{ price.assetName }} is now {{ formatCurrency(price.price) }}<span class="hidden sm:inline"> per share</span>
                 </li>
-              </ul>
-            </div>
-          </template>
-
-          <!-- Account Closed -->
-          <template v-else-if="event.type === 'mark_as_closed'">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <ArchiveBoxIcon class="h-5 w-5 text-gray-400" />
-                <span class="font-medium text-gray-900">Account Marked as Closed</span>
-                <span class="text-gray-400">-</span>
-                <span class="font-medium text-gray-900">{{ event.accountName }}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
-                <button
-                  @click="undoClose(event)"
-                  class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
-                  title="Undo close"
-                >
-                  <TrashIcon class="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <hr class="my-3 border-gray-200" />
-            <div class="text-sm text-gray-700">
-              <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
-              <ul class="list-disc list-inside text-gray-600 ml-2">
+              </template>
+              <template v-else-if="event.type === 'mark_as_closed'">
                 <li>All holdings set to zero</li>
-              </ul>
-            </div>
-          </template>
-
-          <!-- Manual Price Update -->
-          <template v-else-if="event.type === 'manual_price'">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <CurrencyDollarIcon class="h-5 w-5 text-green-500" />
-                <span class="font-medium text-gray-900">Price Update</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
-                <button
-                  @click="doDeleteUpdate(event.id)"
-                  class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
-                  title="Undo price update"
-                >
-                  <TrashIcon class="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <hr class="my-3 border-gray-200" />
-            <div class="text-sm text-gray-700">
-              <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
-              <ul class="list-disc list-inside text-gray-600 ml-2">
+              </template>
+              <template v-else-if="event.type === 'manual_price'">
                 <li v-for="price in event.prices" :key="price.assetName">
                   {{ price.assetName }} is now {{ formatCurrency(price.price) }}<span class="hidden sm:inline"> per share</span>
                 </li>
-              </ul>
-            </div>
-          </template>
-
-          <!-- Manual Holding Update -->
-          <template v-else-if="event.type === 'manual_holdings'">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <ChartBarIcon class="h-5 w-5 text-purple-500" />
-                <span class="font-medium text-gray-900">Shares Update</span>
-                <span v-if="event.accountName" class="text-gray-400">-</span>
-                <span v-if="event.accountName" class="font-medium text-gray-900">{{ event.accountName }}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-500">{{ formatRelativeDate(event.createdAt) }}<template v-if="event.creatorName"> by {{ event.creatorName }}</template></span>
-                <button
-                  @click="doDeleteUpdate(event.id)"
-                  class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
-                  title="Undo shares update"
-                >
-                  <TrashIcon class="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <hr class="my-3 border-gray-200" />
-            <div class="text-sm text-gray-700">
-              <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
-              <ul class="list-disc list-inside text-gray-600 ml-2">
+              </template>
+              <template v-else-if="event.type === 'manual_holdings'">
                 <li v-for="holding in event.holdings" :key="holding.assetName">
                   {{ holding.assetName }} is now {{ formatNumber(holding.quantity) }} shares
                 </li>
-              </ul>
-            </div>
-          </template>
-        </div>
+              </template>
+            </ul>
+          </div>
+        </HistoryEventCard>
       </div>
     </div>
   </AppLayout>
