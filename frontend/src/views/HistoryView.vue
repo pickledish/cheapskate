@@ -163,7 +163,7 @@ export default {
             <button @click="prevMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-l-md border-r border-gray-300">
               <ChevronLeftIcon class="h-4 w-4" />
             </button>
-            <span class="px-3 py-1.5 w-20 sm:w-24 text-center">{{ monthLabel }}</span>
+            <span class="px-3 py-1.5 w-22 sm:w-24 text-center">{{ monthLabel }}</span>
             <button @click="nextMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-r-md border-l border-gray-300">
               <ChevronRightIcon class="h-4 w-4" />
             </button>
