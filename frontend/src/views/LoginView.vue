@@ -47,7 +47,7 @@ export default {
             password: this.password
           })
           if (error) throw error
-          this.$router.push('/')
+          this.$router.push('/accounts')
         }
       } catch (err) {
         this.error = err.message

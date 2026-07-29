@@ -79,8 +79,8 @@ export default {
           name: this.name.trim()
         })
 
-        // Redirect: new families start onboarding, joining families go straight to dashboard
-        this.$router.push(this.mode === 'create' ? '/goals' : '/')
+        // Redirect: new families start onboarding, joining families go to accounts
+        this.$router.push(this.mode === 'create' ? '/goals' : '/accounts')
       } catch (err) {
         this.error = err.message
       } finally {

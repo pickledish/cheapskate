@@ -365,7 +365,7 @@ export default {
           step="assets"
           message="All your assets are categorized. You're all set to start tracking your portfolio!"
           next-step-label="Go to Dashboard"
-          next-route="/"
+          next-route="/networth"
           class="mt-4"
         />
       </div>

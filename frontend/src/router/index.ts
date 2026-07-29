@@ -27,6 +27,10 @@ const routes = [
   },
   {
     path: '/',
+    redirect: '/accounts'
+  },
+  {
+    path: '/networth',
     name: 'dashboard',
     component: DashboardView,
     meta: { requiresAuth: true, requiresOnboardingComplete: true }
@@ -99,7 +103,7 @@ router.beforeEach(async (to, _from, next) => {
   if (to.path === '/login' && isAuthenticated) {
     if (!familyId) return next('/setup')
     if (!assetsCompleted) return next('/goals')
-    return next('/')
+    return next('/accounts')
   }
 
   // Setup page - always allow
