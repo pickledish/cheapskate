@@ -11,6 +11,23 @@
   textarea::placeholder {
     color: var(--color-gray-400);
   }
+
+  /* Fix iOS Safari date input overflow - Safari forces content-box sizing and
+     ignores width:100% on temporal inputs; appearance:none restores standard behavior */
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  ::-webkit-datetime-edit,
+  ::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+  }
 }
 
 /* Source Sans 3 - self-hosted static fonts */
