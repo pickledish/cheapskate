@@ -5,6 +5,12 @@
   html {
     overscroll-behavior-x: none;
   }
+
+  /* Keep placeholders consistently muted (Tailwind preflight uses currentColor @ 50%) */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
 }
 
 /* Source Sans 3 - self-hosted static fonts */
