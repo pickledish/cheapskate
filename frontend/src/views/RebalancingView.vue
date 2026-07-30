@@ -249,8 +249,8 @@ export default {
 
       <template v-if="!loading && !error">
         <!-- Current vs Goal comparison grid -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-          <div class="bg-gray-600 px-6 py-3">
+        <div class="bg-surface shadow rounded-lg overflow-hidden">
+          <div class="bg-header px-6 py-3">
             <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">Current vs Target Allocation</h3>
           </div>
           <div class="p-6">
@@ -260,8 +260,8 @@ export default {
         </div>
 
         <!-- Allocation history chart -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-          <div class="bg-gray-600 px-6 py-3">
+        <div class="bg-surface shadow rounded-lg overflow-hidden">
+          <div class="bg-header px-6 py-3">
             <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">Allocation Over Time</h3>
           </div>
           <div class="p-6">

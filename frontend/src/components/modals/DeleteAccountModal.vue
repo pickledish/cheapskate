@@ -62,7 +62,7 @@ export default {
     <!-- Confirmation input -->
     <div class="mb-4">
       <label class="block text-sm font-medium text-secondary-text mb-1">
-        Type <span class="font-mono font-bold bg-gray-100 px-1 rounded">DELETE</span> to confirm
+        Type <span class="font-mono font-bold bg-recessed-deep px-1 rounded">DELETE</span> to confirm
       </label>
       <input
         v-model="confirmText"

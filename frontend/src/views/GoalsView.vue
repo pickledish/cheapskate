@@ -204,21 +204,21 @@ export default {
       <!-- Main content area -->
       <div v-if="!loading && assetClasses.length > 0" class="flex flex-col-reverse gap-6 md:flex-row">
         <!-- Asset classes table -->
-        <div class="w-full md:w-7/12 bg-white shadow rounded-lg self-start overflow-x-auto">
+        <div class="w-full md:w-7/12 bg-surface shadow rounded-lg self-start overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead>
             <tr>
-              <th class="bg-gray-600 rounded-tl-lg w-10"></th>
-              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+              <th class="bg-header rounded-tl-lg w-10"></th>
+              <th class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                 Name
               </th>
-              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+              <th class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                 Assets
               </th>
-              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+              <th class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                 Goal
               </th>
-              <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+              <th class="bg-header rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                 Actions
               </th>
             </tr>
@@ -239,14 +239,14 @@ export default {
           >
             <tr v-for="(assetClass, index) in assetClasses" v-bind:key="assetClass.id">
               <td
-                class="drag-handle cursor-grab px-3 py-4 text-placeholder-text hover:text-muted-text bg-white"
+                class="drag-handle cursor-grab px-3 py-4 text-placeholder-text hover:text-muted-text bg-surface"
                 v-bind:class="{ 'rounded-bl-lg': index === assetClasses.length - 1 && !hasAnyGoals }"
               >
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
                 </svg>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap bg-white">
+              <td class="px-6 py-4 whitespace-nowrap bg-surface">
                 <span
                   class="inline-block px-2 py-0.5 text-xs font-medium rounded"
                   v-bind:class="[getClassColor(assetClass.color).bg, getClassColor(assetClass.color).text]"
@@ -254,14 +254,14 @@ export default {
                   {{ assetClass.name }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-text bg-white">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-text bg-surface">
                 {{ assetCountByClass[assetClass.id] || 0 }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-primary-text bg-white">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-primary-text bg-surface">
                 {{ assetClass.goal > 0 ? (assetClass.goal * 100) + '%' : '-' }}
               </td>
               <td
-                class="px-6 py-2 whitespace-nowrap text-right bg-white"
+                class="px-6 py-2 whitespace-nowrap text-right bg-surface"
                 v-bind:class="{ 'rounded-br-lg': index === assetClasses.length - 1 && !hasAnyGoals }"
               >
                 <Menu v-slot="{ open }" as="div" class="relative inline-block text-left">
@@ -269,7 +269,7 @@ export default {
                     class="inline-block"
                     v-bind:ref="(el) => setMenuAnchor(index, el)"
                   >
-                    <MenuButton class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-gray-100 rounded cursor-pointer">
+                    <MenuButton class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-recessed-deep rounded cursor-pointer">
                       <Bars3Icon class="w-5 h-5" />
                     </MenuButton>
                   </div>
@@ -277,11 +277,11 @@ export default {
                   <Teleport to="body">
                     <MenuItems
                       v-bind:style="open ? menuDropdownStyle(index) : undefined"
-                      class="fixed z-50 w-32 bg-white rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
+                      class="fixed z-50 w-32 bg-surface rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
                     >
                       <MenuItem v-slot="{ active }">
                         <button
-                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
+                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text']"
                           v-on:click="openEditModal(assetClass)"
                         >
                           Edit
@@ -303,23 +303,23 @@ export default {
           </VueDraggable>
           <tfoot v-if="hasAnyGoals">
             <tr>
-              <td class="bg-white rounded-bl-lg"></td>
-              <td class="px-6 py-4 text-sm font-medium text-primary-text bg-white">
+              <td class="bg-surface rounded-bl-lg"></td>
+              <td class="px-6 py-4 text-sm font-medium text-primary-text bg-surface">
                 Total
               </td>
-              <td class="bg-white"></td>
-              <td class="px-6 py-4 text-sm font-medium bg-white" v-bind:class="goalsAreValid ? 'text-green-600' : 'text-amber-600'">
+              <td class="bg-surface"></td>
+              <td class="px-6 py-4 text-sm font-medium bg-surface" v-bind:class="goalsAreValid ? 'text-green-600' : 'text-amber-600'">
                 {{ Math.round(totalGoals * 100) }}%
               </td>
-              <td class="bg-white rounded-br-lg"></td>
+              <td class="bg-surface rounded-br-lg"></td>
             </tr>
           </tfoot>
         </table>
         </div>
 
         <!-- Right side panel -->
-        <div class="w-full md:w-5/12 bg-white shadow rounded-lg overflow-hidden self-start">
-          <div class="bg-gray-600 px-6 py-3">
+        <div class="w-full md:w-5/12 bg-surface shadow rounded-lg overflow-hidden self-start">
+          <div class="bg-header px-6 py-3">
             <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">Target Allocation</h3>
           </div>
           <div v-if="goalsAreValid" class="p-4 h-72">
@@ -341,7 +341,7 @@ export default {
       />
 
       <!-- Empty state -->
-      <div v-if="!loading && assetClasses.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
+      <div v-if="!loading && assetClasses.length === 0" class="text-center py-12 bg-surface rounded-lg shadow">
         <p class="text-muted-text mb-4">No asset classes yet. Add your first to categorize your assets.</p>
         <button
           v-on:click="showAddModal = true"

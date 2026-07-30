@@ -92,8 +92,8 @@ export default {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-canvas">
-    <div class="max-w-md w-full p-8 bg-white rounded-lg shadow-md">
+  <div class="min-h-screen flex items-center justify-center bg-page">
+    <div class="max-w-md w-full p-8 bg-surface rounded-lg shadow-md">
       <h1 class="text-2xl font-bold text-center mb-6 text-primary-text">
         Welcome to Cheapskate
       </h1>
@@ -151,7 +151,7 @@ export default {
               v-model="familyId"
               type="text"
               v-bind:disabled="mode !== 'join'"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm disabled:bg-gray-100 disabled:text-placeholder-text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm disabled:bg-recessed-deep disabled:text-placeholder-text"
               placeholder="Enter family secret"
               v-on:click.stop
             />

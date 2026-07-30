@@ -530,7 +530,7 @@ export default {
                 <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
               </ComboboxButton>
             </div>
-            <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg focus:outline-none">
+            <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-surface border border-gray-200 rounded-lg shadow-lg focus:outline-none">
               <div v-if="sortedAccounts.length === 0" class="px-3 py-2 text-sm text-muted-text">
                 No accounts found
               </div>
@@ -543,7 +543,7 @@ export default {
                 <div
                   v-bind:class="[
                     'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
-                    active ? 'bg-gray-100' : '',
+                    active ? 'bg-recessed-deep' : '',
                     selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
                   ]"
                 >
@@ -618,7 +618,7 @@ export default {
       <!-- Holdings table -->
       <div class="border rounded-md max-h-64 overflow-x-auto overflow-y-auto">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50 sticky top-0">
+          <thead class="bg-recessed sticky top-0">
             <tr>
               <th class="px-4 py-2 text-left text-xs font-medium text-muted-text uppercase whitespace-nowrap">Name</th>
               <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase whitespace-nowrap">Qty</th>
@@ -627,7 +627,7 @@ export default {
               <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase"></th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <tbody class="bg-surface divide-y divide-gray-200">
             <tr v-for="(holding, index) in holdings" v-bind:key="index">
               <td class="px-4 py-2 text-sm text-primary-text whitespace-nowrap">{{ holding.name }}</td>
               <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatNumber(holding.quantity) }}</td>
@@ -693,13 +693,13 @@ export default {
           >
             <ChevronUpIcon class="w-4 h-4" />
           </MenuButton>
-          <MenuItems class="absolute right-0 bottom-full mb-1 w-48 bg-white rounded-md shadow-lg z-50 py-1">
+          <MenuItems class="absolute right-0 bottom-full mb-1 w-48 bg-surface rounded-md shadow-lg z-50 py-1">
             <MenuItem v-slot="{ active }">
               <button
                 v-on:click="parseMode = 'cloud'"
                 v-bind:class="[
                   'w-full text-left px-4 py-2 text-sm',
-                  active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text'
+                  active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text'
                 ]"
               >
                 Parse with Cloud AI
@@ -710,7 +710,7 @@ export default {
                 v-on:click="parseMode = 'local'"
                 v-bind:class="[
                   'w-full text-left px-4 py-2 text-sm',
-                  active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text'
+                  active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text'
                 ]"
               >
                 Parse with Local LLM

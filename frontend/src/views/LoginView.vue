@@ -64,8 +64,8 @@ export default {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-canvas">
-    <div class="max-w-md w-full p-8 bg-white rounded-lg shadow-md">
+  <div class="min-h-screen flex items-center justify-center bg-page">
+    <div class="max-w-md w-full p-8 bg-surface rounded-lg shadow-md">
       <h1 class="text-2xl font-bold text-center mb-6 text-primary-text">
         {{ isSignup ? 'Create Account' : 'Sign In' }}
       </h1>
@@ -73,7 +73,7 @@ export default {
       <button
         v-on:click="signInWithGoogle"
         type="button"
-        class="w-full py-2 px-4 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2 text-secondary-text font-medium"
+        class="w-full py-2 px-4 bg-surface border border-gray-300 rounded-md hover:bg-recessed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2 text-secondary-text font-medium"
       >
         <svg class="w-5 h-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/>
@@ -89,7 +89,7 @@ export default {
           <div class="w-full border-t border-gray-300"></div>
         </div>
         <div class="relative flex justify-center text-sm">
-          <span class="px-2 bg-white text-muted-text">or</span>
+          <span class="px-2 bg-surface text-muted-text">or</span>
         </div>
       </div>
 

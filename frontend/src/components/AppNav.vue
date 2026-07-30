@@ -61,14 +61,14 @@ export default {
       }
       return isActive
         ? 'border-blue-500 bg-blue-50 text-primary-text'
-        : 'border-transparent text-muted-text hover:bg-gray-50 hover:text-secondary-text'
+        : 'border-transparent text-muted-text hover:bg-recessed hover:text-secondary-text'
     }
   }
 }
 </script>
 
 <template>
-  <nav class="bg-white border-b border-gray-200">
+  <nav class="bg-surface border-b border-gray-200">
     <!-- Remount on navigate so the mobile menu closes -->
     <Disclosure
       v-bind:key="$route.fullPath"
@@ -108,7 +108,7 @@ export default {
           </div>
         </div>
         <div class="flex">
-          <DisclosureButton class="sm:hidden self-center inline-flex items-center justify-center p-2 rounded-md text-muted-text hover:text-secondary-text hover:bg-gray-100">
+          <DisclosureButton class="sm:hidden self-center inline-flex items-center justify-center p-2 rounded-md text-muted-text hover:text-secondary-text hover:bg-recessed-deep">
             <span class="sr-only">Open main menu</span>
             <Bars3Icon v-if="!open" class="w-6 h-6" />
             <XMarkIcon v-else class="w-6 h-6" />

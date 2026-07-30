@@ -247,23 +247,23 @@ export default {
 
       <!-- Assets table -->
       <div v-if="!loading">
-        <div v-if="assets.length > 0" class="bg-white shadow rounded-lg overflow-x-auto">
+        <div v-if="assets.length > 0" class="bg-surface shadow rounded-lg overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
-                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-header rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Name
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Ticker
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Asset Class
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Latest Price
                 </th>
-                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-header rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Actions
                 </th>
               </tr>
@@ -271,15 +271,15 @@ export default {
             <tbody class="divide-y divide-gray-200">
               <tr v-for="(asset, index) in filteredAssets" v-bind:key="asset.id">
                 <td
-                  class="px-6 py-4 whitespace-nowrap bg-white"
+                  class="px-6 py-4 whitespace-nowrap bg-surface"
                   v-bind:class="{ 'rounded-bl-lg': index === filteredAssets.length - 1 }"
                 >
                   <div class="text-sm font-medium text-primary-text">{{ asset.name }}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap bg-white">
+                <td class="px-6 py-4 whitespace-nowrap bg-surface">
                   <div class="text-sm text-muted-text">{{ asset.ticker || '-' }}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap bg-white">
+                <td class="px-6 py-4 whitespace-nowrap bg-surface">
                   <div v-if="asset.assetClasses.length" class="flex flex-nowrap gap-1">
                     <span
                       v-for="ac in asset.assetClasses"
@@ -292,14 +292,14 @@ export default {
                   </div>
                   <span v-else class="text-sm text-placeholder-text">-</span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap bg-white">
+                <td class="px-6 py-4 whitespace-nowrap bg-surface">
                   <div class="text-sm text-primary-text">{{ formatPrice(asset.latestPrice) }}</div>
                   <div v-if="asset.latestPriceDate" class="text-xs text-placeholder-text">
                     {{ relativeDate(asset.latestPriceDate) }}
                   </div>
                 </td>
                 <td
-                  class="px-6 py-4 whitespace-nowrap text-right text-sm bg-white"
+                  class="px-6 py-4 whitespace-nowrap text-right text-sm bg-surface"
                   v-bind:class="{ 'rounded-br-lg': index === filteredAssets.length - 1 }"
                 >
                   <Menu v-slot="{ open }" as="div" class="relative inline-block text-left">
@@ -307,7 +307,7 @@ export default {
                       class="inline-block"
                       v-bind:ref="(el) => setMenuAnchor(index, el)"
                     >
-                      <MenuButton class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-gray-100 rounded cursor-pointer">
+                      <MenuButton class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-recessed-deep rounded cursor-pointer">
                         <Bars3Icon class="w-5 h-5" />
                       </MenuButton>
                     </div>
@@ -315,11 +315,11 @@ export default {
                     <Teleport to="body">
                       <MenuItems
                         v-bind:style="open ? menuDropdownStyle(index) : undefined"
-                        class="fixed z-50 w-36 bg-white rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
+                        class="fixed z-50 w-36 bg-surface rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
                       >
                         <MenuItem v-slot="{ active }">
                           <button
-                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
+                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text']"
                             v-on:click="openEditModal(asset)"
                           >
                             Edit
@@ -327,7 +327,7 @@ export default {
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
                           <button
-                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
+                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text']"
                             v-on:click="openUpdatePriceModal(asset)"
                           >
                             Update Price
@@ -353,7 +353,7 @@ export default {
         <!-- Add asset button -->
         <button
           v-on:click="showAddAssetModal = true"
-          class="mt-4 w-full bg-canvas border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors"
+          class="mt-4 w-full bg-page border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors"
         >
           <span class="text-xl mr-2">+</span>
           <span class="text-sm font-medium">Add Asset</span>

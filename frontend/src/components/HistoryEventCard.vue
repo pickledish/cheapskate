@@ -72,7 +72,7 @@ export default {
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow p-4 border-l-4" :class="config.borderClass">
+  <div class="bg-surface rounded-lg shadow p-4 border-l-4" :class="config.borderClass">
     <div>
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0">

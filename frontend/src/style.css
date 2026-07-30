@@ -95,19 +95,24 @@
   font-display: swap;
 }
 
-/* Semantic text colors — aliases into Tailwind greys (@theme inline so var() resolves correctly) */
+/* Semantic text + background colors — aliases into Tailwind greys where possible */
 @theme inline {
   --color-primary-text: var(--color-gray-900);
   --color-secondary-text: var(--color-gray-700);
   --color-muted-text: var(--color-gray-500);
   --color-placeholder-text: var(--color-gray-400);
   --color-header-text: var(--color-gray-100);
+
+  --color-surface: var(--color-white);
+  --color-recessed: var(--color-gray-50);
+  --color-recessed-deep: var(--color-gray-100);
+  --color-header: var(--color-gray-600);
 }
 
 /* Override Tailwind's default sans font and scale up text sizes ~6% */
 @theme {
   --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
-  --color-canvas: #f6f7f8;
+  --color-page: #f6f7f8;
 
   /* Scaled text sizes (default * 1.0625) */
   --text-xs: 0.797rem;

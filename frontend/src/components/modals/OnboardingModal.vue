@@ -35,7 +35,7 @@ export default {
     class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
     v-on:click="onBackdropClick"
   >
-    <div v-bind:class="['bg-white rounded-lg shadow-xl w-full mx-4', maxWidth]">
+    <div v-bind:class="['bg-surface rounded-lg shadow-xl w-full mx-4', maxWidth]">
       <!-- Header with step indicator -->
       <div class="px-6 py-4 border-b border-gray-200">
         <div class="flex items-center justify-between">
@@ -55,7 +55,7 @@ export default {
           </button>
         </div>
         <!-- Progress bar -->
-        <div class="mt-3 h-1 bg-gray-200 rounded-full">
+        <div class="mt-3 h-1 bg-recessed-deep rounded-full">
           <div
             class="h-full bg-blue-600 rounded-full transition-all"
             v-bind:style="{ width: `${(stepNumber / totalSteps) * 100}%` }"

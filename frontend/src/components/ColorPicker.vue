@@ -56,7 +56,7 @@ export default {
     <!-- Dropdown grid -->
     <div
       v-if="open"
-      class="absolute z-10 top-full mt-1 p-2 bg-white rounded-md shadow-lg border border-gray-200 w-48"
+      class="absolute z-10 top-full mt-1 p-2 bg-surface rounded-md shadow-lg border border-gray-200 w-48"
     >
       <div class="grid grid-cols-6 gap-1.5">
         <button

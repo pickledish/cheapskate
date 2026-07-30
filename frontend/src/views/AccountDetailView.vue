@@ -441,13 +441,13 @@ export default {
         <PageHeader :title="account.name" :description="isArchived ? 'CLOSED' : null">
           <template #actions>
             <Menu as="div" class="relative inline-block text-left shrink-0">
-              <MenuButton class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-secondary-text hover:bg-gray-50 transition-colors">
+              <MenuButton class="inline-flex items-center rounded-md border border-gray-300 bg-surface px-4 py-2 text-sm font-medium text-secondary-text hover:bg-recessed transition-colors">
                 Manage<span class="hidden sm:inline">&nbsp;Account</span>
               </MenuButton>
-              <MenuItems class="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col">
+              <MenuItems class="absolute right-0 mt-1 w-36 bg-surface rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col">
                 <MenuItem v-slot="{ active }">
                   <button
-                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text']"
                     v-on:click="showEditAccountModal = true"
                   >
                     Edit
@@ -455,7 +455,7 @@ export default {
                 </MenuItem>
                 <MenuItem v-if="!isArchived" v-slot="{ active }">
                   <button
-                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text']"
                     v-on:click="showCloseAccountModal = true"
                   >
                     Mark as Closed
@@ -463,7 +463,7 @@ export default {
                 </MenuItem>
                 <MenuItem v-if="isArchived" v-slot="{ active }">
                   <button
-                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text']"
                     v-on:click="reopenAccount"
                   >
                     Reopen
@@ -482,7 +482,7 @@ export default {
           </template>
         </PageHeader>
 
-        <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="bg-surface shadow rounded-lg overflow-hidden">
           <div class="p-4">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div class="lg:col-span-2 px-1 py-1 flex flex-col justify-between gap-4">
@@ -506,7 +506,7 @@ export default {
                 </div>
               </div>
 
-              <dl class="divide-y divide-gray-200 rounded-lg bg-gray-50 border border-gray-200 px-4">
+              <dl class="divide-y divide-gray-200 rounded-lg bg-recessed border border-gray-200 px-4">
                 <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-text">Owner</dt>
                   <dd class="text-sm font-semibold text-primary-text">
@@ -535,23 +535,23 @@ export default {
         </div>
 
         <!-- Holdings table -->
-        <div v-if="holdings.length > 0 || editing" class="bg-white shadow rounded-lg overflow-x-auto">
+        <div v-if="holdings.length > 0 || editing" class="bg-surface shadow rounded-lg overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
-                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap min-w-48 max-w-48">
+                <th class="bg-header rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap min-w-48 max-w-48">
                   Name
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Ticker
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Asset Class
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap w-40">
+                <th class="bg-header px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap w-40">
                   Quantity
                 </th>
-                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-header rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Total Value
                 </th>
               </tr>
@@ -559,13 +559,13 @@ export default {
             <tbody class="divide-y divide-gray-200">
               <!-- Existing holdings -->
               <tr v-for="holding in holdings" v-bind:key="holding.asset_id">
-                <td class="px-6 py-3 whitespace-nowrap bg-white max-w-48">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface max-w-48">
                   <div class="h-8 flex items-center text-sm font-medium text-primary-text truncate">{{ holding.name }}</div>
                 </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-white">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface">
                   <div class="h-8 flex items-center text-sm text-muted-text">{{ holding.ticker || '-' }}</div>
                 </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-white">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface">
                   <div class="h-8 flex items-center">
                     <div v-if="holding.assetClasses.length" class="flex flex-nowrap gap-1">
                       <span
@@ -580,7 +580,7 @@ export default {
                     <span v-else class="text-sm text-placeholder-text">-</span>
                   </div>
                 </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface text-right">
                   <div class="h-8 flex items-center justify-end">
                     <input
                       v-if="editing"
@@ -592,14 +592,14 @@ export default {
                     <span v-else class="text-sm text-primary-text">{{ formatQuantity(holding.quantity) }}</span>
                   </div>
                 </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface text-right">
                   <div class="h-8 flex items-center justify-end text-sm text-primary-text">{{ formatCurrency(holding.value) }}</div>
                 </td>
               </tr>
 
               <!-- Phantom rows for new holdings (edit mode only) -->
               <tr v-if="editing" v-for="(row, index) in newRows" v-bind:key="'new-' + index">
-                <td class="px-6 py-3 bg-white max-w-48">
+                <td class="px-6 py-3 bg-surface max-w-48">
                   <div class="h-8 flex items-center min-w-0">
                   <Combobox v-slot="{ open }" v-model="row.asset" as="div" class="relative w-full min-w-0" v-on:update:model-value="onNewRowAssetSelected(index)">
                     <div
@@ -620,7 +620,7 @@ export default {
                     <Teleport to="body">
                       <ComboboxOptions
                         v-bind:style="open ? comboboxDropdownStyle(index) : undefined"
-                        class="fixed z-50 max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg focus:outline-none"
+                        class="fixed z-50 max-h-60 overflow-auto bg-surface border border-gray-200 rounded-lg shadow-lg focus:outline-none"
                       >
                         <div v-if="filteredAssetsForRow(index).length === 0" class="px-3 py-2 text-sm text-muted-text">
                           No assets found
@@ -634,7 +634,7 @@ export default {
                           <div
                             v-bind:class="[
                               'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
-                              active ? 'bg-gray-100' : '',
+                              active ? 'bg-recessed-deep' : '',
                               selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
                             ]"
                           >
@@ -647,10 +647,10 @@ export default {
                   </Combobox>
                   </div>
                 </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-white">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface">
                   <div class="h-8 flex items-center text-sm text-muted-text">{{ row.asset?.ticker || '-' }}</div>
                 </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-white">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface">
                   <div class="h-8 flex items-center">
                     <div v-if="row.asset && getNewRowClasses(row.asset.id).length" class="flex flex-nowrap gap-1">
                       <span
@@ -665,7 +665,7 @@ export default {
                     <span v-else class="text-sm text-placeholder-text">-</span>
                   </div>
                 </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface text-right">
                   <div class="h-8 flex items-center justify-end">
                     <input
                       v-model="row.quantity"
@@ -676,7 +676,7 @@ export default {
                     />
                   </div>
                 </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface text-right">
                   <div class="h-8 flex items-center justify-end text-sm text-placeholder-text">-</div>
                 </td>
               </tr>

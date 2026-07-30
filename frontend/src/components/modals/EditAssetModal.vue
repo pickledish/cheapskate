@@ -177,7 +177,7 @@ export default {
           >
             <Listbox v-model="alloc.asset_class_id" as="div" class="relative flex-1">
               <ListboxButton
-                class="relative w-full px-3 py-2 text-left text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="relative w-full px-3 py-2 text-left text-sm border border-gray-300 rounded-md bg-surface focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <span v-bind:class="{ 'text-placeholder-text': !alloc.asset_class_id }">
                   {{ alloc.asset_class_id ? getClassName(alloc.asset_class_id) : 'Select class...' }}
@@ -195,7 +195,7 @@ export default {
                 leave-to-class="transform scale-95 opacity-0"
               >
                 <ListboxOptions
-                  class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white border border-gray-200 rounded-md shadow-lg focus:outline-none"
+                  class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-surface border border-gray-200 rounded-md shadow-lg focus:outline-none"
                 >
                   <ListboxOption
                     v-for="c in assetClasses"
@@ -208,7 +208,7 @@ export default {
                       v-bind:class="[
                         'flex items-center justify-between px-3 py-2 text-sm',
                         disabled ? 'text-placeholder-text cursor-not-allowed' : 'cursor-pointer',
-                        !disabled && active ? 'bg-gray-100' : '',
+                        !disabled && active ? 'bg-recessed-deep' : '',
                         !disabled && selected ? 'text-blue-600 font-medium' : '',
                         !disabled && !selected ? 'text-secondary-text' : ''
                       ]"
