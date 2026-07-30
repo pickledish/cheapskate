@@ -233,7 +233,7 @@ export default {
             v-model="searchQuery"
             type="text"
             placeholder="Search assets..."
-            class="shrink-0 px-3 py-1.5 text-sm border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+            class="shrink-0 px-3 py-1.5 text-sm border border-strong-border rounded-md bg-page text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
           />
         </template>
       </PageHeader>

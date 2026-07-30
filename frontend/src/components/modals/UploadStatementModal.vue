@@ -524,7 +524,7 @@ export default {
                 v-on:change="accountQuery = $event.target.value"
                 v-on:focus="$refs.comboboxButton.$el.click()"
                 placeholder="Search accounts..."
-                class="w-full px-3 py-2 pr-8 text-sm border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full px-3 py-2 pr-8 text-sm border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <ComboboxButton ref="comboboxButton" class="absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
@@ -576,7 +576,7 @@ export default {
               v-model="newAccountName"
               type="text"
               placeholder="Account name (e.g., Fidelity 401k)"
-              class="mt-2 w-full px-3 py-2 text-sm border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="mt-2 w-full px-3 py-2 text-sm border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </label>
@@ -611,7 +611,7 @@ export default {
         <input
           v-model="statementDate"
           type="date"
-          class="px-3 py-2 border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="px-3 py-2 border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 

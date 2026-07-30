@@ -587,7 +587,7 @@ export default {
                       v-model="editQuantities[holding.asset_id]"
                       type="text"
                       inputmode="decimal"
-                      class="w-28 h-8 px-2 text-sm text-right border border-strong-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="w-28 h-8 px-2 text-sm text-right border border-strong-border rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <span v-else class="text-sm text-primary-text">{{ formatQuantity(holding.quantity) }}</span>
                   </div>
@@ -610,7 +610,7 @@ export default {
                         v-bind:display-value="(a) => a ? a.name : ''"
                         v-on:change="row.query = $event.target.value"
                         placeholder="Search assets..."
-                        class="w-full min-w-0 h-8 px-3 pr-8 text-sm border border-strong-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full min-w-0 h-8 px-3 pr-8 text-sm border border-strong-border rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
                         <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
@@ -672,7 +672,7 @@ export default {
                       type="text"
                       inputmode="decimal"
                       placeholder="0"
-                      class="w-28 h-8 px-2 text-sm text-right border border-strong-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="w-28 h-8 px-2 text-sm text-right border border-strong-border rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </td>
@@ -701,7 +701,7 @@ export default {
               <input
                 v-model="editDate"
                 type="date"
-                class="px-3 py-1.5 text-sm border border-strong-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="px-3 py-1.5 text-sm border border-strong-border rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </label>
             <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">

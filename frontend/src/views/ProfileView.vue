@@ -253,7 +253,7 @@ export default {
               <input
                 v-model="userName"
                 type="text"
-                class="w-full sm:w-48 px-3 py-2 text-sm border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 sm:shrink-0 sm:ml-4"
+                class="w-full sm:w-48 px-3 py-2 text-sm border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 sm:shrink-0 sm:ml-4"
               />
             </div>
 
@@ -298,7 +298,7 @@ export default {
               </div>
               <Listbox v-model="localLlmProvider" as="div" class="relative w-full sm:w-44 sm:shrink-0 sm:ml-4">
                 <ListboxButton
-                  class="relative w-full px-3 py-2 text-left text-sm border border-strong-border rounded-md bg-surface focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="relative w-full px-3 py-2 text-left text-sm border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <span>{{ selectedLlmOption?.name }}</span>
                   <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -351,7 +351,7 @@ export default {
                 type="text"
                 placeholder="11434"
                 v-bind:disabled="localLlmProvider === 'disabled'"
-                class="w-full sm:w-24 px-3 py-2 text-sm border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-recessed-deep disabled:text-placeholder-text disabled:cursor-not-allowed sm:shrink-0 sm:ml-4"
+                class="w-full sm:w-24 px-3 py-2 text-sm border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-recessed-deep disabled:text-placeholder-text disabled:cursor-not-allowed sm:shrink-0 sm:ml-4"
               />
             </div>
           </div>

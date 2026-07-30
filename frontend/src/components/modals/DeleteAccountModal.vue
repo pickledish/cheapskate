@@ -67,7 +67,7 @@ export default {
       <input
         v-model="confirmText"
         type="text"
-        class="w-full px-3 py-2 border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+        class="w-full px-3 py-2 border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-red-500"
         placeholder="DELETE"
       />
     </div>
