@@ -60,7 +60,7 @@ export default {
         return 'border-transparent text-placeholder-text cursor-not-allowed pointer-events-none'
       }
       return isActive
-        ? 'border-blue-500 bg-blue-50 text-primary-text'
+        ? 'border-blue-500 text-primary-text'
         : 'border-transparent text-muted-text hover:bg-recessed hover:text-secondary-text'
     }
   }
