@@ -12,6 +12,17 @@
     color: var(--color-placeholder-text);
   }
 
+  /* Hide number input spinners (poor contrast in dark mode; values are typed) */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
   /* Fix iOS Safari date input overflow - Safari forces content-box sizing and
      ignores width:100% on temporal inputs; appearance:none restores standard behavior */
   input[type="date"],
