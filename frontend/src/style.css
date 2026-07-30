@@ -4,6 +4,8 @@
 @layer base {
   html {
     overscroll-behavior-x: none;
+    /* Safari/iOS overscroll bounce uses the html/body canvas color */
+    background-color: var(--color-page);
   }
 
   /* Keep placeholders consistently muted (Tailwind preflight uses currentColor @ 50%) */
