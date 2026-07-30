@@ -616,7 +616,7 @@ export default {
       </div>
 
       <!-- Holdings table -->
-      <div class="border rounded-md max-h-64 overflow-x-auto overflow-y-auto">
+      <div class="border border-strong-border rounded-md max-h-64 overflow-x-auto overflow-y-auto">
         <table class="min-w-full divide-y divide-subtle-border">
           <thead class="bg-recessed sticky top-0">
             <tr>
