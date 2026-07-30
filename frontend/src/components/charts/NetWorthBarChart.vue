@@ -63,7 +63,7 @@ export default {
       return this.series.length > 1
     },
     chartOption() {
-      // Matches --color-secondary-text (@theme inline alias of gray-700)
+      // Matches --color-secondary-text (light: gray-700; charts don't yet follow dark)
       const secondaryText = getComputedStyle(document.documentElement)
         .getPropertyValue('--color-gray-700')
         .trim()

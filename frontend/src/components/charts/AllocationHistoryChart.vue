@@ -37,7 +37,7 @@ export default {
       return this.labels.map((label) => label.replace(/\s+(\d{2})(\d{2})$/, " $2"))
     },
     chartOption() {
-      // Matches --color-secondary-text (@theme inline alias of gray-700)
+      // Matches --color-secondary-text (light: gray-700; charts don't yet follow dark)
       const secondaryText = getComputedStyle(document.documentElement)
         .getPropertyValue('--color-gray-700')
         .trim()
