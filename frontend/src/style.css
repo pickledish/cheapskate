@@ -142,7 +142,8 @@
       /* conceptually should be gray-950, but that's too different from gray-900 */
       --color-recessed: #0d1220;
       --color-recessed-deep: var(--color-gray-800);
-      --color-header: var(--color-gray-700);
+      /* slightly bluer than gray-700, fits with the rest of the blue-forward dark theme */
+      --color-header: hsl(218 24% 28%);
 
       --color-subtle-border: var(--color-gray-800);
       --color-strong-border: var(--color-gray-700);
