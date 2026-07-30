@@ -199,7 +199,7 @@ export default {
       </div>
 
       <!-- Loading state -->
-      <div v-if="loading" class="text-gray-500">Loading...</div>
+      <div v-if="loading" class="text-muted-text">Loading...</div>
 
       <!-- Main content area -->
       <div v-if="!loading && assetClasses.length > 0" class="flex flex-col-reverse gap-6 md:flex-row">
@@ -209,16 +209,16 @@ export default {
           <thead>
             <tr>
               <th class="bg-gray-600 rounded-tl-lg w-10"></th>
-              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                 Name
               </th>
-              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                 Assets
               </th>
-              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+              <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                 Goal
               </th>
-              <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+              <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                 Actions
               </th>
             </tr>
@@ -239,7 +239,7 @@ export default {
           >
             <tr v-for="(assetClass, index) in assetClasses" v-bind:key="assetClass.id">
               <td
-                class="drag-handle cursor-grab px-3 py-4 text-gray-400 hover:text-gray-600 bg-white"
+                class="drag-handle cursor-grab px-3 py-4 text-placeholder-text hover:text-muted-text bg-white"
                 v-bind:class="{ 'rounded-bl-lg': index === assetClasses.length - 1 && !hasAnyGoals }"
               >
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -254,10 +254,10 @@ export default {
                   {{ assetClass.name }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 bg-white">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-text bg-white">
                 {{ assetCountByClass[assetClass.id] || 0 }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 bg-white">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-primary-text bg-white">
                 {{ assetClass.goal > 0 ? (assetClass.goal * 100) + '%' : '-' }}
               </td>
               <td
@@ -269,7 +269,7 @@ export default {
                     class="inline-block"
                     v-bind:ref="(el) => setMenuAnchor(index, el)"
                   >
-                    <MenuButton class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded cursor-pointer">
+                    <MenuButton class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-gray-100 rounded cursor-pointer">
                       <Bars3Icon class="w-5 h-5" />
                     </MenuButton>
                   </div>
@@ -281,7 +281,7 @@ export default {
                     >
                       <MenuItem v-slot="{ active }">
                         <button
-                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
                           v-on:click="openEditModal(assetClass)"
                         >
                           Edit
@@ -289,7 +289,7 @@ export default {
                       </MenuItem>
                       <MenuItem v-slot="{ active }">
                         <button
-                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
+                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-secondary-text']"
                           v-on:click="doDeleteAssetClass(assetClass)"
                         >
                           Delete
@@ -304,7 +304,7 @@ export default {
           <tfoot v-if="hasAnyGoals">
             <tr>
               <td class="bg-white rounded-bl-lg"></td>
-              <td class="px-6 py-4 text-sm font-medium text-gray-900 bg-white">
+              <td class="px-6 py-4 text-sm font-medium text-primary-text bg-white">
                 Total
               </td>
               <td class="bg-white"></td>
@@ -320,12 +320,12 @@ export default {
         <!-- Right side panel -->
         <div class="w-full md:w-5/12 bg-white shadow rounded-lg overflow-hidden self-start">
           <div class="bg-gray-600 px-6 py-3">
-            <h3 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Target Allocation</h3>
+            <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">Target Allocation</h3>
           </div>
           <div v-if="goalsAreValid" class="p-4 h-72">
             <GoalAllocationChart v-bind:asset-classes="assetClasses" />
           </div>
-          <div v-else class="p-6 text-center text-gray-500">
+          <div v-else class="p-6 text-center text-muted-text">
             <p>Configure goals to total 100% to see allocation chart.</p>
           </div>
         </div>
@@ -342,7 +342,7 @@ export default {
 
       <!-- Empty state -->
       <div v-if="!loading && assetClasses.length === 0" class="text-center py-12 bg-white rounded-lg shadow">
-        <p class="text-gray-500 mb-4">No asset classes yet. Add your first to categorize your assets.</p>
+        <p class="text-muted-text mb-4">No asset classes yet. Add your first to categorize your assets.</p>
         <button
           v-on:click="showAddModal = true"
           class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
@@ -373,7 +373,7 @@ export default {
       v-bind:step-number="1"
       v-on:close="showOnboardingModal = false"
     >
-      <div class="space-y-4 text-gray-600">
+      <div class="space-y-4 text-muted-text">
         <p>
           <strong>Welcome to Cheapskate!</strong>
         </p>

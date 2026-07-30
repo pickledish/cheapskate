@@ -37,6 +37,10 @@ export default {
       return this.labels.map((label) => label.replace(/\s+(\d{2})(\d{2})$/, " $2"))
     },
     chartOption() {
+      // Matches --color-secondary-text (@theme inline alias of gray-700)
+      const secondaryText = getComputedStyle(document.documentElement)
+        .getPropertyValue('--color-gray-700')
+        .trim()
       return {
         animation: false,
         tooltip: {
@@ -63,7 +67,7 @@ export default {
           max: 1,
           interval: this.isMobile ? 0.5 : 0.2,
           axisLabel: {
-            color: '#374151',
+            color: secondaryText,
             // Keep "100%" inside the canvas without extra right padding
             alignMaxLabel: 'right',
             formatter: (value) => `${(value * 100).toFixed(0)}%`
@@ -72,7 +76,7 @@ export default {
         yAxis: {
           type: 'category',
           data: this.axisLabels,
-          axisLabel: { color: '#374151' },
+          axisLabel: { color: secondaryText },
           axisPointer: {
             show: true,
             type: 'shadow'
@@ -121,7 +125,7 @@ export default {
     <div v-if="hasData" class="w-full" :style="{ height: chartHeight + 'px' }">
       <VChart :option="chartOption" autoresize />
     </div>
-    <div v-else class="text-center text-gray-500 py-8">
+    <div v-else class="text-center text-muted-text py-8">
       No allocation history to display.
     </div>
   </div>

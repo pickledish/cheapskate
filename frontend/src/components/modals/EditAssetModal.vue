@@ -141,7 +141,7 @@ export default {
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Name
         </label>
         <input
@@ -152,7 +152,7 @@ export default {
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Ticker (optional)
         </label>
         <input
@@ -165,7 +165,7 @@ export default {
 
       <!-- Asset Class Allocations -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Asset Class Allocation
         </label>
 
@@ -179,11 +179,11 @@ export default {
               <ListboxButton
                 class="relative w-full px-3 py-2 text-left text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <span v-bind:class="{ 'text-gray-400': !alloc.asset_class_id }">
+                <span v-bind:class="{ 'text-placeholder-text': !alloc.asset_class_id }">
                   {{ alloc.asset_class_id ? getClassName(alloc.asset_class_id) : 'Select class...' }}
                 </span>
                 <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                  <ChevronUpDownIcon class="w-4 h-4 text-gray-400" />
+                  <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
                 </span>
               </ListboxButton>
               <transition
@@ -207,10 +207,10 @@ export default {
                     <div
                       v-bind:class="[
                         'flex items-center justify-between px-3 py-2 text-sm',
-                        disabled ? 'text-gray-300 cursor-not-allowed' : 'cursor-pointer',
+                        disabled ? 'text-placeholder-text cursor-not-allowed' : 'cursor-pointer',
                         !disabled && active ? 'bg-gray-100' : '',
                         !disabled && selected ? 'text-blue-600 font-medium' : '',
-                        !disabled && !selected ? 'text-gray-700' : ''
+                        !disabled && !selected ? 'text-secondary-text' : ''
                       ]"
                     >
                       {{ c.name }}
@@ -228,11 +228,11 @@ export default {
                 max="100"
                 class="w-20 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <span class="ml-1 text-sm text-gray-500">%</span>
+              <span class="ml-1 text-sm text-muted-text">%</span>
             </div>
             <button
               v-on:click="removeAllocation(index)"
-              class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded"
+              class="w-6 h-6 flex items-center justify-center text-placeholder-text hover:text-muted-text rounded"
               title="Remove allocation"
             >
               <TrashIcon class="w-4 h-4" />
@@ -244,7 +244,7 @@ export default {
           <button
             v-on:click="addAllocation"
             v-bind:disabled="availableClasses.length === 0"
-            class="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+            class="text-sm text-blue-600 hover:text-blue-800 disabled:text-placeholder-text"
           >
             + Add more
           </button>
@@ -262,7 +262,7 @@ export default {
     <template #secondary>
       <button
         v-on:click="$emit('close')"
-        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+        class="px-4 py-2 text-secondary-text hover:text-primary-text"
       >
         Cancel
       </button>

@@ -245,24 +245,24 @@ export default {
         {{ error }}
       </div>
 
-      <div v-if="loading" class="text-gray-500">Loading...</div>
+      <div v-if="loading" class="text-muted-text">Loading...</div>
 
       <template v-if="!loading && !error">
         <!-- Current vs Goal comparison grid -->
         <div class="bg-white shadow rounded-lg overflow-hidden">
           <div class="bg-gray-600 px-6 py-3">
-            <h3 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Current vs Target Allocation</h3>
+            <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">Current vs Target Allocation</h3>
           </div>
           <div class="p-6">
             <AllocationComparisonGrid v-if="comparisonAllocations.length > 0 && comparisonAllocations.some(a => a.current > 0)" :allocations="comparisonAllocations" :totalValue="currentTotalValue" />
-            <div v-else class="text-center text-gray-500 py-7">No allocation history to display.</div>
+            <div v-else class="text-center text-muted-text py-7">No allocation history to display.</div>
           </div>
         </div>
 
         <!-- Allocation history chart -->
         <div class="bg-white shadow rounded-lg overflow-hidden">
           <div class="bg-gray-600 px-6 py-3">
-            <h3 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Allocation Over Time</h3>
+            <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">Allocation Over Time</h3>
           </div>
           <div class="p-6">
             <AllocationHistoryChart :labels="monthLabels" :series="chartSeries" />

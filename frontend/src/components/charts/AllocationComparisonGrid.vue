@@ -59,7 +59,7 @@ export default {
       class="bg-gray-50 rounded-lg p-3 flex flex-col w-full max-w-[160px] min-w-0"
     >
       <!-- Asset class name -->
-      <div class="text-sm font-medium text-gray-700 mb-2 truncate text-center" :title="alloc.name">
+      <div class="text-sm font-medium text-secondary-text mb-2 truncate text-center" :title="alloc.name">
         {{ alloc.name }}
       </div>
 
@@ -88,12 +88,12 @@ export default {
       <!-- Labels -->
       <div class="flex justify-center gap-2 mt-2">
         <div class="text-center">
-          <div class="text-xs font-medium text-gray-700">{{ formatCurrency(currentDollars(alloc)) }}</div>
-          <div class="text-xs text-gray-400">Current</div>
+          <div class="text-xs font-medium text-secondary-text">{{ formatCurrency(currentDollars(alloc)) }}</div>
+          <div class="text-xs text-placeholder-text">Current</div>
         </div>
         <div class="text-center">
-          <div class="text-xs font-medium text-gray-700">{{ formatCurrency(goalDollars(alloc)) }}</div>
-          <div class="text-xs text-gray-400">Target</div>
+          <div class="text-xs font-medium text-secondary-text">{{ formatCurrency(goalDollars(alloc)) }}</div>
+          <div class="text-xs text-placeholder-text">Target</div>
         </div>
       </div>
     </div>

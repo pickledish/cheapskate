@@ -94,13 +94,13 @@ export default {
 <template>
   <div class="min-h-screen flex items-center justify-center bg-canvas">
     <div class="max-w-md w-full p-8 bg-white rounded-lg shadow-md">
-      <h1 class="text-2xl font-bold text-center mb-6 text-gray-900">
+      <h1 class="text-2xl font-bold text-center mb-6 text-primary-text">
         Welcome to Cheapskate
       </h1>
 
       <!-- Name input -->
       <div class="mb-6">
-        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="name" class="block text-sm font-medium text-secondary-text mb-1">
           Your name
         </label>
         <input
@@ -128,7 +128,7 @@ export default {
               value="create"
               class="h-4 w-4 text-blue-600 focus:ring-blue-500"
             />
-            <span class="ml-3 font-medium text-gray-900">Start a new family</span>
+            <span class="ml-3 font-medium text-primary-text">Start a new family</span>
           </div>
         </label>
 
@@ -144,14 +144,14 @@ export default {
               value="join"
               class="h-4 w-4 text-blue-600 focus:ring-blue-500"
             />
-            <span class="ml-3 font-medium text-gray-900">Join an existing family</span>
+            <span class="ml-3 font-medium text-primary-text">Join an existing family</span>
           </div>
           <div class="mt-3 ml-7">
             <input
               v-model="familyId"
               type="text"
               v-bind:disabled="mode !== 'join'"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm disabled:bg-gray-100 disabled:text-gray-400"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm disabled:bg-gray-100 disabled:text-placeholder-text"
               placeholder="Enter family secret"
               v-on:click.stop
             />

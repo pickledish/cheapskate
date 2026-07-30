@@ -40,16 +40,16 @@ export default {
       <div class="px-6 py-4 border-b border-gray-200">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
+            <p class="text-xs text-muted-text uppercase tracking-wide mb-1">
               Step {{ stepNumber }} of {{ totalSteps }}
             </p>
-            <h2 class="text-lg font-semibold text-gray-900">
+            <h2 class="text-lg font-semibold text-primary-text">
               {{ title }}
             </h2>
           </div>
           <button
             v-on:click="$emit('close')"
-            class="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+            class="text-placeholder-text hover:text-muted-text text-2xl leading-none"
           >
             &times;
           </button>

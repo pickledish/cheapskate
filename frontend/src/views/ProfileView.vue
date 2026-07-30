@@ -235,20 +235,20 @@ export default {
       </div>
 
       <!-- Loading state -->
-      <div v-if="loading" class="text-gray-500">Loading...</div>
+      <div v-if="loading" class="text-muted-text">Loading...</div>
 
       <template v-if="!loading">
         <!-- Profile Section -->
         <section class="bg-white rounded-lg shadow overflow-hidden">
           <div class="bg-gray-600 px-6 py-3">
-            <h2 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Profile</h2>
+            <h2 class="text-xs font-medium text-header-text uppercase tracking-wider">Profile</h2>
           </div>
           <div class="p-6 space-y-4">
             <!-- Name row -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p class="font-medium text-gray-900">Display Name</p>
-                <p class="text-sm text-gray-500">How you appear to other family members</p>
+                <p class="font-medium text-primary-text">Display Name</p>
+                <p class="text-sm text-muted-text">How you appear to other family members</p>
               </div>
               <input
                 v-model="userName"
@@ -262,14 +262,14 @@ export default {
             <!-- Email row -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p class="font-medium text-gray-900">Email</p>
-                <p class="text-sm text-gray-500">Your Google account email</p>
+                <p class="font-medium text-primary-text">Email</p>
+                <p class="text-sm text-muted-text">Your Google account email</p>
               </div>
               <input
                 type="text"
                 v-bind:value="userEmail"
                 disabled
-                class="w-full sm:w-64 px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-100 text-gray-400 cursor-not-allowed sm:shrink-0 sm:ml-4"
+                class="w-full sm:w-64 px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-100 text-placeholder-text cursor-not-allowed sm:shrink-0 sm:ml-4"
               />
             </div>
           </div>
@@ -287,14 +287,14 @@ export default {
         <!-- Local LLM Section -->
         <section class="bg-white rounded-lg shadow">
           <div class="bg-gray-600 px-6 py-3 rounded-t-lg">
-            <h2 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Local LLM</h2>
+            <h2 class="text-xs font-medium text-header-text uppercase tracking-wider">Local LLM</h2>
           </div>
           <div class="p-6 space-y-4">
             <!-- Provider row -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p class="font-medium text-gray-900">Provider</p>
-                <p class="text-sm text-gray-500">Parse PDFs locally instead of using the cloud service</p>
+                <p class="font-medium text-primary-text">Provider</p>
+                <p class="text-sm text-muted-text">Parse PDFs locally instead of using the cloud service</p>
               </div>
               <Listbox v-model="localLlmProvider" as="div" class="relative w-full sm:w-44 sm:shrink-0 sm:ml-4">
                 <ListboxButton
@@ -302,7 +302,7 @@ export default {
                 >
                   <span>{{ selectedLlmOption?.name }}</span>
                   <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                    <ChevronUpDownIcon class="w-4 h-4 text-gray-400" />
+                    <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
                   </span>
                 </ListboxButton>
                 <transition
@@ -326,7 +326,7 @@ export default {
                         v-bind:class="[
                           'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
                           active ? 'bg-gray-100' : '',
-                          selected ? 'text-blue-600 font-medium' : 'text-gray-700'
+                          selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
                         ]"
                       >
                         {{ option.name }}
@@ -343,15 +343,15 @@ export default {
             <!-- Port row -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p class="font-medium text-gray-900" v-bind:class="{ 'text-gray-400': localLlmProvider === 'disabled' }">Port</p>
-                <p class="text-sm text-gray-500" v-bind:class="{ 'text-gray-400': localLlmProvider === 'disabled' }">Local server port (default: 11434 for Ollama)</p>
+                <p class="font-medium text-primary-text" v-bind:class="{ 'text-placeholder-text': localLlmProvider === 'disabled' }">Port</p>
+                <p class="text-sm text-muted-text" v-bind:class="{ 'text-placeholder-text': localLlmProvider === 'disabled' }">Local server port (default: 11434 for Ollama)</p>
               </div>
               <input
                 v-model="localLlmPort"
                 type="text"
                 placeholder="11434"
                 v-bind:disabled="localLlmProvider === 'disabled'"
-                class="w-full sm:w-24 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed sm:shrink-0 sm:ml-4"
+                class="w-full sm:w-24 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-placeholder-text disabled:cursor-not-allowed sm:shrink-0 sm:ml-4"
               />
             </div>
           </div>
@@ -360,7 +360,7 @@ export default {
           <button
             v-on:click="testLlmConnection"
             v-bind:disabled="testing || localLlmProvider === 'disabled'"
-            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm font-medium disabled:opacity-50 transition-colors"
+            class="px-4 py-2 border border-gray-300 text-secondary-text rounded-md hover:bg-gray-50 text-sm font-medium disabled:opacity-50 transition-colors"
           >
             {{ testing ? 'Testing...' : 'Test' }}
           </button>
@@ -376,19 +376,19 @@ export default {
         <!-- Family Section -->
         <section class="bg-white rounded-lg shadow overflow-hidden">
           <div class="bg-gray-600 px-6 py-3">
-            <h2 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Family</h2>
+            <h2 class="text-xs font-medium text-header-text uppercase tracking-wider">Family</h2>
           </div>
           <div class="p-6 space-y-4">
             <!-- Family ID row -->
             <div>
-              <dt class="text-sm text-gray-500 mb-1">Family Secret</dt>
+              <dt class="text-sm text-muted-text mb-1">Family Secret</dt>
               <div class="relative h-10">
                 <!-- Input with family ID -->
                 <input
                   type="text"
                   readonly
                   v-bind:value="familyId"
-                  class="w-full h-full px-3 pr-16 border border-gray-300 rounded-md font-mono text-sm text-gray-900 bg-gray-50 focus:outline-none"
+                  class="w-full h-full px-3 pr-16 border border-gray-300 rounded-md font-mono text-sm text-primary-text bg-gray-50 focus:outline-none"
                 />
                 <!-- Click to reveal overlay -->
                 <div
@@ -396,13 +396,13 @@ export default {
                   v-on:click="toggleFamilyIdReveal"
                   class="absolute inset-0 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
                 >
-                  <span class="text-sm text-gray-600 font-medium">Click to reveal</span>
+                  <span class="text-sm text-muted-text font-medium">Click to reveal</span>
                 </div>
                 <!-- Copy button inside textarea -->
                 <button
                   v-if="familyIdRevealed"
                   v-on:click="copyFamilyId"
-                  class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 bg-white border border-gray-300 rounded hover:bg-gray-50"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 px-2 py-1 text-xs text-muted-text hover:text-primary-text bg-white border border-gray-300 rounded hover:bg-gray-50"
                 >
                   <ClipboardIcon class="w-3.5 h-3.5" />
                   {{ copyFeedback ? 'Copied!' : 'Copy' }}
@@ -419,22 +419,22 @@ export default {
 
             <!-- Family Members -->
             <div>
-              <dt class="text-sm text-gray-500 mb-2">
+              <dt class="text-sm text-muted-text mb-2">
                 Members ({{ familyMembers.length }})
               </dt>
               <ul class="list-disc list-inside space-y-1">
                 <li
                   v-for="member in familyMembers"
                   v-bind:key="member.id"
-                  class="text-gray-900"
+                  class="text-primary-text"
                 >
                   {{ member.name }}
-                  <span class="text-gray-400 text-sm"> — joined {{ formatJoinDate(member.created_at) }}</span>
+                  <span class="text-placeholder-text text-sm"> — joined {{ formatJoinDate(member.created_at) }}</span>
                 </li>
               </ul>
               <p
                 v-if="familyMembers.length === 1"
-                class="text-sm text-gray-500 mt-2 italic"
+                class="text-sm text-muted-text mt-2 italic"
               >
                 You are the only member of this family.
               </p>
@@ -443,12 +443,12 @@ export default {
             <!-- Change Family -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2">
               <div>
-                <p class="font-medium text-gray-900">Leave Family</p>
-                <p class="text-sm text-gray-500">Create or join another (access to this family's data will be lost)</p>
+                <p class="font-medium text-primary-text">Leave Family</p>
+                <p class="text-sm text-muted-text">Create or join another (access to this family's data will be lost)</p>
               </div>
               <button
                 v-on:click="openChangeFamilyModal"
-                class="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm font-medium sm:shrink-0 sm:ml-4"
+                class="w-full sm:w-auto px-4 py-2 border border-gray-300 text-secondary-text rounded-md hover:bg-gray-50 text-sm font-medium sm:shrink-0 sm:ml-4"
               >
                 Leave Family
               </button>
@@ -465,12 +465,12 @@ export default {
             <!-- Sign Out -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p class="font-medium text-gray-900">Sign Out</p>
-                <p class="text-sm text-gray-500">Sign out of your account on this device</p>
+                <p class="font-medium text-primary-text">Sign Out</p>
+                <p class="text-sm text-muted-text">Sign out of your account on this device</p>
               </div>
               <button
                 v-on:click="signOut"
-                class="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm font-medium sm:shrink-0 sm:ml-4"
+                class="w-full sm:w-auto px-4 py-2 border border-gray-300 text-secondary-text rounded-md hover:bg-gray-50 text-sm font-medium sm:shrink-0 sm:ml-4"
               >
                 Sign Out
               </button>
@@ -481,8 +481,8 @@ export default {
             <!-- Delete Account -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p class="font-medium text-gray-900">Delete Account</p>
-                <p class="text-sm text-gray-500">Permanently delete your account and data</p>
+                <p class="font-medium text-primary-text">Delete Account</p>
+                <p class="text-sm text-muted-text">Permanently delete your account and data</p>
               </div>
               <button
                 v-on:click="openDeleteAccountModal"

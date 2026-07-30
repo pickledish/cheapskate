@@ -9,7 +9,7 @@
   /* Keep placeholders consistently muted (Tailwind preflight uses currentColor @ 50%) */
   input::placeholder,
   textarea::placeholder {
-    color: var(--color-gray-400);
+    color: var(--color-placeholder-text);
   }
 
   /* Fix iOS Safari date input overflow - Safari forces content-box sizing and
@@ -93,6 +93,15 @@
   font-weight: 700;
   font-style: italic;
   font-display: swap;
+}
+
+/* Semantic text colors — aliases into Tailwind greys (@theme inline so var() resolves correctly) */
+@theme inline {
+  --color-primary-text: var(--color-gray-900);
+  --color-secondary-text: var(--color-gray-700);
+  --color-muted-text: var(--color-gray-500);
+  --color-placeholder-text: var(--color-gray-400);
+  --color-header-text: var(--color-gray-100);
 }
 
 /* Override Tailwind's default sans font and scale up text sizes ~6% */

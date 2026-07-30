@@ -287,9 +287,9 @@ export default {
       >
         <template #actions>
           <Menu as="div" class="relative shrink-0">
-            <MenuButton class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+            <MenuButton class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-secondary-text bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
               Group by: {{ selectedGroupByLabel }}
-              <ChevronDownIcon class="w-4 h-4 text-gray-500" />
+              <ChevronDownIcon class="w-4 h-4 text-muted-text" />
             </MenuButton>
             <transition
               enter-active-class="transition duration-100 ease-out"
@@ -307,7 +307,7 @@ export default {
                       :class="[
                         'flex items-center justify-between w-full px-3 py-2 text-sm text-left',
                         active ? 'bg-gray-100' : '',
-                        groupBy === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'
+                        groupBy === option.value ? 'text-blue-600 font-medium' : 'text-secondary-text'
                       ]"
                       @click="groupBy = option.value"
                     >
@@ -323,12 +323,12 @@ export default {
       </PageHeader>
 
       <!-- Loading state -->
-      <div v-if="loading" class="text-gray-500">Loading...</div>
+      <div v-if="loading" class="text-muted-text">Loading...</div>
 
       <!-- Chart card -->
       <div v-else class="bg-white shadow rounded-lg overflow-hidden">
         <div class="bg-gray-600 px-6 py-3">
-          <h3 class="text-xs font-medium text-gray-100 uppercase tracking-wider">Net Worth Over Time</h3>
+          <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">Net Worth Over Time</h3>
         </div>
         <div class="p-6">
           <NetWorthBarChart :labels="monthLabels" :series="chartSeries" />

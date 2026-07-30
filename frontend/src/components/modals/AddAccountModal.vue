@@ -55,14 +55,14 @@ export default {
       {{ error }}
     </div>
 
-    <p class="text-sm text-gray-600 mb-4">
+    <p class="text-sm text-muted-text mb-4">
       Add a brokerage account, 401(k), IRA, HSA, or other investment account.
     </p>
 
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Account Name
         </label>
         <input
@@ -74,7 +74,7 @@ export default {
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Account Last 4 Digits
         </label>
         <input
@@ -84,7 +84,7 @@ export default {
           placeholder="e.g., 1234"
           class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <p class="mt-1 text-xs text-gray-500">
+        <p class="mt-1 text-xs text-muted-text">
           Used to auto-match uploaded statements to this account.
         </p>
       </div>
@@ -96,11 +96,11 @@ export default {
             type="checkbox"
             class="rounded border-gray-300"
           />
-          <span class="text-sm text-gray-700">
+          <span class="text-sm text-secondary-text">
             Include in rebalancing
           </span>
         </label>
-        <p class="mt-1 text-xs text-gray-500">
+        <p class="mt-1 text-xs text-muted-text">
           Uncheck for accounts you don't want included in the portfolio rebalancing dashboard (this is for illiquid assets, like home equity).
         </p>
       </div>
@@ -109,7 +109,7 @@ export default {
     <template #secondary>
       <button
         v-on:click="$emit('close')"
-        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+        class="px-4 py-2 text-secondary-text hover:text-primary-text"
       >
         Cancel
       </button>

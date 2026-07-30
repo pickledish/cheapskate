@@ -435,19 +435,19 @@ export default {
       </div>
 
       <!-- Loading state -->
-      <div v-if="loading" class="text-gray-500">Loading...</div>
+      <div v-if="loading" class="text-muted-text">Loading...</div>
 
       <template v-if="!loading && account">
         <PageHeader :title="account.name" :description="isArchived ? 'CLOSED' : null">
           <template #actions>
             <Menu as="div" class="relative inline-block text-left shrink-0">
-              <MenuButton class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+              <MenuButton class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-secondary-text hover:bg-gray-50 transition-colors">
                 Manage<span class="hidden sm:inline">&nbsp;Account</span>
               </MenuButton>
               <MenuItems class="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col">
                 <MenuItem v-slot="{ active }">
                   <button
-                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
                     v-on:click="showEditAccountModal = true"
                   >
                     Edit
@@ -455,7 +455,7 @@ export default {
                 </MenuItem>
                 <MenuItem v-if="!isArchived" v-slot="{ active }">
                   <button
-                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
                     v-on:click="showCloseAccountModal = true"
                   >
                     Mark as Closed
@@ -463,7 +463,7 @@ export default {
                 </MenuItem>
                 <MenuItem v-if="isArchived" v-slot="{ active }">
                   <button
-                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
                     v-on:click="reopenAccount"
                   >
                     Reopen
@@ -471,7 +471,7 @@ export default {
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
                   <button
-                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
+                    v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-secondary-text']"
                     v-on:click="doDeleteAccount"
                   >
                     Delete
@@ -487,8 +487,8 @@ export default {
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div class="lg:col-span-2 px-1 py-1 flex flex-col justify-between gap-4">
                 <div>
-                  <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Account value</div>
-                  <div class="mt-1 text-2xl font-semibold text-gray-900">{{ displayTotalHoldings }}</div>
+                  <div class="text-xs font-semibold uppercase tracking-wide text-muted-text">Account value</div>
+                  <div class="mt-1 text-2xl font-semibold text-primary-text">{{ displayTotalHoldings }}</div>
                   <div v-if="assetClasses.length" class="mt-2 flex flex-nowrap gap-1.5 overflow-x-auto">
                     <span
                       v-for="ac in assetClasses"
@@ -501,33 +501,33 @@ export default {
                   </div>
                 </div>
                 <div>
-                  <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">As of date</div>
-                  <div class="mt-1 text-sm text-gray-900">{{ displayLastUpdatedDate }} <span class="text-gray-500">({{ displayLastUpdated }})</span></div>
+                  <div class="text-xs font-semibold uppercase tracking-wide text-muted-text">As of date</div>
+                  <div class="mt-1 text-sm text-primary-text">{{ displayLastUpdatedDate }} <span class="text-muted-text">({{ displayLastUpdated }})</span></div>
                 </div>
               </div>
 
               <dl class="divide-y divide-gray-200 rounded-lg bg-gray-50 border border-gray-200 px-4">
                 <div class="flex items-baseline justify-between py-2.5">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Owner</dt>
-                  <dd class="text-sm font-semibold text-gray-900">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-text">Owner</dt>
+                  <dd class="text-sm font-semibold text-primary-text">
                     <template v-if="ownerName">{{ ownerName }}</template>
-                    <span v-else class="text-gray-400 font-normal">Unknown</span>
+                    <span v-else class="text-placeholder-text font-normal">Unknown</span>
                   </dd>
                 </div>
                 <div class="flex items-baseline justify-between py-2.5">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Account Number</dt>
-                  <dd class="text-sm font-semibold text-gray-900">
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-text">Account Number</dt>
+                  <dd class="text-sm font-semibold text-primary-text">
                     <template v-if="displayAccountLast4">*****{{ displayAccountLast4 }}</template>
-                    <span v-else class="text-gray-400 font-normal">Not set</span>
+                    <span v-else class="text-placeholder-text font-normal">Not set</span>
                   </dd>
                 </div>
                 <div class="flex items-baseline justify-between py-2.5">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Liquidity</dt>
-                  <dd class="text-sm font-semibold text-gray-900">{{ displayLiquid }}</dd>
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-text">Liquidity</dt>
+                  <dd class="text-sm font-semibold text-primary-text">{{ displayLiquid }}</dd>
                 </div>
                 <div class="flex items-baseline justify-between py-2.5">
-                  <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Account Type</dt>
-                  <dd class="text-sm font-semibold text-gray-900">{{ displayTaxType }}</dd>
+                  <dt class="text-xs font-semibold uppercase tracking-wide text-muted-text">Account Type</dt>
+                  <dd class="text-sm font-semibold text-primary-text">{{ displayTaxType }}</dd>
                 </div>
               </dl>
             </div>
@@ -539,19 +539,19 @@ export default {
           <table class="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
-                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap min-w-48 max-w-48">
+                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap min-w-48 max-w-48">
                   Name
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Ticker
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Asset Class
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap w-40">
+                <th class="bg-gray-600 px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap w-40">
                   Quantity
                 </th>
-                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Total Value
                 </th>
               </tr>
@@ -560,10 +560,10 @@ export default {
               <!-- Existing holdings -->
               <tr v-for="holding in holdings" v-bind:key="holding.asset_id">
                 <td class="px-6 py-3 whitespace-nowrap bg-white max-w-48">
-                  <div class="h-8 flex items-center text-sm font-medium text-gray-900 truncate">{{ holding.name }}</div>
+                  <div class="h-8 flex items-center text-sm font-medium text-primary-text truncate">{{ holding.name }}</div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-white">
-                  <div class="h-8 flex items-center text-sm text-gray-500">{{ holding.ticker || '-' }}</div>
+                  <div class="h-8 flex items-center text-sm text-muted-text">{{ holding.ticker || '-' }}</div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-white">
                   <div class="h-8 flex items-center">
@@ -577,7 +577,7 @@ export default {
                         {{ ac.name }}
                       </span>
                     </div>
-                    <span v-else class="text-sm text-gray-400">-</span>
+                    <span v-else class="text-sm text-placeholder-text">-</span>
                   </div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
@@ -589,11 +589,11 @@ export default {
                       inputmode="decimal"
                       class="w-28 h-8 px-2 text-sm text-right border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <span v-else class="text-sm text-gray-900">{{ formatQuantity(holding.quantity) }}</span>
+                    <span v-else class="text-sm text-primary-text">{{ formatQuantity(holding.quantity) }}</span>
                   </div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
-                  <div class="h-8 flex items-center justify-end text-sm text-gray-900">{{ formatCurrency(holding.value) }}</div>
+                  <div class="h-8 flex items-center justify-end text-sm text-primary-text">{{ formatCurrency(holding.value) }}</div>
                 </td>
               </tr>
 
@@ -613,7 +613,7 @@ export default {
                         class="w-full min-w-0 h-8 px-3 pr-8 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
-                        <ChevronUpDownIcon class="w-4 h-4 text-gray-400" />
+                        <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
                       </ComboboxButton>
                     </div>
                     <!-- Portal out of the table: overflow-x-auto clips absolute dropdowns -->
@@ -622,7 +622,7 @@ export default {
                         v-bind:style="open ? comboboxDropdownStyle(index) : undefined"
                         class="fixed z-50 max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg focus:outline-none"
                       >
-                        <div v-if="filteredAssetsForRow(index).length === 0" class="px-3 py-2 text-sm text-gray-500">
+                        <div v-if="filteredAssetsForRow(index).length === 0" class="px-3 py-2 text-sm text-muted-text">
                           No assets found
                         </div>
                         <ComboboxOption
@@ -635,7 +635,7 @@ export default {
                             v-bind:class="[
                               'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
                               active ? 'bg-gray-100' : '',
-                              selected ? 'text-blue-600 font-medium' : 'text-gray-700'
+                              selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
                             ]"
                           >
                             <span>{{ asset.ticker ? `${asset.ticker} - ${asset.name}` : asset.name }}</span>
@@ -648,7 +648,7 @@ export default {
                   </div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-white">
-                  <div class="h-8 flex items-center text-sm text-gray-500">{{ row.asset?.ticker || '-' }}</div>
+                  <div class="h-8 flex items-center text-sm text-muted-text">{{ row.asset?.ticker || '-' }}</div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-white">
                   <div class="h-8 flex items-center">
@@ -662,7 +662,7 @@ export default {
                         {{ ac.name }}
                       </span>
                     </div>
-                    <span v-else class="text-sm text-gray-400">-</span>
+                    <span v-else class="text-sm text-placeholder-text">-</span>
                   </div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
@@ -677,7 +677,7 @@ export default {
                   </div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-white text-right">
-                  <div class="h-8 flex items-center justify-end text-sm text-gray-400">-</div>
+                  <div class="h-8 flex items-center justify-end text-sm text-placeholder-text">-</div>
                 </td>
               </tr>
             </tbody>
@@ -696,7 +696,7 @@ export default {
             Edit Holdings
           </button>
           <div v-else class="w-full flex flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-            <label class="flex items-center justify-center gap-2 text-sm text-gray-600 sm:justify-start">
+            <label class="flex items-center justify-center gap-2 text-sm text-muted-text sm:justify-start">
               Effective date
               <input
                 v-model="editDate"
@@ -707,7 +707,7 @@ export default {
             <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">
               <button
                 v-on:click="cancelEdit"
-                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors self-center sm:self-auto"
+                class="px-4 py-2 text-sm text-muted-text hover:text-primary-text transition-colors self-center sm:self-auto"
               >
                 Cancel
               </button>
@@ -723,7 +723,7 @@ export default {
         </div>
 
         <!-- Empty state (only when not editing) -->
-        <div v-if="holdings.length === 0 && !editing" class="text-center py-12 text-gray-500">
+        <div v-if="holdings.length === 0 && !editing" class="text-center py-12 text-muted-text">
           <p class="text-lg">No holdings yet</p>
           <p class="mt-1 text-sm">Click the edit button to add holdings manually.</p>
         </div>

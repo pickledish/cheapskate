@@ -66,14 +66,14 @@ export default {
 <template>
   <div class="min-h-screen flex items-center justify-center bg-canvas">
     <div class="max-w-md w-full p-8 bg-white rounded-lg shadow-md">
-      <h1 class="text-2xl font-bold text-center mb-6 text-gray-900">
+      <h1 class="text-2xl font-bold text-center mb-6 text-primary-text">
         {{ isSignup ? 'Create Account' : 'Sign In' }}
       </h1>
 
       <button
         v-on:click="signInWithGoogle"
         type="button"
-        class="w-full py-2 px-4 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2 text-gray-700 font-medium"
+        class="w-full py-2 px-4 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2 text-secondary-text font-medium"
       >
         <svg class="w-5 h-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/>
@@ -89,13 +89,13 @@ export default {
           <div class="w-full border-t border-gray-300"></div>
         </div>
         <div class="relative flex justify-center text-sm">
-          <span class="px-2 bg-white text-gray-500">or</span>
+          <span class="px-2 bg-white text-muted-text">or</span>
         </div>
       </div>
 
       <form v-on:submit.prevent="submit" class="space-y-4">
         <div>
-          <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+          <label for="email" class="block text-sm font-medium text-secondary-text mb-1">
             Email
           </label>
           <input
@@ -109,7 +109,7 @@ export default {
         </div>
 
         <div>
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+          <label for="password" class="block text-sm font-medium text-secondary-text mb-1">
             Password
           </label>
           <input
@@ -136,7 +136,7 @@ export default {
         </button>
       </form>
 
-      <p class="mt-4 text-center text-sm text-gray-600">
+      <p class="mt-4 text-center text-sm text-muted-text">
         {{ isSignup ? 'Already have an account?' : "Don't have an account?" }}
         <button
           v-on:click="toggleMode"

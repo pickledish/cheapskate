@@ -63,6 +63,10 @@ export default {
       return this.series.length > 1
     },
     chartOption() {
+      // Matches --color-secondary-text (@theme inline alias of gray-700)
+      const secondaryText = getComputedStyle(document.documentElement)
+        .getPropertyValue('--color-gray-700')
+        .trim()
       const formatCurrency = (value) => {
         return new Intl.NumberFormat('en-US', {
           style: 'currency',
@@ -85,7 +89,7 @@ export default {
         legend: this.isStacked ? {
           type: 'scroll',
           bottom: 0,
-          textStyle: { color: '#374151' }
+          textStyle: { color: secondaryText }
         } : { show: false },
         grid: {
           left: '3%',
@@ -97,7 +101,7 @@ export default {
         xAxis: {
           type: 'category',
           data: this.labels,
-          axisLabel: { color: '#374151' },
+          axisLabel: { color: secondaryText },
           axisPointer: {
             show: true,
             type: 'shadow'
@@ -106,7 +110,7 @@ export default {
         yAxis: {
           type: 'value',
           axisLabel: {
-            color: '#374151',
+            color: secondaryText,
             formatter: (value) => {
               if (value >= 1000000) {
                 return '$' + (value / 1000000).toFixed(1) + 'M'
@@ -140,7 +144,7 @@ export default {
     <div v-if="hasData" class="w-full" style="height: 500px;">
       <VChart ref="chart" :option="chartOption" autoresize @legendselectchanged="onLegendSelectChanged" />
     </div>
-    <div v-else class="text-center text-gray-500 py-8">
+    <div v-else class="text-center text-muted-text py-8">
       No net worth data to display.
     </div>
   </div>

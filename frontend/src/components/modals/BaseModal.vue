@@ -32,12 +32,12 @@ export default {
       <!-- Header -->
       <div class="px-6 py-4 border-b border-gray-200">
         <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gray-900">
+          <h2 class="text-lg font-semibold text-primary-text">
             {{ title }}
           </h2>
           <button
             v-on:click="$emit('close')"
-            class="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+            class="text-placeholder-text hover:text-muted-text text-2xl leading-none"
           >
             &times;
           </button>

@@ -48,20 +48,20 @@ export default {
     navClass(path, enabled) {
       const isActive = this.$route.path.startsWith(path)
       if (!enabled) {
-        return 'border-transparent text-gray-300 cursor-not-allowed pointer-events-none'
+        return 'border-transparent text-placeholder-text cursor-not-allowed pointer-events-none'
       }
       return isActive
-        ? 'border-blue-500 text-gray-900'
-        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+        ? 'border-blue-500 text-primary-text'
+        : 'border-transparent text-muted-text hover:text-secondary-text hover:border-gray-300'
     },
     mobileNavClass(path, enabled) {
       const isActive = this.$route.path.startsWith(path)
       if (!enabled) {
-        return 'border-transparent text-gray-300 cursor-not-allowed pointer-events-none'
+        return 'border-transparent text-placeholder-text cursor-not-allowed pointer-events-none'
       }
       return isActive
-        ? 'border-blue-500 bg-blue-50 text-gray-900'
-        : 'border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+        ? 'border-blue-500 bg-blue-50 text-primary-text'
+        : 'border-transparent text-muted-text hover:bg-gray-50 hover:text-secondary-text'
     }
   }
 }
@@ -79,7 +79,7 @@ export default {
       <div class="flex justify-between h-16">
         <div class="flex">
           <div class="flex-shrink-0 flex items-center">
-            <span class="text-xl font-semibold text-gray-900">
+            <span class="text-xl font-semibold text-primary-text">
               <span class="mr-2">🛼</span><span class="relative inline-block -translate-y-0.25">Cheapskate<svg class="absolute left-0 -bottom-2.5 w-full h-3 -rotate-3" viewBox="0 0 100 12" preserveAspectRatio="none">
                   <path 
                     d="M3 1 Q 25 3, 50 1 Q 75 0, 93 2
@@ -108,7 +108,7 @@ export default {
           </div>
         </div>
         <div class="flex">
-          <DisclosureButton class="sm:hidden self-center inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+          <DisclosureButton class="sm:hidden self-center inline-flex items-center justify-center p-2 rounded-md text-muted-text hover:text-secondary-text hover:bg-gray-100">
             <span class="sr-only">Open main menu</span>
             <Bars3Icon v-if="!open" class="w-6 h-6" />
             <XMarkIcon v-else class="w-6 h-6" />
@@ -116,7 +116,7 @@ export default {
           <router-link
             to="/profile"
             class="inline-flex items-center gap-2 px-1 pt-1 border-b-2 text-sm font-medium"
-            v-bind:class="$route.path === '/profile' ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            v-bind:class="$route.path === '/profile' ? 'border-blue-500 text-primary-text' : 'border-transparent text-muted-text hover:text-secondary-text hover:border-gray-300'"
           >
             <UserCircleIcon class="w-5 h-5" />
             <span v-if="userEmail" class="hidden sm:inline">{{ userEmail }}</span>

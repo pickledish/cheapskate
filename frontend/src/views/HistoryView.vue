@@ -159,7 +159,7 @@ export default {
         description="View all price and position updates, from statement uploads and manual entries. Undo mistakes."
       >
         <template #actions>
-          <div class="inline-flex items-center text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shrink-0">
+          <div class="inline-flex items-center text-sm font-medium text-secondary-text bg-white border border-gray-300 rounded-md shrink-0">
             <button @click="prevMonth" class="px-2 py-1.5 hover:bg-gray-50 rounded-l-md border-r border-gray-300">
               <ChevronLeftIcon class="h-4 w-4" />
             </button>
@@ -171,10 +171,10 @@ export default {
         </template>
       </PageHeader>
 
-      <div v-if="loading" class="text-gray-500">Loading...</div>
+      <div v-if="loading" class="text-muted-text">Loading...</div>
       <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">{{ error }}</div>
 
-      <div v-if="!loading && events.length === 0" class="text-gray-500 text-center py-8">
+      <div v-if="!loading && events.length === 0" class="text-muted-text text-center py-8">
         No update history yet.
       </div>
 
@@ -188,9 +188,9 @@ export default {
           :creator-name="event.creatorName"
           v-on:undo="onUndo(event)"
         >
-          <div class="text-sm text-gray-700">
+          <div class="text-sm text-secondary-text">
             <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
-            <ul class="list-disc list-inside space-y-0.5 text-gray-600 ml-2">
+            <ul class="list-disc list-inside space-y-0.5 text-muted-text ml-2">
               <template v-if="event.type === 'statement'">
                 <li v-for="holding in event.holdings" :key="holding.assetName">
                   {{ holding.assetName }} is now {{ formatNumber(holding.quantity) }} shares<template v-if="getPriceForAsset(event, holding.assetName)"> at {{ formatCurrency(getPriceForAsset(event, holding.assetName)) }}<span class="hidden sm:inline"> per share</span></template>

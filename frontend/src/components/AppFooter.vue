@@ -5,7 +5,7 @@ const env = import.meta.env.DEV ? 'Development' : 'Production'
 </script>
 
 <template>
-  <footer class="py-4 text-center text-xs text-gray-400">
+  <footer class="py-4 text-center text-xs text-placeholder-text">
     <span>Cheapskate</span>
     <span class="mx-2">·</span>
     <span>{{ env }}</span>

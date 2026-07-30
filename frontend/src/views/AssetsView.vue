@@ -243,7 +243,7 @@ export default {
       </div>
 
       <!-- Loading state -->
-      <div v-if="loading" class="text-gray-500">Loading...</div>
+      <div v-if="loading" class="text-muted-text">Loading...</div>
 
       <!-- Assets table -->
       <div v-if="!loading">
@@ -251,19 +251,19 @@ export default {
           <table class="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
-                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-gray-600 rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Name
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Ticker
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Asset Class
                 </th>
-                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-gray-600 px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Latest Price
                 </th>
-                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-gray-100 uppercase tracking-wider whitespace-nowrap">
+                <th class="bg-gray-600 rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
                   Actions
                 </th>
               </tr>
@@ -274,10 +274,10 @@ export default {
                   class="px-6 py-4 whitespace-nowrap bg-white"
                   v-bind:class="{ 'rounded-bl-lg': index === filteredAssets.length - 1 }"
                 >
-                  <div class="text-sm font-medium text-gray-900">{{ asset.name }}</div>
+                  <div class="text-sm font-medium text-primary-text">{{ asset.name }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap bg-white">
-                  <div class="text-sm text-gray-500">{{ asset.ticker || '-' }}</div>
+                  <div class="text-sm text-muted-text">{{ asset.ticker || '-' }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap bg-white">
                   <div v-if="asset.assetClasses.length" class="flex flex-nowrap gap-1">
@@ -290,11 +290,11 @@ export default {
                       {{ ac.name }}
                     </span>
                   </div>
-                  <span v-else class="text-sm text-gray-400">-</span>
+                  <span v-else class="text-sm text-placeholder-text">-</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap bg-white">
-                  <div class="text-sm text-gray-900">{{ formatPrice(asset.latestPrice) }}</div>
-                  <div v-if="asset.latestPriceDate" class="text-xs text-gray-400">
+                  <div class="text-sm text-primary-text">{{ formatPrice(asset.latestPrice) }}</div>
+                  <div v-if="asset.latestPriceDate" class="text-xs text-placeholder-text">
                     {{ relativeDate(asset.latestPriceDate) }}
                   </div>
                 </td>
@@ -307,7 +307,7 @@ export default {
                       class="inline-block"
                       v-bind:ref="(el) => setMenuAnchor(index, el)"
                     >
-                      <MenuButton class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded cursor-pointer">
+                      <MenuButton class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-gray-100 rounded cursor-pointer">
                         <Bars3Icon class="w-5 h-5" />
                       </MenuButton>
                     </div>
@@ -319,7 +319,7 @@ export default {
                       >
                         <MenuItem v-slot="{ active }">
                           <button
-                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
                             v-on:click="openEditModal(asset)"
                           >
                             Edit
@@ -327,7 +327,7 @@ export default {
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
                           <button
-                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-gray-900' : 'text-gray-700']"
+                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text']"
                             v-on:click="openUpdatePriceModal(asset)"
                           >
                             Update Price
@@ -335,7 +335,7 @@ export default {
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
                           <button
-                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-gray-700']"
+                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-secondary-text']"
                             v-on:click="doDeleteAsset(asset)"
                           >
                             Delete
@@ -353,7 +353,7 @@ export default {
         <!-- Add asset button -->
         <button
           v-on:click="showAddAssetModal = true"
-          class="mt-4 w-full bg-canvas border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+          class="mt-4 w-full bg-canvas border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors"
         >
           <span class="text-xl mr-2">+</span>
           <span class="text-sm font-medium">Add Asset</span>
@@ -400,7 +400,7 @@ export default {
       v-bind:step-number="3"
       v-on:close="showOnboardingModal = false"
     >
-      <div class="space-y-4 text-gray-600">
+      <div class="space-y-4 text-muted-text">
         <p>
           Almost done! Now let's <strong>categorize your assets</strong>.
         </p>

@@ -102,9 +102,9 @@ export default {
             value="create"
             class="h-4 w-4 text-blue-600 focus:ring-blue-500"
           />
-          <span class="ml-3 font-medium text-gray-900">Start a new family</span>
+          <span class="ml-3 font-medium text-primary-text">Start a new family</span>
         </div>
-        <p class="ml-7 text-sm text-gray-500 mt-1">
+        <p class="ml-7 text-sm text-muted-text mt-1">
           Create a fresh family with just you as a member.
         </p>
       </label>
@@ -121,14 +121,14 @@ export default {
             value="join"
             class="h-4 w-4 text-blue-600 focus:ring-blue-500"
           />
-          <span class="ml-3 font-medium text-gray-900">Join an existing family</span>
+          <span class="ml-3 font-medium text-primary-text">Join an existing family</span>
         </div>
         <div class="mt-3 ml-7">
           <input
             v-model="familyId"
             type="text"
             v-bind:disabled="mode !== 'join'"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm disabled:bg-gray-100 disabled:text-gray-400"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm disabled:bg-gray-100 disabled:text-placeholder-text"
             placeholder="Enter family secret"
             v-on:click.stop
           />
@@ -139,7 +139,7 @@ export default {
     <template #secondary>
       <button
         v-on:click="$emit('close')"
-        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+        class="px-4 py-2 text-secondary-text hover:text-primary-text"
       >
         Cancel
       </button>

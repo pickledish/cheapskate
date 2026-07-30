@@ -62,14 +62,14 @@ export default {
       {{ error }}
     </div>
 
-    <p class="text-sm text-gray-600 mb-4">
+    <p class="text-sm text-muted-text mb-4">
       Create an asset class for categorizing your portfolio (e.g., stocks, bonds, cash, real estate).
     </p>
 
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Name
         </label>
         <div class="flex items-center gap-2">
@@ -84,7 +84,7 @@ export default {
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Target Allocation (%)
         </label>
         <input
@@ -96,7 +96,7 @@ export default {
           placeholder="0"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <p class="mt-1 text-xs text-gray-500">
+        <p class="mt-1 text-xs text-muted-text">
           Target percentage for rebalancing. Leave at 0 to exclude from rebalancing calculations.
         </p>
       </div>
@@ -105,7 +105,7 @@ export default {
     <template #secondary>
       <button
         v-on:click="$emit('close')"
-        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+        class="px-4 py-2 text-secondary-text hover:text-primary-text"
       >
         Cancel
       </button>

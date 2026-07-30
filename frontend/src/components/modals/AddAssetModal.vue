@@ -52,14 +52,14 @@ export default {
       {{ error }}
     </div>
 
-    <p class="text-sm text-gray-600 mb-4">
+    <p class="text-sm text-muted-text mb-4">
       Add any asset: stocks, ETFs, funds, real estate, private equity, etc.
     </p>
 
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Name
         </label>
         <input
@@ -71,7 +71,7 @@ export default {
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Ticker (optional)
         </label>
         <input
@@ -80,7 +80,7 @@ export default {
           placeholder="e.g., VTI, VTSAX"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <p class="mt-1 text-xs text-gray-500">
+        <p class="mt-1 text-xs text-muted-text">
           Leave blank for private assets without ticker symbols.
         </p>
       </div>
@@ -90,7 +90,7 @@ export default {
     <template #secondary>
       <button
         v-on:click="$emit('close')"
-        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+        class="px-4 py-2 text-secondary-text hover:text-primary-text"
       >
         Cancel
       </button>

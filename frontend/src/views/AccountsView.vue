@@ -248,7 +248,7 @@ export default {
       </div>
 
       <!-- Loading state -->
-      <div v-if="loading" class="text-gray-500">Loading...</div>
+      <div v-if="loading" class="text-muted-text">Loading...</div>
 
       <!-- Investment Accounts Section -->
       <section v-if="!loading" class="space-y-6">
@@ -261,7 +261,7 @@ export default {
             v-bind:to="'/accounts/' + account.id"
             class="bg-white rounded-lg shadow p-4 flex flex-col hover:shadow-md transition-shadow"
           >
-            <h3 class="font-semibold text-gray-900">{{ account.name }}</h3>
+            <h3 class="font-semibold text-primary-text">{{ account.name }}</h3>
             <!-- Asset class tags -->
             <div v-if="account.assetClasses.length" class="flex flex-wrap gap-1 mt-3">
               <span
@@ -274,7 +274,7 @@ export default {
               </span>
             </div>
             <!-- Holdings as of date -->
-            <p class="mt-3 text-xs text-gray-400">
+            <p class="mt-3 text-xs text-placeholder-text">
               <span v-if="account.latestStatementDate">
                 Data from {{ relativeDate(account.latestStatementDate) }}
               </span>
@@ -285,7 +285,7 @@ export default {
           <!-- Add account card -->
           <button
             v-on:click="showAddAccountModal = true"
-            class="bg-canvas border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors min-h-[100px]"
+            class="bg-canvas border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors min-h-[100px]"
           >
             <span class="text-3xl mb-2">+</span>
             <span class="text-sm font-medium">Add Account</span>
@@ -323,7 +323,7 @@ export default {
       v-bind:step-number="2"
       v-on:close="showOnboardingModal = false"
     >
-      <div class="space-y-4 text-gray-600">
+      <div class="space-y-4 text-muted-text">
         <p>
           Now let's add your <strong>investment accounts</strong>.
         </p>

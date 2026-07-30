@@ -61,7 +61,7 @@ export default {
 
     <!-- Confirmation input -->
     <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-1">
+      <label class="block text-sm font-medium text-secondary-text mb-1">
         Type <span class="font-mono font-bold bg-gray-100 px-1 rounded">DELETE</span> to confirm
       </label>
       <input
@@ -75,7 +75,7 @@ export default {
     <template #secondary>
       <button
         v-on:click="$emit('close')"
-        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+        class="px-4 py-2 text-secondary-text hover:text-primary-text"
       >
         Cancel
       </button>

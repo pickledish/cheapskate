@@ -450,7 +450,7 @@ export default {
 
     <!-- Step 1: Upload -->
     <div v-if="step === 'upload'">
-      <p class="text-sm text-gray-600 mb-4">
+      <p class="text-sm text-muted-text mb-4">
         Select a PDF statement to upload. It will be parsed using AI to extract holdings.
       </p>
 
@@ -488,13 +488,13 @@ export default {
         type="file"
         accept=".pdf"
         v-on:change="onFileChange"
-        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        class="block w-full text-sm text-muted-text file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
       />
     </div>
 
     <!-- Step 2: Account matching (only shown when no auto-match) -->
     <div v-if="step === 'match'">
-      <p class="text-sm text-gray-600 mb-2">
+      <p class="text-sm text-muted-text mb-2">
         <template v-if="matchingAccountIds.length > 1">
           Multiple accounts match account number ending in <strong>{{ parsedLast4 }}</strong>.
         </template>
@@ -505,7 +505,7 @@ export default {
           Could not detect an account number in the statement.
         </template>
       </p>
-      <p class="text-sm text-gray-600 mb-4">
+      <p class="text-sm text-muted-text mb-4">
         <template v-if="matchingAccountIds.length > 1">
           Please select the correct one.
         </template>
@@ -527,11 +527,11 @@ export default {
                 class="w-full px-3 py-2 pr-8 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <ComboboxButton ref="comboboxButton" class="absolute inset-y-0 right-0 flex items-center pr-2">
-                <ChevronUpDownIcon class="w-4 h-4 text-gray-400" />
+                <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
               </ComboboxButton>
             </div>
             <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg focus:outline-none">
-              <div v-if="sortedAccounts.length === 0" class="px-3 py-2 text-sm text-gray-500">
+              <div v-if="sortedAccounts.length === 0" class="px-3 py-2 text-sm text-muted-text">
                 No accounts found
               </div>
               <ComboboxOption
@@ -544,7 +544,7 @@ export default {
                   v-bind:class="[
                     'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
                     active ? 'bg-gray-100' : '',
-                    selected ? 'text-blue-600 font-medium' : 'text-gray-700'
+                    selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
                   ]"
                 >
                   <span class="flex items-center gap-2">
@@ -570,7 +570,7 @@ export default {
             class="rounded border-gray-300 text-blue-600 mt-0.5"
           />
           <div class="flex-1">
-            <div class="text-sm font-medium text-gray-700">Create new account instead</div>
+            <div class="text-sm font-medium text-secondary-text">Create new account instead</div>
             <input
               v-if="createNewAccount"
               v-model="newAccountName"
@@ -585,7 +585,7 @@ export default {
 
     <!-- Step 3: Preview -->
     <div v-if="step === 'preview'">
-      <p class="text-sm text-gray-600 mb-2">
+      <p class="text-sm text-muted-text mb-2">
         <template v-if="resolvedAccount">
           <template v-if="matchingAccountIds.length === 1">
             Auto-matched to <strong>{{ resolvedAccount.name }}</strong><template v-if="resolvedAccount.last4 || parsedLast4"> (****{{ resolvedAccount.last4 || parsedLast4 }})</template>.
@@ -599,13 +599,13 @@ export default {
           </template>
         </template>
       </p>
-      <p class="text-sm text-gray-600 mb-4">
+      <p class="text-sm text-muted-text mb-4">
         Review the parsed holdings below. New assets will be created automatically.
       </p>
 
       <!-- Statement date -->
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Statement Date
         </label>
         <input
@@ -620,19 +620,19 @@ export default {
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50 sticky top-0">
             <tr>
-              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Name</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Qty</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Value</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Price</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase"></th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-muted-text uppercase whitespace-nowrap">Name</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase whitespace-nowrap">Qty</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase whitespace-nowrap">Value</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase whitespace-nowrap">Price</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase"></th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="(holding, index) in holdings" v-bind:key="index">
-              <td class="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{{ holding.name }}</td>
-              <td class="px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">{{ formatNumber(holding.quantity) }}</td>
-              <td class="px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">{{ formatCurrency(holding.total_value) }}</td>
-              <td class="px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">{{ formatCurrency(computePrice(holding)) }}</td>
+              <td class="px-4 py-2 text-sm text-primary-text whitespace-nowrap">{{ holding.name }}</td>
+              <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatNumber(holding.quantity) }}</td>
+              <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatCurrency(holding.total_value) }}</td>
+              <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatCurrency(computePrice(holding)) }}</td>
               <td class="px-4 py-2 text-right whitespace-nowrap">
                 <button
                   v-on:click="removeHolding(index)"
@@ -643,7 +643,7 @@ export default {
               </td>
             </tr>
             <tr v-if="holdings.length === 0">
-              <td colspan="5" class="px-4 py-4 text-sm text-gray-500 text-center">
+              <td colspan="5" class="px-4 py-4 text-sm text-muted-text text-center">
                 No holdings found
               </td>
             </tr>
@@ -654,7 +654,7 @@ export default {
 
     <!-- Step 4: Saving -->
     <div v-if="step === 'saving'" class="text-center py-8">
-      <p class="text-gray-600">Saving statement...</p>
+      <p class="text-muted-text">Saving statement...</p>
     </div>
 
     <template v-if="step !== 'saving'" #secondary>
@@ -662,7 +662,7 @@ export default {
       <button
         v-if="step === 'upload'"
         v-on:click="$emit('close')"
-        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+        class="px-4 py-2 text-secondary-text hover:text-primary-text"
       >
         Cancel
       </button>
@@ -670,7 +670,7 @@ export default {
       <button
         v-else
         v-on:click="step = 'upload'"
-        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+        class="px-4 py-2 text-secondary-text hover:text-primary-text"
       >
         Back
       </button>
@@ -699,7 +699,7 @@ export default {
                 v-on:click="parseMode = 'cloud'"
                 v-bind:class="[
                   'w-full text-left px-4 py-2 text-sm',
-                  active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                  active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text'
                 ]"
               >
                 Parse with Cloud AI
@@ -710,7 +710,7 @@ export default {
                 v-on:click="parseMode = 'local'"
                 v-bind:class="[
                   'w-full text-left px-4 py-2 text-sm',
-                  active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                  active ? 'bg-gray-100 text-primary-text' : 'text-secondary-text'
                 ]"
               >
                 Parse with Local LLM

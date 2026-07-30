@@ -17,7 +17,7 @@ const EVENT_TYPES = {
   mark_as_closed: {
     title: 'Account Marked as Closed',
     icon: ArchiveBoxIcon,
-    iconClass: 'text-gray-400',
+    iconClass: 'text-placeholder-text',
     borderClass: 'border-gray-400',
     undoTitle: 'Undo close'
   },
@@ -77,24 +77,24 @@ export default {
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0">
           <component :is="config.icon" class="h-5 w-5 shrink-0" :class="config.iconClass" />
-          <span class="font-medium text-gray-900 shrink-0 whitespace-nowrap">{{ config.title }}</span>
+          <span class="font-medium text-primary-text shrink-0 whitespace-nowrap">{{ config.title }}</span>
           <template v-if="accountName">
-            <span class="text-gray-400 shrink-0">-</span>
-            <span class="font-medium text-gray-900 truncate min-w-0">{{ accountName }}</span>
+            <span class="text-placeholder-text shrink-0">-</span>
+            <span class="font-medium text-primary-text truncate min-w-0">{{ accountName }}</span>
           </template>
         </div>
         <div class="hidden sm:flex items-center gap-2 shrink-0">
-          <span class="text-sm text-gray-500">{{ relativeLabel }}<template v-if="creatorName"> by {{ creatorName }}</template></span>
+          <span class="text-sm text-muted-text">{{ relativeLabel }}<template v-if="creatorName"> by {{ creatorName }}</template></span>
           <button
             v-on:click="$emit('undo')"
-            class="w-8 h-8 -my-1 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
+            class="w-8 h-8 -my-1 flex items-center justify-center text-placeholder-text hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
             :title="config.undoTitle"
           >
             <TrashIcon class="w-5 h-5" />
           </button>
         </div>
       </div>
-      <div class="sm:hidden ml-7 text-sm text-gray-500">{{ relativeLabel }}<template v-if="creatorName"> by {{ creatorName }}</template></div>
+      <div class="sm:hidden ml-7 text-sm text-muted-text">{{ relativeLabel }}<template v-if="creatorName"> by {{ creatorName }}</template></div>
     </div>
     <hr class="my-3 border-gray-200" />
     <slot />

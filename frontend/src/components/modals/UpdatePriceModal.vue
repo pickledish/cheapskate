@@ -77,14 +77,14 @@ export default {
       {{ error }}
     </div>
 
-    <p class="text-sm text-gray-600 mb-4">
+    <p class="text-sm text-muted-text mb-4">
       Update the price for <strong>{{ asset.name }}</strong>.
     </p>
 
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Date
         </label>
         <input
@@ -95,7 +95,7 @@ export default {
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Price per Share/Unit
         </label>
         <input
@@ -111,7 +111,7 @@ export default {
     <template #secondary>
       <button
         v-on:click="$emit('close')"
-        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+        class="px-4 py-2 text-secondary-text hover:text-primary-text"
       >
         Cancel
       </button>

@@ -77,14 +77,14 @@ export default {
       {{ error }}
     </div>
 
-    <p class="text-sm text-gray-600 mb-4">
+    <p class="text-sm text-muted-text mb-4">
       Mark <strong>{{ account.name }}</strong> as closed? All holdings will be set to zero
       and the account will be hidden from the accounts list. Historical data is preserved.
     </p>
 
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-secondary-text mb-1">
           Effective Date
         </label>
         <input
@@ -98,7 +98,7 @@ export default {
     <template #secondary>
       <button
         v-on:click="$emit('close')"
-        class="px-4 py-2 text-gray-700 hover:text-gray-900"
+        class="px-4 py-2 text-secondary-text hover:text-primary-text"
       >
         Cancel
       </button>
