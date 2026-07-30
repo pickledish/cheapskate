@@ -315,7 +315,7 @@ export default {
                     <Teleport to="body">
                       <MenuItems
                         v-bind:style="open ? menuDropdownStyle(index) : undefined"
-                        class="fixed z-50 w-36 bg-surface rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
+                        class="fixed z-50 w-36 bg-surface border border-subtle-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
                       >
                         <MenuItem v-slot="{ active }">
                           <button

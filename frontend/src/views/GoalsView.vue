@@ -277,7 +277,7 @@ export default {
                   <Teleport to="body">
                     <MenuItems
                       v-bind:style="open ? menuDropdownStyle(index) : undefined"
-                      class="fixed z-50 w-32 bg-surface rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
+                      class="fixed z-50 w-32 bg-surface border border-subtle-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
                     >
                       <MenuItem v-slot="{ active }">
                         <button
@@ -308,7 +308,7 @@ export default {
                 Total
               </td>
               <td class="bg-surface"></td>
-              <td class="px-6 py-4 text-sm font-medium bg-surface" v-bind:class="goalsAreValid ? 'text-green-600' : 'text-amber-600'">
+              <td class="px-6 py-4 text-sm font-medium bg-surface" v-bind:class="goalsAreValid ? 'text-green-500' : 'text-amber-500'">
                 {{ Math.round(totalGoals * 100) }}%
               </td>
               <td class="bg-surface rounded-br-lg"></td>

@@ -693,7 +693,7 @@ export default {
           >
             <ChevronUpIcon class="w-4 h-4" />
           </MenuButton>
-          <MenuItems class="absolute right-0 bottom-full mb-1 w-48 bg-surface rounded-md shadow-lg z-50 py-1">
+          <MenuItems class="absolute right-0 bottom-full mb-1 w-48 bg-surface border border-subtle-border rounded-md shadow-lg z-50 py-1">
             <MenuItem v-slot="{ active }">
               <button
                 v-on:click="parseMode = 'cloud'"

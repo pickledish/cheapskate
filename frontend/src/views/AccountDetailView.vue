@@ -444,7 +444,7 @@ export default {
               <MenuButton class="inline-flex items-center rounded-md border border-strong-border bg-surface px-4 py-2 text-sm font-medium text-secondary-text hover:bg-recessed transition-colors">
                 Manage<span class="hidden sm:inline">&nbsp;Account</span>
               </MenuButton>
-              <MenuItems class="absolute right-0 mt-1 w-36 bg-surface rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col">
+              <MenuItems class="absolute right-0 mt-1 w-36 bg-surface border border-subtle-border rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col">
                 <MenuItem v-slot="{ active }">
                   <button
                     v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text']"
