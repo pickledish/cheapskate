@@ -253,11 +253,11 @@ export default {
               <input
                 v-model="userName"
                 type="text"
-                class="w-full sm:w-48 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 sm:shrink-0 sm:ml-4"
+                class="w-full sm:w-48 px-3 py-2 text-sm border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 sm:shrink-0 sm:ml-4"
               />
             </div>
 
-            <hr class="border-gray-200" />
+            <hr class="border-subtle-border" />
 
             <!-- Email row -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -269,7 +269,7 @@ export default {
                 type="text"
                 v-bind:value="userEmail"
                 disabled
-                class="w-full sm:w-64 px-3 py-2 text-sm border border-gray-300 rounded-md bg-recessed-deep text-placeholder-text cursor-not-allowed sm:shrink-0 sm:ml-4"
+                class="w-full sm:w-64 px-3 py-2 text-sm border border-strong-border rounded-md bg-recessed-deep text-placeholder-text cursor-not-allowed sm:shrink-0 sm:ml-4"
               />
             </div>
           </div>
@@ -298,7 +298,7 @@ export default {
               </div>
               <Listbox v-model="localLlmProvider" as="div" class="relative w-full sm:w-44 sm:shrink-0 sm:ml-4">
                 <ListboxButton
-                  class="relative w-full px-3 py-2 text-left text-sm border border-gray-300 rounded-md bg-surface focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="relative w-full px-3 py-2 text-left text-sm border border-strong-border rounded-md bg-surface focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <span>{{ selectedLlmOption?.name }}</span>
                   <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -314,7 +314,7 @@ export default {
                   leave-to-class="transform scale-95 opacity-0"
                 >
                   <ListboxOptions
-                    class="absolute left-0 right-0 sm:left-auto sm:right-0 z-10 mt-1 w-full sm:w-44 max-h-60 overflow-auto bg-surface border border-gray-200 rounded-md shadow-lg focus:outline-none"
+                    class="absolute left-0 right-0 sm:left-auto sm:right-0 z-10 mt-1 w-full sm:w-44 max-h-60 overflow-auto bg-surface border border-subtle-border rounded-md shadow-lg focus:outline-none"
                   >
                     <ListboxOption
                       v-for="option in localLlmOptions"
@@ -338,7 +338,7 @@ export default {
               </Listbox>
             </div>
 
-            <hr class="border-gray-200" />
+            <hr class="border-subtle-border" />
 
             <!-- Port row -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -351,7 +351,7 @@ export default {
                 type="text"
                 placeholder="11434"
                 v-bind:disabled="localLlmProvider === 'disabled'"
-                class="w-full sm:w-24 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-recessed-deep disabled:text-placeholder-text disabled:cursor-not-allowed sm:shrink-0 sm:ml-4"
+                class="w-full sm:w-24 px-3 py-2 text-sm border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-recessed-deep disabled:text-placeholder-text disabled:cursor-not-allowed sm:shrink-0 sm:ml-4"
               />
             </div>
           </div>
@@ -360,7 +360,7 @@ export default {
           <button
             v-on:click="testLlmConnection"
             v-bind:disabled="testing || localLlmProvider === 'disabled'"
-            class="px-4 py-2 border border-gray-300 text-secondary-text rounded-md hover:bg-recessed text-sm font-medium disabled:opacity-50 transition-colors"
+            class="px-4 py-2 border border-strong-border text-secondary-text rounded-md hover:bg-recessed text-sm font-medium disabled:opacity-50 transition-colors"
           >
             {{ testing ? 'Testing...' : 'Test' }}
           </button>
@@ -388,13 +388,13 @@ export default {
                   type="text"
                   readonly
                   v-bind:value="familyId"
-                  class="w-full h-full px-3 pr-16 border border-gray-300 rounded-md font-mono text-sm text-primary-text bg-recessed focus:outline-none"
+                  class="w-full h-full px-3 pr-16 border border-strong-border rounded-md font-mono text-sm text-primary-text bg-recessed focus:outline-none"
                 />
                 <!-- Click to reveal overlay -->
                 <div
                   v-if="!familyIdRevealed"
                   v-on:click="toggleFamilyIdReveal"
-                  class="absolute inset-0 bg-recessed-deep border border-gray-300 rounded-md flex items-center justify-center cursor-pointer hover:brightness-95 transition"
+                  class="absolute inset-0 bg-recessed-deep border border-strong-border rounded-md flex items-center justify-center cursor-pointer hover:brightness-95 transition"
                 >
                   <span class="text-sm text-muted-text font-medium">Click to reveal</span>
                 </div>
@@ -402,7 +402,7 @@ export default {
                 <button
                   v-if="familyIdRevealed"
                   v-on:click="copyFamilyId"
-                  class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 px-2 py-1 text-xs text-muted-text hover:text-primary-text bg-surface border border-gray-300 rounded hover:bg-recessed"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 px-2 py-1 text-xs text-muted-text hover:text-primary-text bg-surface border border-strong-border rounded hover:bg-recessed"
                 >
                   <ClipboardIcon class="w-3.5 h-3.5" />
                   {{ copyFeedback ? 'Copied!' : 'Copy' }}
@@ -448,7 +448,7 @@ export default {
               </div>
               <button
                 v-on:click="openChangeFamilyModal"
-                class="w-full sm:w-auto px-4 py-2 border border-gray-300 text-secondary-text rounded-md hover:bg-recessed text-sm font-medium sm:shrink-0 sm:ml-4"
+                class="w-full sm:w-auto px-4 py-2 border border-strong-border text-secondary-text rounded-md hover:bg-recessed text-sm font-medium sm:shrink-0 sm:ml-4"
               >
                 Leave Family
               </button>
@@ -470,13 +470,13 @@ export default {
               </div>
               <button
                 v-on:click="signOut"
-                class="w-full sm:w-auto px-4 py-2 border border-gray-300 text-secondary-text rounded-md hover:bg-recessed text-sm font-medium sm:shrink-0 sm:ml-4"
+                class="w-full sm:w-auto px-4 py-2 border border-strong-border text-secondary-text rounded-md hover:bg-recessed text-sm font-medium sm:shrink-0 sm:ml-4"
               >
                 Sign Out
               </button>
             </div>
 
-            <hr class="border-gray-200" />
+            <hr class="border-subtle-border" />
 
             <!-- Delete Account -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

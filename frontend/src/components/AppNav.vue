@@ -52,7 +52,7 @@ export default {
       }
       return isActive
         ? 'border-blue-500 text-primary-text'
-        : 'border-transparent text-muted-text hover:text-secondary-text hover:border-gray-300'
+        : 'border-transparent text-muted-text hover:text-secondary-text hover:border-strong-border'
     },
     mobileNavClass(path, enabled) {
       const isActive = this.$route.path.startsWith(path)
@@ -68,7 +68,7 @@ export default {
 </script>
 
 <template>
-  <nav class="bg-surface border-b border-gray-200">
+  <nav class="bg-surface border-b border-subtle-border">
     <!-- Remount on navigate so the mobile menu closes -->
     <Disclosure
       v-bind:key="$route.fullPath"
@@ -116,7 +116,7 @@ export default {
           <router-link
             to="/profile"
             class="inline-flex items-center gap-2 px-1 pt-1 border-b-2 text-sm font-medium"
-            v-bind:class="$route.path === '/profile' ? 'border-blue-500 text-primary-text' : 'border-transparent text-muted-text hover:text-secondary-text hover:border-gray-300'"
+            v-bind:class="$route.path === '/profile' ? 'border-blue-500 text-primary-text' : 'border-transparent text-muted-text hover:text-secondary-text hover:border-strong-border'"
           >
             <UserCircleIcon class="w-5 h-5" />
             <span v-if="userEmail" class="hidden sm:inline">{{ userEmail }}</span>
@@ -130,7 +130,7 @@ export default {
         v-bind:class="open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'"
       >
         <DisclosurePanel static class="overflow-hidden">
-          <div class="border-t border-gray-200 py-2 space-y-1">
+          <div class="border-t border-subtle-border py-2 space-y-1">
             <router-link
               v-for="item in navItems"
               v-bind:key="'mobile-' + item.to"

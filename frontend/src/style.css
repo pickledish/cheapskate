@@ -107,6 +107,9 @@
   --color-recessed: var(--color-gray-50);
   --color-recessed-deep: var(--color-gray-100);
   --color-header: var(--color-gray-600);
+
+  --color-subtle-border: var(--color-gray-200);
+  --color-strong-border: var(--color-gray-300);
 }
 
 /* Override Tailwind's default sans font and scale up text sizes ~6% */

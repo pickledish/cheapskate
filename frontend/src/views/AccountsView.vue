@@ -285,7 +285,7 @@ export default {
           <!-- Add account card -->
           <button
             v-on:click="showAddAccountModal = true"
-            class="bg-page border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors min-h-[100px]"
+            class="bg-page border-2 border-dashed border-strong-border rounded-lg p-4 flex flex-col items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors min-h-[100px]"
           >
             <span class="text-3xl mb-2">+</span>
             <span class="text-sm font-medium">Add Account</span>

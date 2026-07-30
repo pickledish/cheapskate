@@ -30,7 +30,7 @@ export default {
   >
     <div v-bind:class="['bg-surface rounded-lg shadow-xl w-full min-w-0 mx-4', maxWidth]">
       <!-- Header -->
-      <div class="px-6 py-4 border-b border-gray-200">
+      <div class="px-6 py-4 border-b border-subtle-border">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold text-primary-text">
             {{ title }}

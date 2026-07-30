@@ -205,7 +205,7 @@ export default {
       <div v-if="!loading && assetClasses.length > 0" class="flex flex-col-reverse gap-6 md:flex-row">
         <!-- Asset classes table -->
         <div class="w-full md:w-7/12 bg-surface shadow rounded-lg self-start overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
+        <table class="min-w-full divide-y divide-subtle-border">
           <thead>
             <tr>
               <th class="bg-header rounded-tl-lg w-10"></th>
@@ -235,7 +235,7 @@ export default {
             ghost-class="drag-ghost"
             chosen-class="drag-chosen"
             drag-class="drag-active"
-            class="divide-y divide-gray-200"
+            class="divide-y divide-subtle-border"
           >
             <tr v-for="(assetClass, index) in assetClasses" v-bind:key="assetClass.id">
               <td
@@ -387,11 +387,11 @@ export default {
           For example, a <a href="https://www.bogleheads.org/wiki/Three-fund_portfolio" class="text-blue-600 underline">Boglehead-style</a> composition might look like this:
         </p>
         <table class="mx-auto text-sm mt-5 mb-3">
-          <tr class="border-b border-gray-200">
+          <tr class="border-b border-subtle-border">
             <td class="py-1 pr-12">US Stocks</td>
             <td class="py-1 text-right font-bold">60%</td>
           </tr>
-          <tr class="border-b border-gray-200">
+          <tr class="border-b border-subtle-border">
             <td class="py-1 pr-12">International Stocks</td>
             <td class="py-1 text-right font-bold">20%</td>
           </tr>

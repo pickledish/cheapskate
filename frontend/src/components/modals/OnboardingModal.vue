@@ -37,7 +37,7 @@ export default {
   >
     <div v-bind:class="['bg-surface rounded-lg shadow-xl w-full mx-4', maxWidth]">
       <!-- Header with step indicator -->
-      <div class="px-6 py-4 border-b border-gray-200">
+      <div class="px-6 py-4 border-b border-subtle-border">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-muted-text uppercase tracking-wide mb-1">

@@ -233,7 +233,7 @@ export default {
             v-model="searchQuery"
             type="text"
             placeholder="Search assets..."
-            class="shrink-0 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+            class="shrink-0 px-3 py-1.5 text-sm border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
           />
         </template>
       </PageHeader>
@@ -248,7 +248,7 @@ export default {
       <!-- Assets table -->
       <div v-if="!loading">
         <div v-if="assets.length > 0" class="bg-surface shadow rounded-lg overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
+          <table class="min-w-full divide-y divide-subtle-border">
             <thead>
               <tr>
                 <th class="bg-header rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
@@ -268,7 +268,7 @@ export default {
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200">
+            <tbody class="divide-y divide-subtle-border">
               <tr v-for="(asset, index) in filteredAssets" v-bind:key="asset.id">
                 <td
                   class="px-6 py-4 whitespace-nowrap bg-surface"
@@ -353,7 +353,7 @@ export default {
         <!-- Add asset button -->
         <button
           v-on:click="showAddAssetModal = true"
-          class="mt-4 w-full bg-page border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors"
+          class="mt-4 w-full bg-page border-2 border-dashed border-strong-border rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors"
         >
           <span class="text-xl mr-2">+</span>
           <span class="text-sm font-medium">Add Asset</span>

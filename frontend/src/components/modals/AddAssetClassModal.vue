@@ -77,7 +77,7 @@ export default {
             v-model="name"
             type="text"
             placeholder="e.g., Stocks, Bonds, Cash"
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="flex-1 px-3 py-2 border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <ColorPicker v-model="color" />
         </div>
@@ -94,7 +94,7 @@ export default {
           max="100"
           step="1"
           placeholder="0"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <p class="mt-1 text-xs text-muted-text">
           Target percentage for rebalancing. Leave at 0 to exclude from rebalancing calculations.

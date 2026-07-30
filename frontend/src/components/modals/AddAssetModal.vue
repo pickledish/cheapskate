@@ -66,7 +66,7 @@ export default {
           v-model="name"
           type="text"
           placeholder="e.g., Vanguard Total Stock or Primary Residence"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -78,7 +78,7 @@ export default {
           v-model="ticker"
           type="text"
           placeholder="e.g., VTI, VTSAX"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <p class="mt-1 text-xs text-muted-text">
           Leave blank for private assets without ticker symbols.

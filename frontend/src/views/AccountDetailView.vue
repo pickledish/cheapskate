@@ -441,7 +441,7 @@ export default {
         <PageHeader :title="account.name" :description="isArchived ? 'CLOSED' : null">
           <template #actions>
             <Menu as="div" class="relative inline-block text-left shrink-0">
-              <MenuButton class="inline-flex items-center rounded-md border border-gray-300 bg-surface px-4 py-2 text-sm font-medium text-secondary-text hover:bg-recessed transition-colors">
+              <MenuButton class="inline-flex items-center rounded-md border border-strong-border bg-surface px-4 py-2 text-sm font-medium text-secondary-text hover:bg-recessed transition-colors">
                 Manage<span class="hidden sm:inline">&nbsp;Account</span>
               </MenuButton>
               <MenuItems class="absolute right-0 mt-1 w-36 bg-surface rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col">
@@ -506,7 +506,7 @@ export default {
                 </div>
               </div>
 
-              <dl class="divide-y divide-gray-200 rounded-lg bg-recessed border border-gray-200 px-4">
+              <dl class="divide-y divide-subtle-border rounded-lg bg-recessed border border-subtle-border px-4">
                 <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-text">Owner</dt>
                   <dd class="text-sm font-semibold text-primary-text">
@@ -536,7 +536,7 @@ export default {
 
         <!-- Holdings table -->
         <div v-if="holdings.length > 0 || editing" class="bg-surface shadow rounded-lg overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
+          <table class="min-w-full divide-y divide-subtle-border">
             <thead>
               <tr>
                 <th class="bg-header rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap min-w-48 max-w-48">
@@ -556,7 +556,7 @@ export default {
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200">
+            <tbody class="divide-y divide-subtle-border">
               <!-- Existing holdings -->
               <tr v-for="holding in holdings" v-bind:key="holding.asset_id">
                 <td class="px-6 py-3 whitespace-nowrap bg-surface max-w-48">
@@ -587,7 +587,7 @@ export default {
                       v-model="editQuantities[holding.asset_id]"
                       type="text"
                       inputmode="decimal"
-                      class="w-28 h-8 px-2 text-sm text-right border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="w-28 h-8 px-2 text-sm text-right border border-strong-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <span v-else class="text-sm text-primary-text">{{ formatQuantity(holding.quantity) }}</span>
                   </div>
@@ -610,7 +610,7 @@ export default {
                         v-bind:display-value="(a) => a ? a.name : ''"
                         v-on:change="row.query = $event.target.value"
                         placeholder="Search assets..."
-                        class="w-full min-w-0 h-8 px-3 pr-8 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full min-w-0 h-8 px-3 pr-8 text-sm border border-strong-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
                         <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
@@ -620,7 +620,7 @@ export default {
                     <Teleport to="body">
                       <ComboboxOptions
                         v-bind:style="open ? comboboxDropdownStyle(index) : undefined"
-                        class="fixed z-50 max-h-60 overflow-auto bg-surface border border-gray-200 rounded-lg shadow-lg focus:outline-none"
+                        class="fixed z-50 max-h-60 overflow-auto bg-surface border border-subtle-border rounded-lg shadow-lg focus:outline-none"
                       >
                         <div v-if="filteredAssetsForRow(index).length === 0" class="px-3 py-2 text-sm text-muted-text">
                           No assets found
@@ -672,7 +672,7 @@ export default {
                       type="text"
                       inputmode="decimal"
                       placeholder="0"
-                      class="w-28 h-8 px-2 text-sm text-right border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="w-28 h-8 px-2 text-sm text-right border border-strong-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </td>
@@ -701,7 +701,7 @@ export default {
               <input
                 v-model="editDate"
                 type="date"
-                class="px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="px-3 py-1.5 text-sm border border-strong-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </label>
             <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">

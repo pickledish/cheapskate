@@ -93,7 +93,7 @@ export default {
       <!-- Create new family -->
       <label
         class="block p-4 border rounded-lg cursor-pointer transition-colors"
-        v-bind:class="mode === 'create' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'"
+        v-bind:class="mode === 'create' ? 'border-blue-500 bg-blue-50' : 'border-subtle-border hover:border-strong-border'"
       >
         <div class="flex items-center">
           <input
@@ -112,7 +112,7 @@ export default {
       <!-- Join existing family -->
       <label
         class="block p-4 border rounded-lg cursor-pointer transition-colors"
-        v-bind:class="mode === 'join' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'"
+        v-bind:class="mode === 'join' ? 'border-blue-500 bg-blue-50' : 'border-subtle-border hover:border-strong-border'"
       >
         <div class="flex items-center">
           <input
@@ -128,7 +128,7 @@ export default {
             v-model="familyId"
             type="text"
             v-bind:disabled="mode !== 'join'"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm disabled:bg-recessed-deep disabled:text-placeholder-text"
+            class="w-full px-3 py-2 border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm disabled:bg-recessed-deep disabled:text-placeholder-text"
             placeholder="Enter family secret"
             v-on:click.stop
           />

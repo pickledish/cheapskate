@@ -524,13 +524,13 @@ export default {
                 v-on:change="accountQuery = $event.target.value"
                 v-on:focus="$refs.comboboxButton.$el.click()"
                 placeholder="Search accounts..."
-                class="w-full px-3 py-2 pr-8 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full px-3 py-2 pr-8 text-sm border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <ComboboxButton ref="comboboxButton" class="absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
               </ComboboxButton>
             </div>
-            <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-surface border border-gray-200 rounded-lg shadow-lg focus:outline-none">
+            <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-surface border border-subtle-border rounded-lg shadow-lg focus:outline-none">
               <div v-if="sortedAccounts.length === 0" class="px-3 py-2 text-sm text-muted-text">
                 No accounts found
               </div>
@@ -567,7 +567,7 @@ export default {
             type="checkbox"
             v-model="createNewAccount"
             v-on:change="createNewAccount ? selectedAccount = null : null"
-            class="rounded border-gray-300 text-blue-600 mt-0.5"
+            class="rounded border-strong-border text-blue-600 mt-0.5"
           />
           <div class="flex-1">
             <div class="text-sm font-medium text-secondary-text">Create new account instead</div>
@@ -576,7 +576,7 @@ export default {
               v-model="newAccountName"
               type="text"
               placeholder="Account name (e.g., Fidelity 401k)"
-              class="mt-2 w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="mt-2 w-full px-3 py-2 text-sm border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </label>
@@ -611,13 +611,13 @@ export default {
         <input
           v-model="statementDate"
           type="date"
-          class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="px-3 py-2 border border-strong-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
       <!-- Holdings table -->
       <div class="border rounded-md max-h-64 overflow-x-auto overflow-y-auto">
-        <table class="min-w-full divide-y divide-gray-200">
+        <table class="min-w-full divide-y divide-subtle-border">
           <thead class="bg-recessed sticky top-0">
             <tr>
               <th class="px-4 py-2 text-left text-xs font-medium text-muted-text uppercase whitespace-nowrap">Name</th>
@@ -627,7 +627,7 @@ export default {
               <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase"></th>
             </tr>
           </thead>
-          <tbody class="bg-surface divide-y divide-gray-200">
+          <tbody class="bg-surface divide-y divide-subtle-border">
             <tr v-for="(holding, index) in holdings" v-bind:key="index">
               <td class="px-4 py-2 text-sm text-primary-text whitespace-nowrap">{{ holding.name }}</td>
               <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatNumber(holding.quantity) }}</td>
