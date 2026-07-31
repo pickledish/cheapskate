@@ -119,7 +119,7 @@ export default {
         <!-- Create new family -->
         <label
           class="block p-4 border rounded-lg cursor-pointer transition-colors"
-          v-bind:class="mode === 'create' ? 'border-blue-500 bg-blue-50' : 'border-subtle-border hover:border-strong-border'"
+          v-bind:class="mode === 'create' ? 'border-blue-500 bg-info' : 'border-subtle-border hover:border-strong-border'"
         >
           <div class="flex items-center">
             <input
@@ -135,7 +135,7 @@ export default {
         <!-- Join existing family -->
         <label
           class="block p-4 border rounded-lg cursor-pointer transition-colors"
-          v-bind:class="mode === 'join' ? 'border-blue-500 bg-blue-50' : 'border-subtle-border hover:border-strong-border'"
+          v-bind:class="mode === 'join' ? 'border-blue-500 bg-info' : 'border-subtle-border hover:border-strong-border'"
         >
           <div class="flex items-center">
             <input

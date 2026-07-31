@@ -454,11 +454,11 @@ export default {
         Select a PDF statement to upload. It will be parsed using AI to extract holdings.
       </p>
 
-      <Disclosure v-slot="{ open }" as="div" class="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <Disclosure v-slot="{ open }" as="div" class="mb-5 p-4 bg-info border border-blue-200 rounded-lg">
         <DisclosureButton class="w-full flex items-center justify-between text-left">
-          <h4 class="text-sm font-medium text-blue-900">Privacy Notice</h4>
+          <h4 class="text-sm font-medium text-info-text">Privacy Notice</h4>
           <svg
-            class="w-4 h-4 text-blue-700 transition-transform duration-200"
+            class="w-4 h-4 text-info-text transition-transform duration-200"
             v-bind:class="{ '-rotate-90': !open }"
             fill="none"
             stroke="currentColor"
@@ -473,11 +473,11 @@ export default {
         >
           <DisclosurePanel static class="overflow-hidden">
             <div class="mt-2">
-              <p class="text-sm text-blue-800 mb-2">
+              <p class="text-sm text-info-text mb-2">
                 Cheapskate extracts and stores only ticker symbols, share quantities, and account last-4 digits from your statement -- no full account numbers, addresses, or other personal information.
               </p>
-              <p class="text-sm text-blue-800">
-                The AI provider is configured with <a href="https://openrouter.ai/docs/guides/features/zdr" class="font-semibold underline hover:text-blue-900">zero data retention</a>, so your document is not stored or used for training after parsing.
+              <p class="text-sm text-info-text">
+                The AI provider is configured with <a href="https://openrouter.ai/docs/guides/features/zdr" class="font-semibold underline hover:text-info-text">zero data retention</a>, so your document is not stored or used for training after parsing.
               </p>
             </div>
           </DisclosurePanel>
@@ -488,7 +488,7 @@ export default {
         type="file"
         accept=".pdf"
         v-on:change="onFileChange"
-        class="block w-full text-sm text-muted-text file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        class="block w-full text-sm text-muted-text file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-info file:text-info-text hover:file:brightness-90"
       />
     </div>
 
@@ -551,7 +551,7 @@ export default {
                     {{ acct.last4 ? `${acct.name} (****${acct.last4})` : acct.name }}
                     <span
                       v-if="matchingAccountIds.includes(acct.id)"
-                      class="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded"
+                      class="text-xs bg-info text-info-text px-1.5 py-0.5 rounded"
                     >Matches</span>
                   </span>
                   <CheckIcon v-if="selected" class="w-4 h-4 flex-shrink-0" />

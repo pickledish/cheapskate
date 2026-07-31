@@ -123,7 +123,7 @@ export default {
           />
         </div>
 
-        <div v-if="error" class="p-3 rounded-md" v-bind:class="isSignup && !error.includes('error') ? 'bg-green-50 text-green-800' : 'bg-error text-error-text'">
+        <div v-if="error" class="p-3 rounded-md" v-bind:class="isSignup && !error.includes('error') ? 'bg-success text-success-text' : 'bg-error text-error-text'">
           {{ error }}
         </div>
 

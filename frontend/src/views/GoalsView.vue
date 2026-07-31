@@ -416,7 +416,7 @@ export default {
 /* Style for both chosen (on click) and ghost (placeholder) - keep consistent */
 .drag-chosen,
 .drag-ghost {
-  background-color: #eff6ff;
+  background-color: var(--color-info);
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
