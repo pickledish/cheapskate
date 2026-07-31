@@ -4,6 +4,7 @@ import { BarChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
+import { cssVar } from '@/lib/cssVar'
 
 use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer])
 
@@ -63,10 +64,7 @@ export default {
       return this.series.length > 1
     },
     chartOption() {
-      // Matches --color-secondary-text (light: gray-700; charts don't yet follow dark)
-      const secondaryText = getComputedStyle(document.documentElement)
-        .getPropertyValue('--color-gray-700')
-        .trim()
+      const secondaryText = cssVar('--color-secondary-text')
       const formatCurrency = (value) => {
         return new Intl.NumberFormat('en-US', {
           style: 'currency',

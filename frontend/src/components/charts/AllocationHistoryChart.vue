@@ -5,6 +5,7 @@ import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/compon
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
 import { getHexForColor } from '@/lib/tagColors'
+import { cssVar } from '@/lib/cssVar'
 
 use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer])
 
@@ -37,10 +38,7 @@ export default {
       return this.labels.map((label) => label.replace(/\s+(\d{2})(\d{2})$/, " $2"))
     },
     chartOption() {
-      // Matches --color-secondary-text (light: gray-700; charts don't yet follow dark)
-      const secondaryText = getComputedStyle(document.documentElement)
-        .getPropertyValue('--color-gray-700')
-        .trim()
+      const secondaryText = cssVar('--color-secondary-text')
       return {
         animation: false,
         tooltip: {

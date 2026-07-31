@@ -128,8 +128,10 @@
 
   --color-error: var(--color-red-50);
   --color-error-text: var(--color-red-700);
+
   --color-success: var(--color-green-50);
   --color-success-text: var(--color-green-700);
+
   --color-info: var(--color-blue-50);
   --color-info-text: var(--color-blue-700);
 }
