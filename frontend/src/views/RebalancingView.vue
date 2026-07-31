@@ -241,7 +241,7 @@ export default {
         description='Compare "current" and "goal" allocations to each asset class. Visualize portfolio composition over time.'
       />
 
-      <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">
+      <div v-if="error" class="p-4 bg-error text-error-text rounded-md">
         {{ error }}
       </div>
 

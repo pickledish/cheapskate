@@ -172,7 +172,7 @@ export default {
       </PageHeader>
 
       <div v-if="loading" class="text-muted-text">Loading...</div>
-      <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">{{ error }}</div>
+      <div v-if="error" class="p-4 bg-error text-error-text rounded-md">{{ error }}</div>
 
       <div v-if="!loading && events.length === 0" class="text-muted-text text-center py-8">
         No update history yet.

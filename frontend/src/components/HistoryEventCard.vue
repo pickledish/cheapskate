@@ -87,7 +87,7 @@ export default {
           <span class="text-sm text-muted-text">{{ relativeLabel }}<template v-if="creatorName"> by {{ creatorName }}</template></span>
           <button
             v-on:click="$emit('undo')"
-            class="w-8 h-8 -my-1 flex items-center justify-center text-placeholder-text hover:text-red-600 hover:bg-red-50 rounded cursor-pointer"
+            class="w-8 h-8 -my-1 flex items-center justify-center text-placeholder-text hover:text-error-text hover:bg-error rounded cursor-pointer"
             :title="config.undoTitle"
           >
             <TrashIcon class="w-5 h-5" />

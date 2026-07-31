@@ -160,7 +160,7 @@ export default {
       </div>
 
       <!-- Error display -->
-      <div v-if="error" class="mt-4 p-3 rounded-md bg-red-50 text-red-800 text-sm">
+      <div v-if="error" class="mt-4 p-3 rounded-md bg-error text-error-text text-sm">
         {{ error }}
       </div>
 

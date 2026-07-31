@@ -125,6 +125,9 @@
 
   --color-subtle-border: var(--color-gray-200);
   --color-strong-border: var(--color-gray-300);
+
+  --color-error: var(--color-red-50);
+  --color-error-text: var(--color-red-700);
 }
 
 /* Dark mode — flips semantic tokens via prefers-color-scheme (Tailwind default) */
@@ -147,6 +150,9 @@
 
       --color-subtle-border: var(--color-gray-800);
       --color-strong-border: var(--color-gray-700);
+
+      --color-error: var(--color-red-950);
+      --color-error-text: var(--color-red-300);
     }
   }
 }

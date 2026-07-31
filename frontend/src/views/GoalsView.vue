@@ -194,7 +194,7 @@ export default {
       </PageHeader>
 
       <!-- Error display -->
-      <div v-if="error" class="p-4 bg-red-50 text-red-800 rounded-md">
+      <div v-if="error" class="p-4 bg-error text-error-text rounded-md">
         {{ error }}
       </div>
 
@@ -289,7 +289,7 @@ export default {
                       </MenuItem>
                       <MenuItem v-slot="{ active }">
                         <button
-                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-red-50 text-red-600' : 'text-secondary-text']"
+                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-error text-error-text' : 'text-secondary-text']"
                           v-on:click="doDeleteAssetClass(assetClass)"
                         >
                           Delete

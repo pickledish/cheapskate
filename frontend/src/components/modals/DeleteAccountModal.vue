@@ -46,16 +46,16 @@ export default {
 <template>
   <BaseModal title="Delete Account" max-width="max-w-lg" v-on:close="$emit('close')">
     <!-- Warning -->
-    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-      <p class="text-red-800 font-medium">This action cannot be undone</p>
-      <p class="text-red-700 text-sm mt-1">
+    <div class="bg-error border border-red-200 rounded-lg p-4 mb-4">
+      <p class="text-error-text font-medium">This action cannot be undone</p>
+      <p class="text-error-text text-sm mt-1">
         Deleting your account will permanently remove your profile.
         If you are the only member of your family, all family data (accounts, assets, statements) will also be deleted.
       </p>
     </div>
 
     <!-- Error display -->
-    <div v-if="error" class="mb-4 p-3 bg-red-50 text-red-800 rounded-md text-sm">
+    <div v-if="error" class="mb-4 p-3 bg-error text-error-text rounded-md text-sm">
       {{ error }}
     </div>
 

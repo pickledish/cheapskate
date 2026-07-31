@@ -85,7 +85,7 @@ export default {
 <template>
   <BaseModal title="Change Family" max-width="max-w-lg" v-on:close="$emit('close')">
     <!-- Error display -->
-    <div v-if="error" class="mb-4 p-3 bg-red-50 text-red-800 rounded-md text-sm">
+    <div v-if="error" class="mb-4 p-3 bg-error text-error-text rounded-md text-sm">
       {{ error }}
     </div>
 
