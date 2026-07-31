@@ -287,7 +287,7 @@ export default {
       >
         <template #actions>
           <Menu as="div" class="relative shrink-0">
-            <MenuButton class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-secondary-text bg-surface border border-strong-border rounded-md hover:bg-recessed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+            <MenuButton class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-secondary-text bg-surface border border-page-border rounded-md hover:bg-surface-recessed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
               Group by: {{ selectedGroupByLabel }}
               <ChevronDownIcon class="w-4 h-4 text-muted-text" />
             </MenuButton>
@@ -299,14 +299,14 @@ export default {
               leave-from-class="transform scale-100 opacity-100"
               leave-to-class="transform scale-95 opacity-0"
             >
-              <MenuItems class="absolute right-0 z-10 mt-1 w-40 origin-top-right bg-surface border border-subtle-border rounded-md shadow-lg focus:outline-none">
+              <MenuItems class="absolute right-0 z-10 mt-1 w-40 origin-top-right bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none">
                 <div class="py-1">
                   <MenuItem v-for="option in groupByOptions" :key="option.value" v-slot="{ active }">
                     <button
                       type="button"
                       :class="[
                         'flex items-center justify-between w-full px-3 py-2 text-sm text-left',
-                        active ? 'bg-recessed-deep' : '',
+                        active ? 'bg-surface-recessed-deep' : '',
                         groupBy === option.value ? 'text-blue-600 font-medium' : 'text-secondary-text'
                       ]"
                       @click="groupBy = option.value"

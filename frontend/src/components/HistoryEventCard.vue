@@ -18,7 +18,7 @@ const EVENT_TYPES = {
     title: 'Account Marked as Closed',
     icon: ArchiveBoxIcon,
     iconClass: 'text-placeholder-text',
-    borderClass: 'border-strong-border',
+    borderClass: 'border-surface-border-strong',
     undoTitle: 'Undo close'
   },
   manual_price: {
@@ -96,7 +96,7 @@ export default {
       </div>
       <div class="sm:hidden ml-7 text-sm text-muted-text">{{ relativeLabel }}<template v-if="creatorName"> by {{ creatorName }}</template></div>
     </div>
-    <hr class="my-3 border-subtle-border" />
+    <hr class="my-3 border-surface-border" />
     <slot />
   </div>
 </template>

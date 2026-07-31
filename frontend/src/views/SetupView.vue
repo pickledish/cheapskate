@@ -107,19 +107,19 @@ export default {
           id="name"
           v-model="name"
           type="text"
-          class="w-full px-3 py-2 border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          class="w-full px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="Enter your name"
         />
       </div>
 
-      <hr class="mb-6 border-subtle-border" />
+      <hr class="mb-6 border-surface-border" />
 
       <!-- Family options -->
       <div class="space-y-3">
         <!-- Create new family -->
         <label
           class="block p-4 border rounded-lg cursor-pointer transition-colors"
-          v-bind:class="mode === 'create' ? 'border-blue-500 bg-info' : 'border-subtle-border hover:border-strong-border'"
+          v-bind:class="mode === 'create' ? 'border-blue-500 bg-info' : 'border-surface-border hover:border-surface-border-strong'"
         >
           <div class="flex items-center">
             <input
@@ -135,7 +135,7 @@ export default {
         <!-- Join existing family -->
         <label
           class="block p-4 border rounded-lg cursor-pointer transition-colors"
-          v-bind:class="mode === 'join' ? 'border-blue-500 bg-info' : 'border-subtle-border hover:border-strong-border'"
+          v-bind:class="mode === 'join' ? 'border-blue-500 bg-info' : 'border-surface-border hover:border-surface-border-strong'"
         >
           <div class="flex items-center">
             <input
@@ -151,7 +151,7 @@ export default {
               v-model="familyId"
               type="text"
               v-bind:disabled="mode !== 'join'"
-              class="w-full px-3 py-2 border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm disabled:bg-recessed-deep disabled:text-placeholder-text"
+              class="w-full px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm disabled:bg-surface-recessed-deep disabled:text-placeholder-text"
               placeholder="Enter family secret"
               v-on:click.stop
             />

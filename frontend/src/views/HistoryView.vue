@@ -159,12 +159,12 @@ export default {
         description="View all price and position updates, from statement uploads and manual entries. Undo mistakes."
       >
         <template #actions>
-          <div class="inline-flex items-center text-sm font-medium text-secondary-text bg-surface border border-strong-border rounded-md shrink-0">
-            <button @click="prevMonth" class="px-2 py-1.5 hover:bg-recessed rounded-l-md border-r border-strong-border">
+          <div class="inline-flex items-center text-sm font-medium text-secondary-text bg-surface border border-page-border rounded-md shrink-0">
+            <button @click="prevMonth" class="px-2 py-1.5 hover:bg-surface-recessed rounded-l-md border-r border-page-border">
               <ChevronLeftIcon class="h-4 w-4" />
             </button>
             <span class="px-3 py-1.5 w-22 sm:w-24 text-center">{{ monthLabel }}</span>
-            <button @click="nextMonth" class="px-2 py-1.5 hover:bg-recessed rounded-r-md border-l border-strong-border">
+            <button @click="nextMonth" class="px-2 py-1.5 hover:bg-surface-recessed rounded-r-md border-l border-page-border">
               <ChevronRightIcon class="h-4 w-4" />
             </button>
           </div>

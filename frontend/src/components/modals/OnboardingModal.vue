@@ -37,7 +37,7 @@ export default {
   >
     <div v-bind:class="['bg-surface rounded-lg shadow-xl w-full mx-4', maxWidth]">
       <!-- Header with step indicator -->
-      <div class="px-6 py-4 border-b border-subtle-border">
+      <div class="px-6 py-4 border-b border-surface-border">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-muted-text uppercase tracking-wide mb-1">
@@ -55,7 +55,7 @@ export default {
           </button>
         </div>
         <!-- Progress bar -->
-        <div class="mt-3 h-1 bg-recessed-deep rounded-full">
+        <div class="mt-3 h-1 bg-surface-recessed-deep rounded-full">
           <div
             class="h-full bg-blue-600 rounded-full transition-all"
             v-bind:style="{ width: `${(stepNumber / totalSteps) * 100}%` }"

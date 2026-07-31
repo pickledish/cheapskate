@@ -233,7 +233,7 @@ export default {
             v-model="searchQuery"
             type="text"
             placeholder="Search assets..."
-            class="shrink-0 px-3 py-1.5 text-sm border border-strong-border rounded-md bg-page text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+            class="shrink-0 px-3 py-1.5 text-sm border border-page-border rounded-md bg-page text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
           />
         </template>
       </PageHeader>
@@ -248,7 +248,7 @@ export default {
       <!-- Assets table -->
       <div v-if="!loading">
         <div v-if="assets.length > 0" class="bg-surface shadow rounded-lg overflow-x-auto">
-          <table class="min-w-full divide-y divide-subtle-border">
+          <table class="min-w-full divide-y divide-surface-border">
             <thead>
               <tr>
                 <th class="bg-header rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
@@ -268,7 +268,7 @@ export default {
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-subtle-border">
+            <tbody class="divide-y divide-surface-border">
               <tr v-for="(asset, index) in filteredAssets" v-bind:key="asset.id">
                 <td
                   class="px-6 py-4 whitespace-nowrap bg-surface"
@@ -307,7 +307,7 @@ export default {
                       class="inline-block"
                       v-bind:ref="(el) => setMenuAnchor(index, el)"
                     >
-                      <MenuButton class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-recessed-deep rounded cursor-pointer">
+                      <MenuButton class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-surface-recessed-deep rounded cursor-pointer">
                         <Bars3Icon class="w-5 h-5" />
                       </MenuButton>
                     </div>
@@ -315,11 +315,11 @@ export default {
                     <Teleport to="body">
                       <MenuItems
                         v-bind:style="open ? menuDropdownStyle(index) : undefined"
-                        class="fixed z-50 w-36 bg-surface border border-subtle-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
+                        class="fixed z-50 w-36 bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
                       >
                         <MenuItem v-slot="{ active }">
                           <button
-                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text']"
+                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text']"
                             v-on:click="openEditModal(asset)"
                           >
                             Edit
@@ -327,7 +327,7 @@ export default {
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
                           <button
-                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text']"
+                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text']"
                             v-on:click="openUpdatePriceModal(asset)"
                           >
                             Update Price
@@ -353,7 +353,7 @@ export default {
         <!-- Add asset button -->
         <button
           v-on:click="showAddAssetModal = true"
-          class="mt-4 w-full bg-page border-2 border-dashed border-strong-border rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors"
+          class="mt-4 w-full bg-page border-2 border-dashed border-page-border rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors"
         >
           <span class="text-xl mr-2">+</span>
           <span class="text-sm font-medium">Add Asset</span>

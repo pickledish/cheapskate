@@ -454,7 +454,7 @@ export default {
         Select a PDF statement to upload. It will be parsed using AI to extract holdings.
       </p>
 
-      <Disclosure v-slot="{ open }" as="div" class="mb-5 p-4 bg-info border border-blue-200 rounded-lg">
+      <Disclosure v-slot="{ open }" as="div" class="mb-5 p-4 bg-info border border-info-border rounded-lg">
         <DisclosureButton class="w-full flex items-center justify-between text-left">
           <h4 class="text-sm font-medium text-info-text">Privacy Notice</h4>
           <svg
@@ -524,13 +524,13 @@ export default {
                 v-on:change="accountQuery = $event.target.value"
                 v-on:focus="$refs.comboboxButton.$el.click()"
                 placeholder="Search accounts..."
-                class="w-full px-3 py-2 pr-8 text-sm border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full px-3 py-2 pr-8 text-sm border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <ComboboxButton ref="comboboxButton" class="absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
               </ComboboxButton>
             </div>
-            <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-surface border border-subtle-border rounded-lg shadow-lg focus:outline-none">
+            <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none">
               <div v-if="sortedAccounts.length === 0" class="px-3 py-2 text-sm text-muted-text">
                 No accounts found
               </div>
@@ -543,7 +543,7 @@ export default {
                 <div
                   v-bind:class="[
                     'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
-                    active ? 'bg-recessed-deep' : '',
+                    active ? 'bg-surface-recessed-deep' : '',
                     selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
                   ]"
                 >
@@ -567,7 +567,7 @@ export default {
             type="checkbox"
             v-model="createNewAccount"
             v-on:change="createNewAccount ? selectedAccount = null : null"
-            class="rounded border-strong-border text-blue-600 mt-0.5"
+            class="rounded border-surface-border-strong text-blue-600 mt-0.5"
           />
           <div class="flex-1">
             <div class="text-sm font-medium text-secondary-text">Create new account instead</div>
@@ -576,7 +576,7 @@ export default {
               v-model="newAccountName"
               type="text"
               placeholder="Account name (e.g., Fidelity 401k)"
-              class="mt-2 w-full px-3 py-2 text-sm border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="mt-2 w-full px-3 py-2 text-sm border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </label>
@@ -611,14 +611,14 @@ export default {
         <input
           v-model="statementDate"
           type="date"
-          class="px-3 py-2 border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
       <!-- Holdings table -->
-      <div class="border border-strong-border rounded-md max-h-64 overflow-x-auto overflow-y-auto">
-        <table class="min-w-full divide-y divide-subtle-border">
-          <thead class="bg-recessed sticky top-0">
+      <div class="border border-surface-border-strong rounded-md max-h-64 overflow-x-auto overflow-y-auto">
+        <table class="min-w-full divide-y divide-surface-border">
+          <thead class="bg-surface-recessed sticky top-0">
             <tr>
               <th class="px-4 py-2 text-left text-xs font-medium text-muted-text uppercase whitespace-nowrap">Name</th>
               <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase whitespace-nowrap">Qty</th>
@@ -627,7 +627,7 @@ export default {
               <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase"></th>
             </tr>
           </thead>
-          <tbody class="bg-surface divide-y divide-subtle-border">
+          <tbody class="bg-surface divide-y divide-surface-border">
             <tr v-for="(holding, index) in holdings" v-bind:key="index">
               <td class="px-4 py-2 text-sm text-primary-text whitespace-nowrap">{{ holding.name }}</td>
               <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatNumber(holding.quantity) }}</td>
@@ -693,13 +693,13 @@ export default {
           >
             <ChevronUpIcon class="w-4 h-4" />
           </MenuButton>
-          <MenuItems class="absolute right-0 bottom-full mb-1 w-48 bg-surface border border-subtle-border rounded-md shadow-lg z-50 py-1">
+          <MenuItems class="absolute right-0 bottom-full mb-1 w-48 bg-surface border border-surface-border rounded-md shadow-lg z-50 py-1">
             <MenuItem v-slot="{ active }">
               <button
                 v-on:click="parseMode = 'cloud'"
                 v-bind:class="[
                   'w-full text-left px-4 py-2 text-sm',
-                  active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text'
+                  active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text'
                 ]"
               >
                 Parse with Cloud AI
@@ -710,7 +710,7 @@ export default {
                 v-on:click="parseMode = 'local'"
                 v-bind:class="[
                   'w-full text-left px-4 py-2 text-sm',
-                  active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text'
+                  active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text'
                 ]"
               >
                 Parse with Local LLM

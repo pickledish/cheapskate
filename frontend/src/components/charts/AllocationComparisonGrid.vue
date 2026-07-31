@@ -56,7 +56,7 @@ export default {
     <div
       v-for="alloc in allocations"
       :key="alloc.name"
-      class="bg-recessed rounded-lg p-3 flex flex-col w-full max-w-[160px] min-w-0"
+      class="bg-surface-recessed rounded-lg p-3 flex flex-col w-full max-w-[160px] min-w-0"
     >
       <!-- Asset class name -->
       <div class="text-sm font-medium text-secondary-text mb-2 truncate text-center" :title="alloc.name">

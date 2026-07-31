@@ -72,7 +72,7 @@ export default {
           <input
             v-model="name"
             type="text"
-            class="flex-1 px-3 py-2 border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="flex-1 px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <ColorPicker v-model="color" />
         </div>
@@ -89,7 +89,7 @@ export default {
           max="100"
           step="1"
           placeholder="0"
-          class="w-full px-3 py-2 border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <p class="mt-1 text-xs text-muted-text">
           Target percentage for rebalancing. Leave at 0 to exclude from rebalancing calculations.

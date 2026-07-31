@@ -69,7 +69,7 @@ export default {
           v-model="name"
           type="text"
           placeholder="e.g., Fidelity 401k"
-          class="w-full px-3 py-2 border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -82,7 +82,7 @@ export default {
           type="text"
           maxlength="4"
           placeholder="e.g., 1234"
-          class="w-24 px-3 py-2 border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-24 px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <p class="mt-1 text-xs text-muted-text">
           Used to auto-match uploaded statements to this account.
@@ -94,7 +94,7 @@ export default {
           <input
             v-model="rebalancing"
             type="checkbox"
-            class="rounded border-strong-border"
+            class="rounded border-surface-border-strong"
           />
           <span class="text-sm text-secondary-text">
             Include in rebalancing

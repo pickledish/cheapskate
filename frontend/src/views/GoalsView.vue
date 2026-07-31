@@ -205,7 +205,7 @@ export default {
       <div v-if="!loading && assetClasses.length > 0" class="flex flex-col-reverse gap-6 md:flex-row">
         <!-- Asset classes table -->
         <div class="w-full md:w-7/12 bg-surface shadow rounded-lg self-start overflow-x-auto">
-        <table class="min-w-full divide-y divide-subtle-border">
+        <table class="min-w-full divide-y divide-surface-border">
           <thead>
             <tr>
               <th class="bg-header rounded-tl-lg w-10"></th>
@@ -235,7 +235,7 @@ export default {
             ghost-class="drag-ghost"
             chosen-class="drag-chosen"
             drag-class="drag-active"
-            class="divide-y divide-subtle-border"
+            class="divide-y divide-surface-border"
           >
             <tr v-for="(assetClass, index) in assetClasses" v-bind:key="assetClass.id">
               <td
@@ -269,7 +269,7 @@ export default {
                     class="inline-block"
                     v-bind:ref="(el) => setMenuAnchor(index, el)"
                   >
-                    <MenuButton class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-recessed-deep rounded cursor-pointer">
+                    <MenuButton class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-surface-recessed-deep rounded cursor-pointer">
                       <Bars3Icon class="w-5 h-5" />
                     </MenuButton>
                   </div>
@@ -277,11 +277,11 @@ export default {
                   <Teleport to="body">
                     <MenuItems
                       v-bind:style="open ? menuDropdownStyle(index) : undefined"
-                      class="fixed z-50 w-32 bg-surface border border-subtle-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
+                      class="fixed z-50 w-32 bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
                     >
                       <MenuItem v-slot="{ active }">
                         <button
-                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-recessed-deep text-primary-text' : 'text-secondary-text']"
+                          v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text']"
                           v-on:click="openEditModal(assetClass)"
                         >
                           Edit
@@ -387,11 +387,11 @@ export default {
           For example, a <a href="https://www.bogleheads.org/wiki/Three-fund_portfolio" class="text-blue-600 underline">Boglehead-style</a> composition might look like this:
         </p>
         <table class="mx-auto text-sm mt-5 mb-3">
-          <tr class="border-b border-subtle-border">
+          <tr class="border-b border-surface-border">
             <td class="py-1 pr-12">US Stocks</td>
             <td class="py-1 text-right font-bold">60%</td>
           </tr>
-          <tr class="border-b border-subtle-border">
+          <tr class="border-b border-surface-border">
             <td class="py-1 pr-12">International Stocks</td>
             <td class="py-1 text-right font-bold">20%</td>
           </tr>

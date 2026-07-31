@@ -46,7 +46,7 @@ export default {
 <template>
   <BaseModal title="Delete Account" max-width="max-w-lg" v-on:close="$emit('close')">
     <!-- Warning -->
-    <div class="bg-error border border-red-200 rounded-lg p-4 mb-4">
+    <div class="bg-error border border-error-border rounded-lg p-4 mb-4">
       <p class="text-error-text font-medium">This action cannot be undone</p>
       <p class="text-error-text text-sm mt-1">
         Deleting your account will permanently remove your profile.
@@ -62,12 +62,12 @@ export default {
     <!-- Confirmation input -->
     <div class="mb-4">
       <label class="block text-sm font-medium text-secondary-text mb-1">
-        Type <span class="font-mono font-bold bg-recessed-deep px-1 rounded">DELETE</span> to confirm
+        Type <span class="font-mono font-bold bg-surface-recessed-deep px-1 rounded">DELETE</span> to confirm
       </label>
       <input
         v-model="confirmText"
         type="text"
-        class="w-full px-3 py-2 border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-red-500"
+        class="w-full px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-red-500"
         placeholder="DELETE"
       />
     </div>

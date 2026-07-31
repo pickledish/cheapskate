@@ -108,61 +108,84 @@
   font-display: swap;
 }
 
-/* Semantic text + background colors — aliases into Tailwind greys where possible.
-   Non-inline so dark mode can override the --color-* vars (utilities keep var(--color-…)). */
+/* Semantic text + background colors — aliases into Tailwind greys where possible */
 @theme {
+  /* main background color */
+  --color-page: #f6f7f8;
+  --color-page-border: var(--color-gray-300);
+
+  /* for "raised" elements -- cards, sections, etc */
+  --color-surface: var(--color-white);
+  --color-surface-recessed: var(--color-gray-50);
+  --color-surface-recessed-deep: var(--color-gray-100);
+  --color-surface-border: var(--color-gray-200);
+  --color-surface-border-strong: var(--color-gray-300);
+
+  /* main text colors, should look good on both `page` and `surface` */
   --color-primary-text: var(--color-gray-900);
   --color-secondary-text: var(--color-gray-700);
   --color-muted-text: var(--color-gray-500);
   --color-placeholder-text: var(--color-gray-400);
+
+  /* for when raised elements (see above) have headers */
+  --color-header: var(--color-gray-600);
   --color-header-text: var(--color-gray-100);
 
-  --color-page: #f6f7f8;
-  --color-surface: var(--color-white);
-  --color-recessed: var(--color-gray-50);
-  --color-recessed-deep: var(--color-gray-100);
-  --color-header: var(--color-gray-600);
-
-  --color-subtle-border: var(--color-gray-200);
-  --color-strong-border: var(--color-gray-300);
-
+  /* for error boxes */
   --color-error: var(--color-red-50);
   --color-error-text: var(--color-red-700);
+  --color-error-border: var(--color-red-200);
 
+  /* for success boxes */
   --color-success: var(--color-green-50);
   --color-success-text: var(--color-green-700);
+  --color-success-border: var(--color-green-200);
 
+  /* for info boxes */
   --color-info: var(--color-blue-50);
   --color-info-text: var(--color-blue-700);
+  --color-info-border: var(--color-blue-200);
 }
 
 /* Dark mode — flips semantic tokens via prefers-color-scheme (Tailwind default) */
 @layer theme {
   :root, :host {
     @variant dark {
+      /* main background color */
+      --color-page: #0b0d10;
+      --color-page-border: var(--color-gray-700);
+
+      /* for "raised" elements -- cards, sections, etc */
+      --color-surface: var(--color-gray-900);
+      --color-surface-recessed: #0d1220; /* conceptually should be gray-950, but that's too different from gray-900 */
+      --color-surface-recessed-deep: var(--color-gray-800);
+      --color-surface-border: var(--color-gray-800);
+      --color-surface-border-strong: var(--color-gray-700);
+
+      /* main text colors, should look good on both `page` and `surface` */
       --color-primary-text: var(--color-gray-50);
       --color-secondary-text: var(--color-gray-300);
       --color-muted-text: var(--color-gray-400);
       --color-placeholder-text: var(--color-gray-500);
+
+      /* for when raised elements (see above) have headers */
+      --color-header: hsl(218 24% 28%); /* slightly bluer than gray-700, fits with the blue-forward dark theme */
       --color-header-text: var(--color-gray-200);
 
-      --color-page: #0b0d10;
-      --color-surface: var(--color-gray-900);
-      /* conceptually should be gray-950, but that's too different from gray-900 */
-      --color-recessed: #0d1220;
-      --color-recessed-deep: var(--color-gray-800);
-      /* slightly bluer than gray-700, fits with the rest of the blue-forward dark theme */
-      --color-header: hsl(218 24% 28%);
-
-      --color-subtle-border: var(--color-gray-800);
-      --color-strong-border: var(--color-gray-700);
-
+      /* for error boxes */
       --color-error: var(--color-red-950);
       --color-error-text: var(--color-red-300);
+      --color-error-border: var(--color-red-800);
+
+      /* for success boxes */
       --color-success: var(--color-green-950);
       --color-success-text: var(--color-green-300);
+      --color-success-border: var(--color-green-800);
+
+      /* for info boxes */
       --color-info: var(--color-blue-950);
       --color-info-text: var(--color-blue-300);
+      --color-info-border: var(--color-blue-800);
     }
   }
 }

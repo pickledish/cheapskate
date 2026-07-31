@@ -48,7 +48,7 @@ export default {
     <button
       type="button"
       @click.stop="open = !open"
-      class="w-6 h-6 rounded-md border border-strong-border focus:outline-none focus:ring-2 focus:ring-blue-500"
+      class="w-6 h-6 rounded-md border border-surface-border-strong focus:outline-none focus:ring-2 focus:ring-blue-500"
       :style="{ backgroundColor: currentHex }"
       :title="'Color: ' + modelValue"
     />
@@ -56,7 +56,7 @@ export default {
     <!-- Dropdown grid -->
     <div
       v-if="open"
-      class="absolute z-10 top-full mt-1 p-2 bg-surface rounded-md shadow-lg border border-subtle-border w-48"
+      class="absolute z-10 top-full mt-1 p-2 bg-surface rounded-md shadow-lg border border-surface-border w-48"
     >
       <div class="grid grid-cols-6 gap-1.5">
         <button
@@ -65,7 +65,7 @@ export default {
           type="button"
           @click="select(color)"
           class="w-6 h-6 rounded-sm border hover:scale-110 transition-transform"
-          :class="color === modelValue ? 'border-gray-800 ring-1 ring-gray-800' : 'border-strong-border'"
+          :class="color === modelValue ? 'border-gray-800 ring-1 ring-gray-800' : 'border-surface-border-strong'"
           :style="{ backgroundColor: tagColors[color].hex }"
           :title="color"
         />

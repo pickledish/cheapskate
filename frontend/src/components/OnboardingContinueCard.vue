@@ -63,7 +63,7 @@ export default {
 </script>
 
 <template>
-  <div class="bg-success border border-green-200 rounded-lg p-6">
+  <div class="bg-success border border-success-border rounded-lg p-6">
     <div class="flex items-start gap-4">
       <CheckCircleIcon class="w-8 h-8 text-green-500 flex-shrink-0" />
       <div class="flex-1">

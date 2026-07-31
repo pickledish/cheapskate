@@ -90,7 +90,7 @@ export default {
         <input
           v-model="effectiveDate"
           type="date"
-          class="w-full px-3 py-2 border border-strong-border rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
     </div>
