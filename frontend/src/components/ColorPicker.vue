@@ -65,7 +65,7 @@ export default {
           type="button"
           @click="select(color)"
           class="w-6 h-6 rounded-sm border hover:scale-110 transition-transform"
-          :class="color === modelValue ? 'border-gray-800 ring-1 ring-gray-800' : 'border-surface-border-strong'"
+          :class="color === modelValue ? 'border-transparent ring-2 ring-offset-2 ring-offset-surface ring-blue-500' : 'border-surface-border'"
           :style="{ backgroundColor: tagColors[color].hex }"
           :title="color"
         />
