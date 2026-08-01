@@ -8,7 +8,7 @@ export interface PriceUpdate {
 
 export interface PriceUpdateWithContext {
   asset_id: number
-  price_date: string
+  effective_date: string
   price: number
   update_id: number
   created_by: string
@@ -50,7 +50,7 @@ export async function listPriceUpdatesWithContext(order: 'asc' | 'desc' = 'desc'
 
   return (data || []).map((row: any) => ({
     asset_id: row.asset_id,
-    price_date: row.updates.effective_date,
+    effective_date: row.updates.effective_date,
     price: row.price,
     update_id: row.update_id,
     created_by: row.updates.created_by,

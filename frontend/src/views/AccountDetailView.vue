@@ -53,7 +53,7 @@ export default {
       totalValue: null,
       assetClasses: [],
       allocationsByAsset: {},
-      latestStatementDate: null,
+      latestEffectiveDate: null,
       loading: true,
       error: null,
 
@@ -62,7 +62,7 @@ export default {
 
       // Inline editing state
       editing: false,
-      editDate: '',
+      effectiveDate: '',
       editQuantities: {},
       newRows: [],
       saving: false,
@@ -91,12 +91,12 @@ export default {
     displayTotalHoldings() {
       return this.formatCurrency(this.totalValue || 0)
     },
-    displayLastUpdated() {
-      return this.latestStatementDate ? this.relativeDate(this.latestStatementDate) : 'No data yet'
+    displayEffectiveRelative() {
+      return this.latestEffectiveDate ? this.relativeDate(this.latestEffectiveDate) : 'No data yet'
     },
-    displayLastUpdatedDate() {
-      return this.latestStatementDate
-        ? dayjs(this.latestStatementDate).format('MMM D, YYYY')
+    displayEffectiveDate() {
+      return this.latestEffectiveDate
+        ? dayjs(this.latestEffectiveDate).format('MMM D, YYYY')
         : 'Upload a statement or add holdings manually'
     },
     availableAssets() {
@@ -215,7 +215,7 @@ export default {
         }
         this.assetClasses = classes
 
-        this.latestStatementDate = updatesData.length > 0 ? updatesData[0].effective_date : null
+        this.latestEffectiveDate = updatesData.length > 0 ? updatesData[0].effective_date : null
 
       } catch (err) {
         this.error = err.message
@@ -250,7 +250,7 @@ export default {
 
     // Inline editing
     enterEditMode() {
-      this.editDate = new Date().toISOString().split('T')[0]
+      this.effectiveDate = new Date().toISOString().split('T')[0]
       this.editQuantities = {}
       for (const h of this.holdings) {
         this.editQuantities[h.asset_id] = this.formatQuantity(h.quantity)
@@ -261,7 +261,7 @@ export default {
 
     cancelEdit() {
       this.editing = false
-      this.editDate = ''
+      this.effectiveDate = ''
       this.editQuantities = {}
       this.newRows = []
     },
@@ -321,8 +321,8 @@ export default {
     },
 
     async saveEdits() {
-      if (!this.editDate) {
-        this.error = 'Please select an effective date'
+      if (!this.effectiveDate) {
+        this.error = 'Please select a date'
         return
       }
 
@@ -363,7 +363,7 @@ export default {
             family_id: user.user_metadata.family_id,
             account_id: this.account.id,
             update_type: 'manual_holdings',
-            effective_date: this.editDate,
+            effective_date: this.effectiveDate,
             created_by: user.id
           })
 
@@ -501,8 +501,8 @@ export default {
                   </div>
                 </div>
                 <div>
-                  <div class="text-xs font-semibold uppercase tracking-wide text-muted-text">As of date</div>
-                  <div class="mt-1 text-sm text-primary-text">{{ displayLastUpdatedDate }} <span class="text-muted-text">({{ displayLastUpdated }})</span></div>
+                  <div class="text-xs font-semibold uppercase tracking-wide text-muted-text">Current as of</div>
+                  <div class="mt-1 text-sm text-primary-text">{{ displayEffectiveDate }} <span class="text-muted-text">({{ displayEffectiveRelative }})</span></div>
                 </div>
               </div>
 
@@ -697,9 +697,9 @@ export default {
           </button>
           <div v-else class="w-full flex flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
             <label class="flex items-center justify-center gap-2 text-sm text-muted-text sm:justify-start">
-              Effective date
+              As of
               <input
-                v-model="editDate"
+                v-model="effectiveDate"
                 type="date"
                 class="px-3 py-1.5 text-sm border border-surface-border-strong rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
               />

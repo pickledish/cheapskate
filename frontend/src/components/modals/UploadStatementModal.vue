@@ -35,7 +35,7 @@ export default {
 
       // Parsed data
       holdings: [],
-      statementDate: '',
+      effectiveDate: '',
       parsedLast4: null,
 
       // Account matching
@@ -150,7 +150,7 @@ export default {
 
     async handleParseResult(result) {
       this.holdings = result.holdings || []
-      this.statementDate = result.statement_date || this.todayDate
+      this.effectiveDate = result.statement_date || this.todayDate
       this.parsedLast4 = result.last4 || null
 
       if (this.parsedLast4) {
@@ -337,8 +337,8 @@ export default {
         return
       }
 
-      if (!this.statementDate) {
-        this.error = 'Please enter a statement date'
+      if (!this.effectiveDate) {
+        this.error = 'Please select a date'
         return
       }
 
@@ -368,7 +368,7 @@ export default {
           family_id: user.user_metadata.family_id,
           account_id: account.id,
           update_type: 'statement',
-          effective_date: this.statementDate,
+          effective_date: this.effectiveDate,
           created_by: user.id
         })
 
@@ -603,13 +603,13 @@ export default {
         Review the parsed holdings below. New assets will be created automatically.
       </p>
 
-      <!-- Statement date -->
+      <!-- As of date -->
       <div class="mb-4">
         <label class="block text-sm font-medium text-secondary-text mb-1">
-          Statement Date
+          As Of
         </label>
         <input
-          v-model="statementDate"
+          v-model="effectiveDate"
           type="date"
           class="px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
         />

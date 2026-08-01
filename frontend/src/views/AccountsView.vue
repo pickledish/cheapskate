@@ -93,11 +93,11 @@ export default {
           }
         }
 
-        // Build map of account_id -> most recent effective_date
-        const latestStatementByAccount = {}
+        // Build map of account_id -> most recent effective date
+        const latestEffectiveByAccount = {}
         for (const update of updatesData) {
-          if (update.account_id && !latestStatementByAccount[update.account_id]) {
-            latestStatementByAccount[update.account_id] = update.effective_date
+          if (update.account_id && !latestEffectiveByAccount[update.account_id]) {
+            latestEffectiveByAccount[update.account_id] = update.effective_date
           }
         }
 
@@ -189,7 +189,7 @@ export default {
         // Merge metadata into accounts
         this.accounts = accountsData.map(account => ({
           ...account,
-          latestStatementDate: latestStatementByAccount[account.id] || null,
+          latestEffectiveDate: latestEffectiveByAccount[account.id] || null,
           assetClasses: assetClassesByAccount[account.id] || []
         }))
 
@@ -273,10 +273,10 @@ export default {
                 {{ ac.name }}
               </span>
             </div>
-            <!-- Holdings as of date -->
+            <!-- As of date -->
             <p class="mt-3 text-xs text-placeholder-text">
-              <span v-if="account.latestStatementDate">
-                Data from {{ relativeDate(account.latestStatementDate) }}
+              <span v-if="account.latestEffectiveDate">
+                Current as of {{ relativeDate(account.latestEffectiveDate) }}
               </span>
               <span v-else class="italic">No data yet</span>
             </p>

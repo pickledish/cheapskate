@@ -102,13 +102,13 @@ export default {
           .map(c => ({ id: c.id, name: c.name }))
           .sort((a, b) => a.name.localeCompare(b.name))
 
-        // Build map of asset_id -> { price, date }
+        // Build map of asset_id -> { price, effectiveDate }
         const latestPriceByAsset = {}
         for (const p of pricesData) {
           if (!latestPriceByAsset[p.asset_id]) {
             latestPriceByAsset[p.asset_id] = {
               price: p.price,
-              date: p.price_date
+              effectiveDate: p.effective_date
             }
           }
         }
@@ -123,7 +123,7 @@ export default {
           return {
             ...asset,
             latestPrice: latestPriceByAsset[asset.id]?.price || null,
-            latestPriceDate: latestPriceByAsset[asset.id]?.date || null,
+            latestEffectiveDate: latestPriceByAsset[asset.id]?.effectiveDate || null,
             assetClasses: sortedAllocs.map(a => ({ name: a.asset_classes.name, color: a.asset_classes.color })),
             allocations: asset.allocations.map(a => ({
               asset_class_id: a.asset_class_id,
@@ -294,8 +294,8 @@ export default {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap bg-surface">
                   <div class="text-sm text-primary-text">{{ formatPrice(asset.latestPrice) }}</div>
-                  <div v-if="asset.latestPriceDate" class="text-xs text-placeholder-text">
-                    {{ relativeDate(asset.latestPriceDate) }}
+                  <div v-if="asset.latestEffectiveDate" class="text-xs text-placeholder-text">
+                    {{ relativeDate(asset.latestEffectiveDate) }}
                   </div>
                 </td>
                 <td

@@ -15,7 +15,7 @@ export default {
   emits: ['close', 'updated'],
   data() {
     return {
-      date: '',
+      effectiveDate: '',
       price: '',
       loading: false,
       error: null
@@ -23,11 +23,11 @@ export default {
   },
   mounted() {
     // Default to today's date
-    this.date = new Date().toISOString().split('T')[0]
+    this.effectiveDate = new Date().toISOString().split('T')[0]
   },
   methods: {
     async save() {
-      if (!this.date) {
+      if (!this.effectiveDate) {
         this.error = 'Please select a date'
         return
       }
@@ -49,7 +49,7 @@ export default {
           family_id: user.user_metadata.family_id,
           account_id: null,
           update_type: 'manual_price',
-          effective_date: this.date,
+          effective_date: this.effectiveDate,
           created_by: user.id
         })
 
@@ -85,10 +85,10 @@ export default {
     <div class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-secondary-text mb-1">
-          Date
+          As Of
         </label>
         <input
-          v-model="date"
+          v-model="effectiveDate"
           type="date"
           class="w-full px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
         />

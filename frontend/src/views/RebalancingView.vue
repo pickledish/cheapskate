@@ -205,10 +205,10 @@ export default {
       return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     },
 
-    getLatestHoldings(asOfDate, accountIds) {
+    getLatestHoldings(effectiveDate, accountIds) {
       const latestHoldings = {}
       for (const h of this.holdingsData) {
-        if (h.holding_date <= asOfDate && accountIds.has(h.account_id)) {
+        if (h.effective_date <= effectiveDate && accountIds.has(h.account_id)) {
           const key = `${h.asset_id}-${h.account_id}`
           latestHoldings[key] = {
             asset_id: h.asset_id,
@@ -220,10 +220,10 @@ export default {
       return Object.values(latestHoldings)
     },
 
-    getLatestPrices(asOfDate) {
+    getLatestPrices(effectiveDate) {
       const latestPrices = {}
       for (const p of this.pricesData) {
-        if (p.price_date <= asOfDate) {
+        if (p.effective_date <= effectiveDate) {
           latestPrices[p.asset_id] = parseFloat(p.price)
         }
       }

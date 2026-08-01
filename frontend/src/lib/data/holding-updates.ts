@@ -9,7 +9,7 @@ export interface HoldingUpdate {
 export interface HoldingUpdateWithContext {
   asset_id: number
   account_id: number
-  holding_date: string
+  effective_date: string
   quantity: number
   update_id: number
   created_by: string
@@ -53,7 +53,7 @@ export async function listHoldingUpdatesWithContext(order: 'asc' | 'desc' = 'des
   return (data || []).map((row: any) => ({
     asset_id: row.asset_id,
     account_id: row.updates.account_id,
-    holding_date: row.updates.effective_date,
+    effective_date: row.updates.effective_date,
     quantity: row.quantity,
     update_id: row.update_id,
     created_by: row.updates.created_by,
@@ -83,7 +83,7 @@ export async function listHoldingUpdatesByAccount(accountId: number, order: 'asc
   return (data || []).map((row: any) => ({
     asset_id: row.asset_id,
     account_id: row.updates.account_id,
-    holding_date: row.updates.effective_date,
+    effective_date: row.updates.effective_date,
     quantity: row.quantity,
     update_id: row.update_id,
     created_by: row.updates.created_by,

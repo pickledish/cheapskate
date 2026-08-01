@@ -30,7 +30,7 @@ export default {
   methods: {
     async save() {
       if (!this.effectiveDate) {
-        this.error = 'Please select an effective date'
+        this.error = 'Please select a date'
         return
       }
 
@@ -85,7 +85,7 @@ export default {
     <div class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-secondary-text mb-1">
-          Effective Date
+          As Of
         </label>
         <input
           v-model="effectiveDate"

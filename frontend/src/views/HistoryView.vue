@@ -189,7 +189,7 @@ export default {
           v-on:undo="onUndo(event)"
         >
           <div class="text-sm text-secondary-text">
-            <p class="font-medium mb-2">Effective {{ formatEffectiveDate(event.effectiveDate) }}:</p>
+            <p class="font-medium mb-2">As of {{ formatEffectiveDate(event.effectiveDate) }}:</p>
             <ul class="list-disc list-inside space-y-0.5 text-muted-text ml-2">
               <template v-if="event.type === 'statement'">
                 <li v-for="holding in event.holdings" :key="holding.assetName">

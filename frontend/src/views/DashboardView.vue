@@ -90,7 +90,7 @@ export default {
       if (this.groupBy === 'none') {
         const values = months.map(month => {
           const monthEnd = this.getMonthEnd(month)
-          return this.computeNetWorthAsOf(monthEnd)
+          return this.computeNetWorthAt(monthEnd)
         })
         this.chartSeries = [{ name: 'Net Worth', data: values }]
       } else if (this.groupBy === 'account') {
@@ -128,10 +128,10 @@ export default {
       return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     },
 
-    getLatestHoldings(asOfDate) {
+    getLatestHoldings(effectiveDate) {
       const latestHoldings = {}
       for (const h of this.holdingsData) {
-        if (h.holding_date <= asOfDate) {
+        if (h.effective_date <= effectiveDate) {
           const key = `${h.asset_id}-${h.account_id}`
           latestHoldings[key] = {
             asset_id: h.asset_id,
@@ -143,19 +143,19 @@ export default {
       return Object.values(latestHoldings)
     },
 
-    getLatestPrices(asOfDate) {
+    getLatestPrices(effectiveDate) {
       const latestPrices = {}
       for (const p of this.pricesData) {
-        if (p.price_date <= asOfDate) {
+        if (p.effective_date <= effectiveDate) {
           latestPrices[p.asset_id] = parseFloat(p.price)
         }
       }
       return latestPrices
     },
 
-    computeNetWorthAsOf(asOfDate) {
-      const holdings = this.getLatestHoldings(asOfDate)
-      const prices = this.getLatestPrices(asOfDate)
+    computeNetWorthAt(effectiveDate) {
+      const holdings = this.getLatestHoldings(effectiveDate)
+      const prices = this.getLatestPrices(effectiveDate)
 
       const quantityByAsset = {}
       for (const h of holdings) {
