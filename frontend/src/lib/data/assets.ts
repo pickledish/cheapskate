@@ -69,20 +69,6 @@ export async function getAsset(id: number): Promise<Asset | null> {
   return data
 }
 
-export async function findAssetByTickerOrName(tickerOrName: string): Promise<Asset | null> {
-  const { data, error } = await supabase
-    .from('assets')
-    .select('*')
-    .or(`ticker.eq.${tickerOrName},name.eq.${tickerOrName}`)
-    .single()
-
-  if (error) {
-    if (error.code === 'PGRST116') return null
-    throw error
-  }
-  return data
-}
-
 export async function insertAsset(asset: {
   ticker: string | null
   name: string

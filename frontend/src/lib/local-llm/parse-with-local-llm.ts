@@ -3,7 +3,6 @@ import {
   ParsePdfResponseSchema,
   geminiSchema,
   buildPrompt,
-  type KnownAsset,
   type ParsePdfResponse,
 } from '@shared/parse-pdf-schema'
 
@@ -15,18 +14,16 @@ export interface LocalLlmConfig {
 export interface ParseWithLocalLlmOptions {
   config: LocalLlmConfig
   pdfArrayBuffer: ArrayBuffer
-  knownAssets?: KnownAsset[]
 }
 
 export async function parseWithLocalLlm(
   options: ParseWithLocalLlmOptions
 ): Promise<ParsePdfResponse> {
-  const { config, pdfArrayBuffer, knownAssets } = options
+  const { config, pdfArrayBuffer } = options
   const baseUrl = `http://localhost:${config.port}`
 
   const tsv = await pdfToQuantizedTsv(pdfArrayBuffer)
-  const prompt = buildPrompt(knownAssets)
-  const userContent = `${prompt}\n\n${tsv}`
+  const userContent = `${buildPrompt()}\n\n${tsv}`
 
   if (config.provider === 'ollama') {
     const model = await getFirstModelOllama(baseUrl)

@@ -18,12 +18,19 @@ export {
   listAssets,
   listAssetsWithAllocations,
   getAsset,
-  findAssetByTickerOrName,
   insertAsset,
   updateAsset,
   deleteAsset
 } from './assets'
 export type { Asset, AssetWithAllocations, AssetAllocationInfo } from './assets'
+
+// Asset Aliases
+export {
+  listAliasesByAccount,
+  insertAssetAlias,
+  normalizeLabel
+} from './asset-aliases'
+export type { AssetAlias } from './asset-aliases'
 
 // Profiles
 export {

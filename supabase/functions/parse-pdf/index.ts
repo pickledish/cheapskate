@@ -63,16 +63,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch user's existing assets to help LLM match against known assets
-    const { data: existingAssets } = await supabase
-      .from("assets")
-      .select("ticker, name");
-
-    const knownAssets = existingAssets?.map((s) => ({
-      ticker: s.ticker as string | null,
-      name: s.name as string,
-    }));
-    const promptText = `${buildPrompt(knownAssets)}\n\n${tsv}`;
+    const promptText = `${buildPrompt()}\n\n${tsv}`;
 
     // Initialize OpenRouter client
     const client = new OpenRouter({

@@ -1,4 +1,31 @@
 <script>
+/**
+ * Holding resolution shapes used by this modal (JSDoc stand-in until this is .ts).
+ *
+ * ParsedHolding — raw LLM output, kept immutable so re-resolving for a different account works:
+ *   { name: string, ticker: string | null, quantity: number, total_value: number | null, price: number | null }
+ *
+ * ResolvedHolding — preview/save row after matching against tickers + per-account aliases:
+ *   {
+ *     name: string,              // fund name as printed on the statement
+ *     ticker: string | null,     // ticker as printed (uppercased), or null
+ *     quantity: number,
+ *     total_value: number | null,
+ *     price: number | null,
+ *     kind: 'ticker' | 'new-ticker' | 'alias' | 'unresolved' | 'sold',
+ *     assetId: number | null,    // set for ticker / alias / sold; null until materialize for the rest
+ *     display: string,           // label shown in the preview table
+ *     chosenAsset: Asset | null, // unresolved only: combobox selection (null => create new)
+ *     assetQuery: string,        // unresolved only: combobox filter text
+ *   }
+ *
+ * kind meanings:
+ *   'ticker'      — statement printed a ticker we already have; assetId is set
+ *   'new-ticker'  — statement printed a ticker we don't have; create asset with that ticker on save
+ *   'alias'       — no ticker, but (account, normalized name) maps to an existing asset
+ *   'unresolved'  — no ticker and no alias; user picks an asset or leaves blank to create + write alias
+ *   'sold'        — previously held in this account but missing from this statement; quantity forced to 0
+ */
 import BaseModal from './BaseModal.vue'
 import { Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { CheckIcon, ChevronUpDownIcon, ChevronUpIcon } from '@heroicons/vue/24/solid'
@@ -12,10 +39,12 @@ import {
   insertPriceUpdate,
   insertHoldingUpdate,
   deleteUpdate,
-  findAssetByTickerOrName,
   insertAsset,
   listHoldingUpdatesByAccount,
   listAssets,
+  listAliasesByAccount,
+  insertAssetAlias,
+  normalizeLabel,
   getProfile
 } from '@/lib/data'
 import { parseWithLocalLlm } from '@/lib/local-llm'
@@ -34,10 +63,13 @@ export default {
       file: null,
       parseMode: 'cloud', // 'cloud' | 'local'
 
-      // Parsed data
-      holdings: [],
+      // Raw LLM output (kept so re-resolving for a different account works)
+      parsedHoldings: [],
       effectiveDate: '',
       parsedLast4: null,
+
+      // Resolved holdings for preview/save
+      holdings: [],
 
       // Account matching
       matchedAccount: null,
@@ -48,7 +80,8 @@ export default {
       newAccountName: '',
       matchingAccountIds: [],
 
-      // Existing holdings for sold-position detection
+      // Asset catalog + existing holdings for sold-position detection
+      allAssets: [],
       existingHoldings: [],
 
       // Loading/error
@@ -83,12 +116,41 @@ export default {
     },
     resolvedAccount() {
       return this.matchedAccount
+    },
+    unresolvedCount() {
+      return this.holdings.filter(h => h.kind === 'unresolved').length
+    },
+    duplicateAssetIds() {
+      const counts = {}
+      for (const h of this.holdings) {
+        const id = this.resolvedAssetId(h)
+        if (id == null) continue
+        counts[id] = (counts[id] || 0) + 1
+      }
+      return Object.keys(counts).filter(id => counts[id] > 1).map(Number)
+    },
+    canSave() {
+      return this.holdings.length > 0 && this.duplicateAssetIds.length === 0
     }
   },
   methods: {
     displayAccount(account) {
       if (!account) return ''
       return account.last4 ? `${account.name} (****${account.last4})` : account.name
+    },
+
+    displayAsset(asset) {
+      if (!asset) return ''
+      return asset.ticker ? `${asset.name} (${asset.ticker})` : asset.name
+    },
+
+    filteredAssetsFor(holding) {
+      const query = (holding.assetQuery || '').toLowerCase().trim()
+      if (!query) return this.allAssets
+      return this.allAssets.filter(a =>
+        a.name.toLowerCase().includes(query) ||
+        (a.ticker && a.ticker.toLowerCase().includes(query))
+      )
     },
 
     onFileChange(event) {
@@ -140,21 +202,20 @@ export default {
       }
 
       const pdfArrayBuffer = await this.file.arrayBuffer()
-      const existingAssets = await listAssets()
-      const knownAssets = existingAssets.map(a => ({
-        ticker: a.ticker,
-        name: a.name
-      }))
-
       return parseWithLocalLlm({
         config: { provider: llmConfig.api, port: llmConfig.port },
-        pdfArrayBuffer,
-        knownAssets
+        pdfArrayBuffer
       })
     },
 
     async handleParseResult(result) {
-      this.holdings = result.holdings || []
+      this.parsedHoldings = (result.holdings || []).map(h => ({
+        name: h.name,
+        ticker: h.ticker?.trim() || null,
+        quantity: h.quantity,
+        total_value: h.total_value,
+        price: h.price ?? null
+      }))
       this.effectiveDate = result.statement_date || this.todayDate
       this.parsedLast4 = result.last4 || null
 
@@ -230,6 +291,7 @@ export default {
     async rejectAutoMatch() {
       this.matchedAccount = null
       this.selectedAccount = null
+      this.holdings = []
       // might've already been loaded in prefetch
       if (this.allAccounts.length === 0) {
         this.allAccounts = await listAccounts()
@@ -239,15 +301,18 @@ export default {
 
     async onAccountResolved() {
       try {
-        // Fetch existing holdings for sold-position detection
-        const [holdingsData, assetsData] = await Promise.all([
+        // Fetch assets, aliases, and existing holdings for sold-position detection
+        const [holdingsData, assetsData, aliasesData] = await Promise.all([
           listHoldingUpdatesByAccount(this.matchedAccount.id, 'desc'),
-          listAssets()
+          listAssets(),
+          listAliasesByAccount(this.matchedAccount.id)
         ])
 
-        const assetMap = {}
+        this.allAssets = assetsData
+
+        const assetsById = {}
         for (const a of assetsData) {
-          assetMap[a.id] = { ticker: a.ticker, name: a.name }
+          assetsById[a.id] = a
         }
 
         // Get latest holding per asset
@@ -262,10 +327,26 @@ export default {
           .filter(h => parseFloat(h.quantity) > 0)
           .map(h => ({
             asset_id: h.asset_id,
-            ticker: assetMap[h.asset_id]?.ticker || null,
-            name: assetMap[h.asset_id]?.name || null
+            ticker: assetsById[h.asset_id]?.ticker || null,
+            name: assetsById[h.asset_id]?.name || null
           }))
 
+        // Build alias lookup: normalized statement label -> asset_id
+        const assetsByLabel = {}
+        for (const alias of aliasesData) {
+          assetsByLabel[alias.label] = alias.asset_id
+        }
+
+        const assetsByTicker = {}
+        for (const a of assetsData) {
+          if (a.ticker) {
+            assetsByTicker[a.ticker.toUpperCase()] = a
+          }
+        }
+
+        this.holdings = this.parsedHoldings.map(h =>
+          this.resolveHolding(h, assetsByTicker, assetsByLabel, assetsById)
+        )
         this.addSoldPositions()
         this.step = 'preview'
       } catch (err) {
@@ -275,28 +356,112 @@ export default {
       }
     },
 
+    /** Classify a parsed holding into a ResolvedHolding using ticker, then alias. */
+    resolveHolding(h, assetsByTicker, assetsByLabel, assetsById) {
+      const base = {
+        name: h.name,
+        ticker: h.ticker,
+        quantity: h.quantity,
+        total_value: h.total_value,
+        price: h.price,
+        chosenAsset: null,
+        assetQuery: ''
+      }
+
+      // Path 1: statement printed a ticker
+      if (h.ticker) {
+        const key = h.ticker.toUpperCase()
+        const hit = assetsByTicker[key]
+        if (hit) {
+          return {
+            ...base,
+            ticker: key,
+            kind: 'ticker',
+            assetId: hit.id,
+            display: hit.ticker || hit.name
+          }
+        }
+        return {
+          ...base,
+          ticker: key,
+          kind: 'new-ticker',
+          assetId: null,
+          display: key
+        }
+      }
+
+      // Path 2: no ticker, but we've mapped this label in this account before
+      const assetId = assetsByLabel[normalizeLabel(h.name)]
+      if (assetId && assetsById[assetId]) {
+        const asset = assetsById[assetId]
+        return {
+          ...base,
+          kind: 'alias',
+          assetId: assetId,
+          display: asset.ticker || asset.name
+        }
+      }
+
+      // Path 3: nothing to go on — user picks or leaves blank to create
+      return {
+        ...base,
+        kind: 'unresolved',
+        assetId: null,
+        display: h.name
+      }
+    },
+
+    /**
+     * Asset id this holding currently resolves to, if known.
+     * Used for sold-position detection and duplicate checks — does not create anything.
+     * Returns null for new-ticker and for unresolved rows with no combobox selection yet.
+     */
+    resolvedAssetId(holding) {
+      if (holding.kind === 'ticker' || holding.kind === 'alias' || holding.kind === 'sold') {
+        return holding.assetId
+      }
+      if (holding.kind === 'unresolved' && holding.chosenAsset) {
+        return holding.chosenAsset.id
+      }
+      return null
+    },
+
     removeHolding(index) {
       this.holdings.splice(index, 1)
+      this.refreshSoldPositions()
+    },
+
+    onChosenAssetChange() {
+      this.refreshSoldPositions()
+    },
+
+    refreshSoldPositions() {
+      // Drop previous sold rows, then recompute from current resolutions
+      this.holdings = this.holdings.filter(h => h.kind !== 'sold')
+      this.addSoldPositions()
     },
 
     addSoldPositions() {
-      // Build set of parsed holding names (lowercase for case-insensitive matching)
-      const parsedNames = new Set(
-        this.holdings.map(h => h.name.toLowerCase())
+      // Assets already represented by a resolved holding in this statement
+      const present = new Set(
+        this.holdings.map(h => this.resolvedAssetId(h)).filter(id => id != null)
       )
 
       // Check each existing holding to see if it's missing from the parsed results
       for (const existing of this.existingHoldings) {
-        const tickerMatch = existing.ticker && parsedNames.has(existing.ticker.toLowerCase())
-        const nameMatch = existing.name && parsedNames.has(existing.name.toLowerCase())
-
-        if (!tickerMatch && !nameMatch) {
+        if (!present.has(existing.asset_id)) {
           // Asset not in statement - add as sold (quantity=0)
           this.holdings.push({
             name: existing.ticker || existing.name,
+            ticker: existing.ticker,
             quantity: 0,
             total_value: null,
-            price: null
+            price: null,
+            kind: 'sold',
+            assetId: existing.asset_id,
+            chosenAsset: null,
+            assetQuery: '',
+            display: existing.ticker || existing.name
           })
         }
       }
@@ -323,6 +488,44 @@ export default {
       return value.toLocaleString(undefined, { maximumFractionDigits: 4 })
     },
 
+    /**
+     * Turn a ResolvedHolding into a concrete assets.id, creating rows as needed.
+     * - ticker / alias / sold: already have assetId, return it
+     * - new-ticker: insert asset with that ticker (no alias — ticker match is stable)
+     * - unresolved: use combobox selection, or insert a ticker-less asset; always write
+     *   an asset_aliases row so this account's label maps here next time
+     */
+    async materializeAsset(holding, accountId, user) {
+      if (holding.kind === 'ticker' || holding.kind === 'alias' || holding.kind === 'sold') {
+        return holding.assetId
+      }
+
+      if (holding.kind === 'new-ticker') {
+        const asset = await insertAsset({
+          family_id: user.user_metadata.family_id,
+          created_by: user.id,
+          ticker: holding.ticker,
+          name: holding.name
+        })
+        return asset.id
+      }
+
+      // unresolved: chosen from combobox, or blank => create ticker-less asset
+      const assetId = holding.chosenAsset?.id ?? (await insertAsset({
+        family_id: user.user_metadata.family_id,
+        created_by: user.id,
+        ticker: null,
+        name: holding.name
+      })).id
+
+      await insertAssetAlias({
+        account_id: accountId,
+        label: holding.name,
+        asset_id: assetId
+      })
+      return assetId
+    },
+
     async saveStatement() {
       if (this.holdings.length === 0) {
         this.error = 'No holdings to save'
@@ -331,6 +534,11 @@ export default {
 
       if (!this.effectiveDate) {
         this.error = 'Please select a date'
+        return
+      }
+
+      if (this.duplicateAssetIds.length > 0) {
+        this.error = 'Two holdings resolve to the same asset. Remove or remap one before saving.'
         return
       }
 
@@ -366,23 +574,14 @@ export default {
 
         // 2. Process each holding
         for (const holding of this.holdings) {
-          // Look up asset by ticker=name OR name=name
-          let asset = await findAssetByTickerOrName(holding.name)
-
-          // If not found, auto-create
-          if (!asset) {
-            try {
-              asset = await insertAsset({
-                family_id: user.user_metadata.family_id,
-                created_by: user.id,
-                ticker: holding.name,
-                name: holding.name
-              })
-            } catch (createError) {
-              // Rollback: delete the update
-              await deleteUpdate(update.id)
-              throw createError
-            }
+          // Resolve / create the asset (and alias, when needed)
+          let assetId
+          try {
+            assetId = await this.materializeAsset(holding, account.id, user)
+          } catch (createError) {
+            // Rollback: delete the update
+            await deleteUpdate(update.id)
+            throw createError
           }
 
           // Compute price (null for sold positions)
@@ -393,7 +592,7 @@ export default {
             try {
               await insertPriceUpdate({
                 update_id: update.id,
-                asset_id: asset.id,
+                asset_id: assetId,
                 price: price
               })
             } catch (priceError) {
@@ -406,7 +605,7 @@ export default {
           try {
             await insertHoldingUpdate({
               update_id: update.id,
-              asset_id: asset.id,
+              asset_id: assetId,
               quantity: holding.quantity
             })
           } catch (holdingError) {
@@ -592,8 +791,27 @@ export default {
         </template>
       </p>
       <p class="text-sm text-muted-text mb-4">
-        Review the parsed holdings below. New assets will be created automatically.
+        Review the parsed holdings below.
       </p>
+
+      <div
+        v-if="unresolvedCount > 0"
+        class="mb-4 p-3 bg-info border border-info-border rounded-md text-sm text-info-text"
+      >
+        <template v-if="unresolvedCount === 1">
+          One holding has no ticker printed on the statement. Choose a matching asset, or leave it blank to create a new one. Cheapskate will remember your choice for this account.
+        </template>
+        <template v-else>
+          {{ unresolvedCount }} holdings have no ticker printed on the statement. Choose a matching asset for each, or leave blank to create new ones. Cheapskate will remember your choices for this account.
+        </template>
+      </div>
+
+      <div
+        v-if="duplicateAssetIds.length > 0"
+        class="mb-4 p-3 bg-error text-error-text rounded-md text-sm"
+      >
+        Two holdings resolve to the same asset. Remove or remap one before saving.
+      </div>
 
       <!-- As of date -->
       <div class="mb-4">
@@ -608,7 +826,7 @@ export default {
       </div>
 
       <!-- Holdings table -->
-      <div class="border border-surface-border-strong rounded-md max-h-64 overflow-x-auto overflow-y-auto">
+      <div class="border border-surface-border-strong rounded-md max-h-80 overflow-x-auto overflow-y-auto">
         <table class="min-w-full divide-y divide-surface-border">
           <thead class="bg-surface-recessed sticky top-0">
             <tr>
@@ -620,20 +838,69 @@ export default {
             </tr>
           </thead>
           <tbody class="bg-surface divide-y divide-surface-border">
-            <tr v-for="(holding, index) in holdings" v-bind:key="index">
-              <td class="px-4 py-2 text-sm text-primary-text whitespace-nowrap">{{ holding.name }}</td>
-              <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatNumber(holding.quantity) }}</td>
-              <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatCurrency(holding.total_value) }}</td>
-              <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatCurrency(computePrice(holding)) }}</td>
-              <td class="px-4 py-2 text-right whitespace-nowrap">
-                <button
-                  v-on:click="removeHolding(index)"
-                  class="text-red-600 hover:text-red-800 text-sm"
-                >
-                  Remove
-                </button>
-              </td>
-            </tr>
+            <template v-for="(holding, index) in holdings" v-bind:key="index">
+              <tr>
+                <td class="px-4 py-2 text-sm text-primary-text whitespace-nowrap">
+                  {{ holding.display }}
+                </td>
+                <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatNumber(holding.quantity) }}</td>
+                <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatCurrency(holding.total_value) }}</td>
+                <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatCurrency(computePrice(holding)) }}</td>
+                <td class="px-4 py-2 text-right whitespace-nowrap">
+                  <button
+                    v-on:click="removeHolding(index)"
+                    class="text-red-600 hover:text-red-800 text-sm"
+                  >
+                    Remove
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="holding.kind === 'unresolved'">
+                <td colspan="5" class="px-4 pb-3 pt-0">
+                  <div class="text-xs text-muted-text mb-1">No ticker on statement</div>
+                  <Combobox
+                    v-model="holding.chosenAsset"
+                    as="div"
+                    class="relative"
+                    v-on:update:model-value="onChosenAssetChange(holding)"
+                  >
+                    <div class="relative">
+                      <ComboboxInput
+                        v-bind:display-value="displayAsset"
+                        v-on:change="holding.assetQuery = $event.target.value"
+                        placeholder="Search assets, or leave blank to create new…"
+                        class="w-full px-3 py-2 pr-8 text-sm border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
+                        <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
+                      </ComboboxButton>
+                    </div>
+                    <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-48 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none">
+                      <div v-if="filteredAssetsFor(holding).length === 0" class="px-3 py-2 text-sm text-muted-text">
+                        No match — a new asset will be created
+                      </div>
+                      <ComboboxOption
+                        v-for="asset in filteredAssetsFor(holding)"
+                        v-bind:key="asset.id"
+                        v-bind:value="asset"
+                        v-slot="{ active, selected }"
+                      >
+                        <div
+                          v-bind:class="[
+                            'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
+                            active ? 'bg-surface-recessed-deep' : '',
+                            selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
+                          ]"
+                        >
+                          <span>{{ displayAsset(asset) }}</span>
+                          <CheckIcon v-if="selected" class="w-4 h-4 flex-shrink-0" />
+                        </div>
+                      </ComboboxOption>
+                    </ComboboxOptions>
+                  </Combobox>
+                </td>
+              </tr>
+            </template>
             <tr v-if="holdings.length === 0">
               <td colspan="5" class="px-4 py-4 text-sm text-muted-text text-center">
                 No holdings found
@@ -724,7 +991,7 @@ export default {
       <button
         v-else-if="step === 'preview'"
         v-on:click="saveStatement"
-        v-bind:disabled="holdings.length === 0"
+        v-bind:disabled="!canSave"
         class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
       >
         Save Statement

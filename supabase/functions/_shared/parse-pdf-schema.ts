@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 export const HoldingSchema = z.object({
-  name: z.string().describe("Asset identifier: prefer ticker symbol (e.g., AAPL, VTI, VTTSX). Use a known-asset ticker when matched. For cash, use '$CASH'."),
+  name: z.string().describe(
+    "Fund/security name exactly as printed on the statement (e.g. 'Vanguard Target Retirement 2060', 'FID 500 INDEX'). Copy verbatim — do not normalize or substitute.",
+  ),
+  ticker: z.string().nullable().describe(
+    "Ticker symbol only if it is printed on the statement (e.g. AAPL, VTI, VTTSX). Null if no ticker appears. Never infer a ticker from the fund name. For cash use '$CASH'; for debt/liabilities use '$DEBT'.",
+  ),
   quantity: z.number().describe("Number of shares/units as a decimal. For $CASH, this is the dollar amount."),
   total_value: z.number().describe("Total market value of this holding in dollars. Required for all holdings."),
   price: z.number().optional().describe("Per-share/per-unit price if explicitly shown. Optional - will be computed from total_value/quantity if not provided."),
@@ -28,7 +33,13 @@ export const responseSchema = {
         properties: {
           name: {
             type: "string",
-            description: "Asset identifier: prefer ticker symbol (e.g., AAPL, VTI, VTTSX). Use a known-asset ticker when matched. For cash, use '$CASH'.",
+            description:
+              "Fund/security name exactly as printed on the statement (e.g. 'Vanguard Target Retirement 2060', 'FID 500 INDEX'). Copy verbatim — do not normalize or substitute.",
+          },
+          ticker: {
+            type: ["string", "null"],
+            description:
+              "Ticker symbol only if it is printed on the statement (e.g. AAPL, VTI, VTTSX). Null if no ticker appears. Never infer a ticker from the fund name. For cash use '$CASH'; for debt/liabilities use '$DEBT'.",
           },
           quantity: {
             type: "number",
@@ -43,7 +54,7 @@ export const responseSchema = {
             description: "Per-share/per-unit price if explicitly shown. Optional - will be computed from total_value/quantity if not provided.",
           },
         },
-        required: ["name", "quantity", "total_value"],
+        required: ["name", "ticker", "quantity", "total_value"],
         additionalProperties: false,
       },
     },
@@ -63,12 +74,6 @@ export const responseSchema = {
 // Backwards compatibility alias
 export const geminiSchema = responseSchema;
 
-/** Existing portfolio assets for matching statement holdings. */
-export interface KnownAsset {
-  ticker: string | null;
-  name: string;
-}
-
 const promptTemplate = `You will receive text extracted from an investment statement PDF as compact TSV (tab-separated values).
 
 Format:
@@ -83,31 +88,15 @@ Use the coordinates to align table columns (e.g. which number is shares vs price
 
 Rules:
 - Extract every holding/position with its name, quantity (shares/units), and total market value
-- For the name field: prefer a ticker symbol. If the holding matches a known asset below, use that asset's ticker (or its listed name if it has no ticker). If no known asset matches, use the ticker from the statement if shown, otherwise a descriptive name
+- For the name field: copy the fund/security name exactly as printed on the statement. Do not normalize, abbreviate, or substitute a ticker
+- For the ticker field: report a ticker ONLY if it is printed on the statement. If no ticker appears next to the holding, set ticker to null. Never infer or guess a ticker from the fund name (e.g. do not map "Vanguard Target Retirement 2060" to VTTSX)
 - For each holding, also extract the per-share price if it's explicitly shown
-- For cash or money-market balances, use name "$CASH" with quantity AND total_value both equal to the dollar amount
-- For debt or liability balances (loans, mortgages, credit cards), use name "$DEBT" with quantity equal to the dollar amount owed and total_value as the negative of that amount
+- For cash or money-market balances, use ticker "$CASH" with quantity AND total_value both equal to the dollar amount
+- For debt or liability balances (loans, mortgages, credit cards), use ticker "$DEBT" with quantity equal to the dollar amount owed and total_value as the negative of that amount
 - Only include actual holdings, not transaction history
 - Extract the statement date if visible (use YYYY-MM-DD format)
 - Extract the last 4 digits of the account number if visible`;
 
-function formatKnownAsset(asset: KnownAsset): string {
-  const ticker = asset.ticker?.trim() || null;
-  const name = asset.name.trim();
-  if (ticker && name && ticker !== name) {
-    return `${ticker} — ${name}`;
-  }
-  return ticker || name;
-}
-
-export function buildPrompt(knownAssets?: KnownAsset[]): string {
-  if (!knownAssets || knownAssets.length === 0) {
-    return promptTemplate;
-  }
-
-  const lines = knownAssets.map((a) => `- ${formatKnownAsset(a)}`).join("\n");
-  return `${promptTemplate}
-
-Known assets (ticker — name). Match statement holdings to these when reasonably confident (abbreviated names like "Vang Target Ret 2060" count). When matched, set the holding "name" field to that asset's ticker (left of the em dash), not the descriptive name:
-${lines}`;
+export function buildPrompt(): string {
+  return promptTemplate;
 }
