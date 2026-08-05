@@ -1,6 +1,6 @@
 // Families
-export { insertFamily } from './families'
-export type { Family } from './families'
+export { insertFamily } from './families';
+export type { Family } from './families';
 
 // Accounts
 export {
@@ -9,9 +9,9 @@ export {
   insertAccount,
   updateAccount,
   findAccountByLast4,
-  deleteAccount
-} from './accounts'
-export type { Account } from './accounts'
+  deleteAccount,
+} from './accounts';
+export type { Account } from './accounts';
 
 // Assets
 export {
@@ -20,17 +20,13 @@ export {
   getAsset,
   insertAsset,
   updateAsset,
-  deleteAsset
-} from './assets'
-export type { Asset, AssetWithAllocations, AssetAllocationInfo } from './assets'
+  deleteAsset,
+} from './assets';
+export type { Asset, AssetWithAllocations, AssetAllocationInfo } from './assets';
 
 // Asset Aliases
-export {
-  listAliasesByAccount,
-  insertAssetAlias,
-  normalizeLabel
-} from './asset-aliases'
-export type { AssetAlias } from './asset-aliases'
+export { listAliasesByAccount, insertAssetAlias, normalizeLabel } from './asset-aliases';
+export type { AssetAlias } from './asset-aliases';
 
 // Profiles
 export {
@@ -39,9 +35,9 @@ export {
   listProfilesByFamily,
   insertProfile,
   updateProfile,
-  updatePreferences
-} from './profiles'
-export type { Profile, UserPreferences, LocalLlmConfig } from './profiles'
+  updatePreferences,
+} from './profiles';
+export type { Profile, UserPreferences, LocalLlmConfig } from './profiles';
 
 // Updates
 export {
@@ -49,24 +45,21 @@ export {
   listUpdatesWithDetails,
   listUpdatesByAccount,
   insertUpdate,
-  deleteUpdate
-} from './updates'
-export type { Update, UpdateWithDetails, UpdateType } from './updates'
+  deleteUpdate,
+} from './updates';
+export type { Update, UpdateWithDetails, UpdateType } from './updates';
 
 // Price Updates
-export {
-  insertPriceUpdate,
-  listPriceUpdatesWithContext
-} from './price-updates'
-export type { PriceUpdate, PriceUpdateWithContext } from './price-updates'
+export { insertPriceUpdate, listPriceUpdatesWithContext } from './price-updates';
+export type { PriceUpdate, PriceUpdateWithContext } from './price-updates';
 
 // Holding Updates
 export {
   insertHoldingUpdate,
   listHoldingUpdatesWithContext,
-  listHoldingUpdatesByAccount
-} from './holding-updates'
-export type { HoldingUpdate, HoldingUpdateWithContext } from './holding-updates'
+  listHoldingUpdatesByAccount,
+} from './holding-updates';
+export type { HoldingUpdate, HoldingUpdateWithContext } from './holding-updates';
 
 // Asset Classes
 export {
@@ -76,14 +69,14 @@ export {
   insertAssetClass,
   updateAssetClass,
   updateSortOrder,
-  deleteAssetClass
-} from './asset-classes'
-export type { AssetClass } from './asset-classes'
+  deleteAssetClass,
+} from './asset-classes';
+export type { AssetClass } from './asset-classes';
 
 // Asset Allocations
 export {
   listAssetAllocations,
   insertAssetAllocation,
-  deleteAssetAllocationsByAsset
-} from './asset-allocations'
-export type { AssetAllocation } from './asset-allocations'
+  deleteAssetAllocationsByAsset,
+} from './asset-allocations';
+export type { AssetAllocation } from './asset-allocations';

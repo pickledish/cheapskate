@@ -1,4 +1,1 @@
-export {
-  pdfToQuantizedTsv,
-  type PdfToTsvOptions,
-} from './pdf-to-tsv'
+export { pdfToQuantizedTsv, type PdfToTsvOptions } from './pdf-to-tsv';

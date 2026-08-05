@@ -1,2 +1,4 @@
-# Stage 1: tooling only — format nothing yet.
-**/*
+# Stage 2: format .ts only (script scopes the glob); keep build/deps out.
+dist
+node_modules
+package-lock.json

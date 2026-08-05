@@ -1,48 +1,47 @@
-import { supabase } from '../supabase'
+import { supabase } from '../supabase';
 
 export interface Asset {
-  id: number
-  ticker: string | null
-  name: string
-  created_by: string
-  created_at: string
-  family_id: string
+  id: number;
+  ticker: string | null;
+  name: string;
+  created_by: string;
+  created_at: string;
+  family_id: string;
 }
 
 export interface AssetAllocationInfo {
-  asset_class_id: number
-  percentage: number
+  asset_class_id: number;
+  percentage: number;
   asset_classes: {
-    name: string
-    color: string
-    sort_order: number
-  }
+    name: string;
+    color: string;
+    sort_order: number;
+  };
 }
 
 export interface AssetWithAllocations extends Asset {
-  allocations: AssetAllocationInfo[]
+  allocations: AssetAllocationInfo[];
 }
 
 export async function listAssets(): Promise<Asset[]> {
-  const { data, error } = await supabase
-    .from('assets')
-    .select('*')
-    .order('name')
+  const { data, error } = await supabase.from('assets').select('*').order('name');
 
-  if (error) throw error
-  return data || []
+  if (error) throw error;
+  return data || [];
 }
 
 export async function listAssetsWithAllocations(): Promise<AssetWithAllocations[]> {
   const { data, error } = await supabase
     .from('assets')
-    .select(`
+    .select(
+      `
       *,
       asset_allocations (*, asset_classes (*))
-    `)
-    .order('name')
+    `,
+    )
+    .order('name');
 
-  if (error) throw error
+  if (error) throw error;
 
   return (data || []).map((row: any) => ({
     id: row.id,
@@ -51,29 +50,25 @@ export async function listAssetsWithAllocations(): Promise<AssetWithAllocations[
     created_by: row.created_by,
     created_at: row.created_at,
     family_id: row.family_id,
-    allocations: row.asset_allocations || []
-  }))
+    allocations: row.asset_allocations || [],
+  }));
 }
 
 export async function getAsset(id: number): Promise<Asset | null> {
-  const { data, error } = await supabase
-    .from('assets')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const { data, error } = await supabase.from('assets').select('*').eq('id', id).single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null
-    throw error
+    if (error.code === 'PGRST116') return null;
+    throw error;
   }
-  return data
+  return data;
 }
 
 export async function insertAsset(asset: {
-  ticker: string | null
-  name: string
-  created_by: string
-  family_id: string
+  ticker: string | null;
+  name: string;
+  created_by: string;
+  family_id: string;
 }): Promise<Asset> {
   const { data, error } = await supabase
     .from('assets')
@@ -81,32 +76,29 @@ export async function insertAsset(asset: {
       ticker: asset.ticker,
       name: asset.name,
       created_by: asset.created_by,
-      family_id: asset.family_id
+      family_id: asset.family_id,
     })
     .select()
-    .single()
+    .single();
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 
-export async function updateAsset(id: number, updates: {
-  ticker?: string | null
-  name?: string
-}): Promise<void> {
-  const { error } = await supabase
-    .from('assets')
-    .update(updates)
-    .eq('id', id)
+export async function updateAsset(
+  id: number,
+  updates: {
+    ticker?: string | null;
+    name?: string;
+  },
+): Promise<void> {
+  const { error } = await supabase.from('assets').update(updates).eq('id', id);
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function deleteAsset(id: number): Promise<void> {
-  const { error } = await supabase
-    .from('assets')
-    .delete()
-    .eq('id', id)
+  const { error } = await supabase.from('assets').delete().eq('id', id);
 
-  if (error) throw error
+  if (error) throw error;
 }
