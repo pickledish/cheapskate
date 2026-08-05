@@ -1,7 +1,14 @@
-<script setup lang="ts">
-const commitHash = __COMMIT_HASH__
-const buildDate = new Date(__BUILD_TIME__).toLocaleDateString()
-const env = import.meta.env.DEV ? 'Development' : 'Production'
+<script>
+export default {
+  name: 'AppFooter',
+  data() {
+    return {
+      commitHash: __COMMIT_HASH__,
+      buildDate: new Date(__BUILD_TIME__).toLocaleDateString(),
+      env: import.meta.env.DEV ? 'Development' : 'Production'
+    }
+  }
+}
 </script>
 
 <template>
