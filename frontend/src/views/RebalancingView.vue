@@ -4,6 +4,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import AllocationHistoryChart from '@/components/charts/AllocationHistoryChart.vue'
 import AllocationComparisonGrid from '@/components/charts/AllocationComparisonGrid.vue'
 import { listHoldingUpdatesWithContext, listPriceUpdatesWithContext, listAccounts, listAssetClasses, listAssetAllocations } from '@/lib/data'
+import { formatMonth } from '@/lib/format'
 
 export default {
   name: 'RebalancingView',
@@ -199,11 +200,7 @@ export default {
       return nextMonth.toISOString().split('T')[0]
     },
 
-    formatMonth(monthStr) {
-      const [year, month] = monthStr.split('-')
-      const date = new Date(year, month - 1)
-      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-    },
+    formatMonth,
 
     getLatestHoldings(effectiveDate, accountIds) {
       const latestHoldings = {}

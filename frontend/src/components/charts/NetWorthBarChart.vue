@@ -5,6 +5,7 @@ import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/compon
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
 import { cssVar } from '@/lib/cssVar'
+import { formatCurrency } from '@/lib/format'
 
 use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer])
 
@@ -65,14 +66,7 @@ export default {
     },
     chartOption() {
       const secondaryText = cssVar('--color-secondary-text')
-      const formatCurrency = (value) => {
-        return new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0
-        }).format(value)
-      }
+      const fmt = (value) => formatCurrency(value, { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
       return {
         animation: false,
@@ -81,7 +75,7 @@ export default {
           transitionDuration: 0,
           formatter: (p) => {
             if (!p.name || p.value == null) return ''
-            return `<strong>${p.name}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${formatCurrency(p.value)}`
+            return `<strong>${p.name}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${fmt(p.value)}`
           }
         },
         legend: this.isStacked ? {

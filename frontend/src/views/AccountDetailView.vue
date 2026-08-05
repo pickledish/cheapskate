@@ -17,12 +17,10 @@ import {
 } from '@/lib/data'
 import { supabase } from '@/lib/supabase'
 import { getColorClasses } from '@/lib/tagColors'
+import { formatCurrency, formatQuantity, relativeDate } from '@/lib/format'
 import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
 import { PencilSquareIcon, CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/24/solid'
 import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
-
-dayjs.extend(relativeTime)
 
 export default {
   name: 'AccountDetailView',
@@ -224,25 +222,9 @@ export default {
       }
     },
 
-    formatCurrency(value) {
-      if (value == null) return '-'
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).format(value)
-    },
-
-    formatQuantity(qty) {
-      if (Number.isInteger(qty)) return qty.toString()
-      return qty.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')
-    },
-
-    relativeDate(dateStr) {
-      if (!dateStr) return null
-      return dayjs(dateStr).fromNow()
-    },
+    formatCurrency,
+    formatQuantity,
+    relativeDate,
 
     getClassColor(colorName) {
       return getColorClasses(colorName)

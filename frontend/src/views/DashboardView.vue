@@ -3,6 +3,7 @@ import AppLayout from '@/components/AppLayout.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import NetWorthBarChart from '@/components/charts/NetWorthBarChart.vue'
 import { listHoldingUpdatesWithContext, listPriceUpdatesWithContext, listAccounts, listProfiles, listAssetsWithAllocations, listAssetClasses } from '@/lib/data'
+import { formatMonth } from '@/lib/format'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
 
@@ -122,11 +123,7 @@ export default {
       return nextMonth.toISOString().split('T')[0]
     },
 
-    formatMonth(monthStr) {
-      const [year, month] = monthStr.split('-')
-      const date = new Date(year, month - 1)
-      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-    },
+    formatMonth,
 
     getLatestHoldings(effectiveDate) {
       const latestHoldings = {}

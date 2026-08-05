@@ -9,12 +9,9 @@ import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
 import { supabase } from '@/lib/supabase'
 import { listAssetsWithAllocations, listPriceUpdatesWithContext, listAssetClasses, deleteAsset } from '@/lib/data'
 import { getColorClasses } from '@/lib/tagColors'
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
+import { formatCurrency, relativeDate } from '@/lib/format'
 import { Bars3Icon } from '@heroicons/vue/24/solid'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
-
-dayjs.extend(relativeTime)
 
 export default {
   name: 'AssetsView',
@@ -170,18 +167,8 @@ export default {
       await this.loadData()
     },
 
-    formatPrice(price) {
-      if (price === null) return '-'
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(price)
-    },
-
-    relativeDate(dateStr) {
-      if (!dateStr) return null
-      return dayjs(dateStr).fromNow()
-    },
+    formatPrice: formatCurrency,
+    relativeDate,
 
     getClassColor(colorName) {
       return getColorClasses(colorName)

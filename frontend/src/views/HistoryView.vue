@@ -11,6 +11,7 @@ import {
   updateAccount
 } from '@/lib/data'
 import dayjs from 'dayjs'
+import { formatCurrency, formatNumber } from '@/lib/format'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 
 export default {
@@ -103,16 +104,8 @@ export default {
       return dayjs(dateStr).format('MMM D YYYY')
     },
 
-    formatCurrency(value) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(value)
-    },
-
-    formatNumber(value) {
-      return Number(value).toLocaleString(undefined, { maximumFractionDigits: 4 })
-    },
+    formatCurrency,
+    formatNumber,
 
     getPriceForAsset(event, assetName) {
       const priceUpdate = event.prices.find(p => p.assetName === assetName)

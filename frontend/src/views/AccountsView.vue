@@ -14,10 +14,7 @@ import {
   listAssetsWithAllocations
 } from '@/lib/data'
 import { getColorClasses } from '@/lib/tagColors'
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-
-dayjs.extend(relativeTime)
+import { relativeDate } from '@/lib/format'
 
 export default {
   name: 'AccountsView',
@@ -210,13 +207,7 @@ export default {
       await this.loadData()
     },
 
-    relativeDate(dateStr) {
-      if (!dateStr) return null
-      const days = dayjs().diff(dayjs(dateStr), 'day')
-      if (days === 0) return 'today'
-      if (days === 1) return '1 day ago'
-      return `${days} days ago`
-    },
+    relativeDate,
 
     getClassColor(colorName) {
       return getColorClasses(colorName)

@@ -1,10 +1,7 @@
 <script>
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
+import { relativeDate } from '@/lib/format'
 import { DocumentTextIcon, CurrencyDollarIcon, ChartBarIcon, ArchiveBoxIcon } from '@heroicons/vue/24/outline'
 import { TrashIcon } from '@heroicons/vue/24/solid'
-
-dayjs.extend(relativeTime)
 
 const EVENT_TYPES = {
   statement: {
@@ -65,7 +62,7 @@ export default {
       return EVENT_TYPES[this.type]
     },
     relativeLabel() {
-      return dayjs(this.createdAt).fromNow()
+      return relativeDate(this.createdAt)
     }
   }
 }

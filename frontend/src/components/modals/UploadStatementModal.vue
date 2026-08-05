@@ -49,6 +49,7 @@ import {
 } from '@/lib/data'
 import { parseWithLocalLlm } from '@/lib/local-llm'
 import { pdfToQuantizedTsv } from '@/lib/pdf'
+import { formatCurrency, formatNumber } from '@/lib/format'
 
 export default {
   name: 'UploadStatementModal',
@@ -506,18 +507,8 @@ export default {
       return holding.total_value // fallback for quantity=0 edge case
     },
 
-    formatCurrency(value) {
-      if (value === null || value === undefined) return '-'
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(value)
-    },
-
-    formatNumber(value) {
-      if (value === null || value === undefined) return '-'
-      return value.toLocaleString(undefined, { maximumFractionDigits: 4 })
-    },
+    formatCurrency,
+    formatNumber,
 
     /**
      * Turn a ResolvedHolding into a concrete assets.id, creating rows as needed.
