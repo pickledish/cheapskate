@@ -28,7 +28,7 @@
  */
 import BaseModal from './BaseModal.vue'
 import { Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
-import { CheckIcon, ChevronUpDownIcon, ChevronUpIcon } from '@heroicons/vue/24/solid'
+import { CheckIcon, ChevronUpDownIcon, ChevronUpIcon, TrashIcon } from '@heroicons/vue/24/solid'
 import { supabase } from '@/lib/supabase'
 import {
   listAccounts,
@@ -52,7 +52,7 @@ import { pdfToQuantizedTsv } from '@/lib/pdf'
 
 export default {
   name: 'UploadStatementModal',
-  components: { BaseModal, Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, Menu, MenuButton, MenuItems, MenuItem, CheckIcon, ChevronUpDownIcon, ChevronUpIcon },
+  components: { BaseModal, Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, Menu, MenuButton, MenuItems, MenuItem, CheckIcon, ChevronUpDownIcon, ChevronUpIcon, TrashIcon },
   emits: ['close', 'uploaded'],
   data() {
     return {
@@ -86,7 +86,10 @@ export default {
 
       // Loading/error
       loading: false,
-      error: null
+      error: null,
+
+      // Anchor els for portaled asset combobox dropdowns (escape table overflow)
+      comboboxAnchors: {}
     }
   },
   computed: {
@@ -117,9 +120,6 @@ export default {
     resolvedAccount() {
       return this.matchedAccount
     },
-    unresolvedCount() {
-      return this.holdings.filter(h => h.kind === 'unresolved').length
-    },
     duplicateAssetIds() {
       const counts = {}
       for (const h of this.holdings) {
@@ -142,6 +142,25 @@ export default {
     displayAsset(asset) {
       if (!asset) return ''
       return asset.ticker ? `${asset.name} (${asset.ticker})` : asset.name
+    },
+
+    setComboboxAnchor(index, el) {
+      if (el) {
+        this.comboboxAnchors[index] = el
+      } else {
+        delete this.comboboxAnchors[index]
+      }
+    },
+
+    comboboxDropdownStyle(index) {
+      const el = this.comboboxAnchors[index]
+      if (!el) return {}
+      const rect = el.getBoundingClientRect()
+      return {
+        top: `${rect.bottom + 4}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`
+      }
     },
 
     filteredAssetsFor(holding) {
@@ -378,7 +397,7 @@ export default {
             ticker: key,
             kind: 'ticker',
             assetId: hit.id,
-            display: hit.ticker || hit.name
+            display: this.displayAsset(hit)
           }
         }
         return {
@@ -386,7 +405,7 @@ export default {
           ticker: key,
           kind: 'new-ticker',
           assetId: null,
-          display: key
+          display: this.displayAsset({ name: h.name, ticker: key })
         }
       }
 
@@ -398,7 +417,7 @@ export default {
           ...base,
           kind: 'alias',
           assetId: assetId,
-          display: asset.ticker || asset.name
+          display: this.displayAsset(asset)
         }
       }
 
@@ -452,7 +471,7 @@ export default {
         if (!present.has(existing.asset_id)) {
           // Asset not in statement - add as sold (quantity=0)
           this.holdings.push({
-            name: existing.ticker || existing.name,
+            name: existing.name,
             ticker: existing.ticker,
             quantity: 0,
             total_value: null,
@@ -461,7 +480,7 @@ export default {
             assetId: existing.asset_id,
             chosenAsset: null,
             assetQuery: '',
-            display: existing.ticker || existing.name
+            display: this.displayAsset(existing)
           })
         }
       }
@@ -791,20 +810,8 @@ export default {
         </template>
       </p>
       <p class="text-sm text-muted-text mb-4">
-        Review the parsed holdings below.
+        Review the parsed holdings below. Holdings without a ticker need an asset chosen (or leave blank to create a new one).
       </p>
-
-      <div
-        v-if="unresolvedCount > 0"
-        class="mb-4 p-3 bg-info border border-info-border rounded-md text-sm text-info-text"
-      >
-        <template v-if="unresolvedCount === 1">
-          One holding has no ticker printed on the statement. Choose a matching asset, or leave it blank to create a new one. Cheapskate will remember your choice for this account.
-        </template>
-        <template v-else>
-          {{ unresolvedCount }} holdings have no ticker printed on the statement. Choose a matching asset for each, or leave blank to create new ones. Cheapskate will remember your choices for this account.
-        </template>
-      </div>
 
       <div
         v-if="duplicateAssetIds.length > 0"
@@ -837,11 +844,96 @@ export default {
               <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase"></th>
             </tr>
           </thead>
-          <tbody class="bg-surface divide-y divide-surface-border">
+          <tbody class="bg-surface">
             <template v-for="(holding, index) in holdings" v-bind:key="index">
-              <tr>
-                <td class="px-4 py-2 text-sm text-primary-text whitespace-nowrap">
-                  {{ holding.display }}
+              <tr
+                v-bind:class="holding.kind === 'unresolved' && !holding.chosenAsset
+                  ? ''
+                  : 'border-b border-surface-border'"
+              >
+                <td class="px-4 py-2 text-sm whitespace-nowrap min-w-[16rem]">
+                  <!-- Resolved: same chrome as the combobox, but disabled -->
+                  <div v-if="holding.kind !== 'unresolved'" class="relative">
+                    <input
+                      type="text"
+                      disabled
+                      v-bind:value="holding.display"
+                      class="w-full px-3 py-1.5 pr-8 text-sm border border-surface-border-strong rounded-md bg-surface-recessed text-secondary-text cursor-default"
+                    />
+                  </div>
+                  <!-- Unresolved: pick an existing asset, or leave blank to create + alias -->
+                  <Combobox
+                    v-else
+                    v-slot="{ open }"
+                    v-model="holding.chosenAsset"
+                    nullable
+                    as="div"
+                    class="relative"
+                    v-on:update:model-value="onChosenAssetChange(holding)"
+                  >
+                    <div
+                      class="relative"
+                      v-bind:ref="(el) => setComboboxAnchor(index, el)"
+                    >
+                      <ComboboxInput
+                        v-bind:display-value="(asset) => asset ? displayAsset(asset) : holding.name"
+                        v-on:change="holding.assetQuery = $event.target.value"
+                        placeholder="Search assets…"
+                        v-bind:class="[
+                          'w-full px-3 py-1.5 pr-8 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                          holding.chosenAsset
+                            ? 'border border-surface-border-strong bg-surface text-primary-text'
+                            : 'border border-dashed border-surface-border-strong bg-surface text-muted-text'
+                        ]"
+                      />
+                      <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
+                        <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
+                      </ComboboxButton>
+                    </div>
+                    <!-- Portal out of the table: overflow clips absolute dropdowns -->
+                    <Teleport to="body">
+                      <ComboboxOptions
+                        v-bind:style="open ? comboboxDropdownStyle(index) : undefined"
+                        class="fixed z-50 max-h-48 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none"
+                      >
+                        <ComboboxOption
+                          v-bind:value="null"
+                          v-slot="{ active, selected }"
+                        >
+                          <div
+                            v-bind:class="[
+                              'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
+                              active ? 'bg-surface-recessed-deep' : '',
+                              selected ? 'text-blue-600 font-medium' : 'text-muted-text'
+                            ]"
+                          >
+                            <span>Create new asset</span>
+                            <CheckIcon v-if="selected" class="w-4 h-4 flex-shrink-0" />
+                          </div>
+                        </ComboboxOption>
+                        <div v-if="filteredAssetsFor(holding).length === 0" class="px-3 py-2 text-sm text-muted-text">
+                          No matching assets
+                        </div>
+                        <ComboboxOption
+                          v-for="asset in filteredAssetsFor(holding)"
+                          v-bind:key="asset.id"
+                          v-bind:value="asset"
+                          v-slot="{ active, selected }"
+                        >
+                          <div
+                            v-bind:class="[
+                              'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
+                              active ? 'bg-surface-recessed-deep' : '',
+                              selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
+                            ]"
+                          >
+                            <span>{{ displayAsset(asset) }}</span>
+                            <CheckIcon v-if="selected" class="w-4 h-4 flex-shrink-0" />
+                          </div>
+                        </ComboboxOption>
+                      </ComboboxOptions>
+                    </Teleport>
+                  </Combobox>
                 </td>
                 <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatNumber(holding.quantity) }}</td>
                 <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatCurrency(holding.total_value) }}</td>
@@ -849,55 +941,21 @@ export default {
                 <td class="px-4 py-2 text-right whitespace-nowrap">
                   <button
                     v-on:click="removeHolding(index)"
-                    class="text-red-600 hover:text-red-800 text-sm"
+                    class="w-7 h-7 inline-flex items-center justify-center text-placeholder-text hover:text-error-text hover:bg-error rounded cursor-pointer"
+                    title="Remove holding"
                   >
-                    Remove
+                    <TrashIcon class="w-4 h-4" />
                   </button>
                 </td>
               </tr>
-              <tr v-if="holding.kind === 'unresolved'">
-                <td colspan="5" class="px-4 pb-3 pt-0">
-                  <div class="text-xs text-muted-text mb-1">No ticker on statement</div>
-                  <Combobox
-                    v-model="holding.chosenAsset"
-                    as="div"
-                    class="relative"
-                    v-on:update:model-value="onChosenAssetChange(holding)"
-                  >
-                    <div class="relative">
-                      <ComboboxInput
-                        v-bind:display-value="displayAsset"
-                        v-on:change="holding.assetQuery = $event.target.value"
-                        placeholder="Search assets, or leave blank to create new…"
-                        class="w-full px-3 py-2 pr-8 text-sm border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
-                        <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
-                      </ComboboxButton>
-                    </div>
-                    <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-48 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none">
-                      <div v-if="filteredAssetsFor(holding).length === 0" class="px-3 py-2 text-sm text-muted-text">
-                        No match — a new asset will be created
-                      </div>
-                      <ComboboxOption
-                        v-for="asset in filteredAssetsFor(holding)"
-                        v-bind:key="asset.id"
-                        v-bind:value="asset"
-                        v-slot="{ active, selected }"
-                      >
-                        <div
-                          v-bind:class="[
-                            'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
-                            active ? 'bg-surface-recessed-deep' : '',
-                            selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
-                          ]"
-                        >
-                          <span>{{ displayAsset(asset) }}</span>
-                          <CheckIcon v-if="selected" class="w-4 h-4 flex-shrink-0" />
-                        </div>
-                      </ComboboxOption>
-                    </ComboboxOptions>
-                  </Combobox>
+              <tr
+                v-if="holding.kind === 'unresolved' && !holding.chosenAsset"
+                class="border-b border-surface-border"
+              >
+                <td colspan="5" class="px-4 pt-0 pb-2">
+                  <p class="pl-2 text-xs text-muted-text">
+                    ↳ New asset — will be created when the statement is saved
+                  </p>
                 </td>
               </tr>
             </template>
