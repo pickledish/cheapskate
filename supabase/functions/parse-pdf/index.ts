@@ -12,7 +12,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const DEFAULT_MODEL = "google/gemini-2.5-flash";
 
 interface ParsePdfRequest {
-  pdf_base64: string;
+  /** Quantized TSV text extracted client-side from the statement PDF. */
+  tsv: string;
 }
 
 const corsHeaders = {
@@ -53,11 +54,11 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { pdf_base64 }: ParsePdfRequest = await req.json();
+    const { tsv }: ParsePdfRequest = await req.json();
 
-    if (!pdf_base64) {
+    if (!tsv || typeof tsv !== "string") {
       return new Response(
-        JSON.stringify({ error: "Missing pdf_base64 in request body" }),
+        JSON.stringify({ error: "Missing tsv in request body" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -67,15 +68,18 @@ Deno.serve(async (req) => {
       .from("assets")
       .select("ticker, name");
 
-    const knownAssets = existingAssets?.map((s) => s.ticker ?? s.name);
-    const promptText = buildPrompt(knownAssets);
+    const knownAssets = existingAssets?.map((s) => ({
+      ticker: s.ticker as string | null,
+      name: s.name as string,
+    }));
+    const promptText = `${buildPrompt(knownAssets)}\n\n${tsv}`;
 
     // Initialize OpenRouter client
     const client = new OpenRouter({
       apiKey: Deno.env.get("OPENROUTER_API_KEY"),
     });
 
-    // Call OpenRouter with the PDF and structured output schema
+    // Call OpenRouter with extracted statement text and structured output schema
     const model = Deno.env.get("OPENROUTER_MODEL") ?? DEFAULT_MODEL;
     const response = await client.chat.send({
       chatRequest: {
@@ -83,16 +87,7 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: "user",
-            content: [
-              { type: "text", text: promptText },
-              {
-                type: "file",
-                file: {
-                  filename: "statement.pdf",
-                  fileData: `data:application/pdf;base64,${pdf_base64}`,
-                },
-              },
-            ],
+            content: promptText,
           },
         ],
         responseFormat: {
@@ -137,7 +132,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Error processing PDF:", error);
+    console.error("Error processing statement:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -157,7 +152,7 @@ Deno.serve(async (req) => {
   curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/parse-pdf' \
     --header 'Authorization: Bearer <USER_ACCESS_TOKEN>' \
     --header 'Content-Type: application/json' \
-    --data '{"pdf_base64":"<base64-encoded-pdf>"}'
+    --data '{"tsv":"# page=1 w=612 h=792\\n# cols: x y text\\n..."}'
 
   Note: The anon key will NOT work - you need a real user session token.
 

@@ -1,6 +1,4 @@
 export {
-  pdfToImages,
-  pdfToDataUrls,
-  type PdfToImagesOptions,
-  type PageImage,
-} from './pdf-to-images'
+  pdfToQuantizedTsv,
+  type PdfToTsvOptions,
+} from './pdf-to-tsv'

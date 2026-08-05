@@ -1,8 +1,9 @@
-import { pdfToDataUrls } from '@/lib/pdf'
+import { pdfToQuantizedTsv } from '@/lib/pdf'
 import {
   ParsePdfResponseSchema,
   geminiSchema,
   buildPrompt,
+  type KnownAsset,
   type ParsePdfResponse,
 } from '@shared/parse-pdf-schema'
 
@@ -14,7 +15,7 @@ export interface LocalLlmConfig {
 export interface ParseWithLocalLlmOptions {
   config: LocalLlmConfig
   pdfArrayBuffer: ArrayBuffer
-  knownAssets?: string[]
+  knownAssets?: KnownAsset[]
 }
 
 export async function parseWithLocalLlm(
@@ -23,15 +24,16 @@ export async function parseWithLocalLlm(
   const { config, pdfArrayBuffer, knownAssets } = options
   const baseUrl = `http://localhost:${config.port}`
 
-  const imageDataUrls = await pdfToDataUrls(pdfArrayBuffer)
+  const tsv = await pdfToQuantizedTsv(pdfArrayBuffer)
   const prompt = buildPrompt(knownAssets)
+  const userContent = `${prompt}\n\n${tsv}`
 
   if (config.provider === 'ollama') {
     const model = await getFirstModelOllama(baseUrl)
-    return callOllama(baseUrl, model, imageDataUrls, prompt)
+    return callOllama(baseUrl, model, userContent)
   } else {
     const model = await getFirstModelOpenAI(baseUrl)
-    return callOpenAI(baseUrl, model, imageDataUrls, prompt)
+    return callOpenAI(baseUrl, model, userContent)
   }
 }
 
@@ -70,12 +72,9 @@ const FORMAT_PROMPT = 'Now output your findings as JSON.'
 async function callOllama(
   baseUrl: string,
   model: string,
-  imageDataUrls: string[],
-  prompt: string
+  userContent: string
 ): Promise<ParsePdfResponse> {
-  const images = imageDataUrls.map(stripDataUrlPrefix)
-
-  const userMessage = { role: 'user', content: prompt, images }
+  const userMessage = { role: 'user', content: userContent }
 
   // First call: let the model think without JSON constraints
   const thinkResponse = await fetch(`${baseUrl}/api/chat`, {
@@ -135,20 +134,11 @@ async function callOllama(
 async function callOpenAI(
   baseUrl: string,
   model: string,
-  imageDataUrls: string[],
-  prompt: string
+  userContent: string
 ): Promise<ParsePdfResponse> {
-  const imageContent = imageDataUrls.map((url) => ({
-    type: 'image_url' as const,
-    image_url: { url },
-  }))
-
   const userMessage = {
     role: 'user',
-    content: [
-      ...imageContent,
-      { type: 'text', text: prompt },
-    ],
+    content: userContent,
   }
 
   // First call: let the model think without JSON constraints
@@ -229,9 +219,4 @@ function parseAndValidateResponse(content: string, model: string): ParsePdfRespo
       `Model "${model}" returned unexpected format: ${validationError instanceof Error ? validationError.message : 'Unknown error'}`
     )
   }
-}
-
-function stripDataUrlPrefix(dataUrl: string): string {
-  const commaIndex = dataUrl.indexOf(',')
-  return commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : dataUrl
 }

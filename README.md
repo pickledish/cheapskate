@@ -157,11 +157,11 @@ All tables use Row Level Security (RLS) — users can only access data belonging
 
 ### parse-pdf
 
-Parses investment statement PDFs using OpenRouter (defaults to Gemini 2.5 Flash).
+Parses investment statement PDFs via OpenRouter (defaults to Gemini 2.5 Flash). The client extracts quantized TSV text from the PDF and sends that to the function.
 
 - **Endpoint:** `POST /functions/v1/parse-pdf`
 - **Auth:** Requires Supabase user JWT in Authorization header
-- **Body:** `{ "pdf_base64": "<base64-encoded-pdf>" }`
+- **Body:** `{ "tsv": "<quantized statement TSV>" }`
 - **Returns:**
   ```json
   {

@@ -19,6 +19,7 @@ import {
   getProfile
 } from '@/lib/data'
 import { parseWithLocalLlm } from '@/lib/local-llm'
+import { pdfToQuantizedTsv } from '@/lib/pdf'
 
 export default {
   name: 'UploadStatementModal',
@@ -118,9 +119,10 @@ export default {
     },
 
     async parseWithCloud() {
-      const base64 = await this.fileToBase64(this.file)
+      const pdfArrayBuffer = await this.file.arrayBuffer()
+      const tsv = await pdfToQuantizedTsv(pdfArrayBuffer)
       const { data, error } = await supabase.functions.invoke('parse-pdf', {
-        body: { pdf_base64: base64 }
+        body: { tsv }
       })
       if (error) throw error
       return data
@@ -139,7 +141,10 @@ export default {
 
       const pdfArrayBuffer = await this.file.arrayBuffer()
       const existingAssets = await listAssets()
-      const knownAssets = existingAssets.map(a => a.ticker ?? a.name)
+      const knownAssets = existingAssets.map(a => ({
+        ticker: a.ticker,
+        name: a.name
+      }))
 
       return parseWithLocalLlm({
         config: { provider: llmConfig.api, port: llmConfig.port },
@@ -268,19 +273,6 @@ export default {
       } finally {
         this.loading = false
       }
-    },
-
-    fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => {
-          // Remove data URL prefix (e.g., "data:application/pdf;base64,")
-          const base64 = reader.result.split(',')[1]
-          resolve(base64)
-        }
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
     },
 
     removeHolding(index) {
