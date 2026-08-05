@@ -6,7 +6,7 @@ Track your net worth and portfolio composition across brokerage accounts, retire
 
 - **Supabase** - Database, auth, and edge functions ([supabase.com](https://supabase.com))
 - **Google Cloud** - OAuth for "Sign in with Google" ([console.cloud.google.com](https://console.cloud.google.com))
-- **OpenRouter** - PDF statement parsing via LLM ([openrouter.ai](https://openrouter.ai))
+- **OpenRouter** - Cloud PDF statement parsing via LLM ([openrouter.ai](https://openrouter.ai)) — optional if using a local LLM
 - **Bunny CDN** - Frontend hosting ([bunny.net](https://bunny.net)) — or any static host
 
 ## Project Structure
@@ -16,7 +16,8 @@ cheapskate/
 ├── supabase/
 │   ├── migrations/      # Database schema (tables, RLS policies)
 │   └── functions/       # Edge Functions (Deno/TypeScript)
-│       └── parse-pdf/   # PDF statement parsing via OpenRouter
+│       ├── parse-pdf/       # PDF statement parsing via OpenRouter
+│       └── delete-account/  # Deletes the authenticated user's account
 └── frontend/            # Vue 3 + Vite app
 ```
 
@@ -44,7 +45,7 @@ supabase functions serve --env-file ./supabase/.env
 
 Get an API key from [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys) and set `OPENROUTER_API_KEY` in your env file.
 
-Optionally set `OPENROUTER_MODEL` to use a different model (defaults to `google/gemini-2.5-flash`). Browse available models at [openrouter.ai/models](https://openrouter.ai/models).
+Optionally set `OPENROUTER_MODEL` to use a different model (defaults to `google/gemini-3-flash`). Browse available models at [openrouter.ai/models](https://openrouter.ai/models).
 
 ### 3. Set Up Google Sign-In
 
@@ -108,7 +109,9 @@ supabase secrets set --env-file supabase/.env
 
 # Deploy
 supabase functions deploy parse-pdf
+supabase functions deploy delete-account
 ```
+
 
 ### 3. Deploy Frontend
 
@@ -161,7 +164,9 @@ All tables use Row Level Security (RLS) — users can only access data belonging
 
 ### parse-pdf
 
-Parses investment statement PDFs via OpenRouter (defaults to Gemini 2.5 Flash). The client extracts quantized TSV text from the PDF and sends that to the function.
+Parses investment statement PDFs via OpenRouter (defaults to Gemini 3 Flash). The client extracts quantized TSV text from the PDF and sends that to the function.
+
+Alternatively, users can parse statements with a **local LLM** (Ollama or an OpenAI-compatible server) configured under Profile & Settings. That path runs entirely in the browser and does not call this function.
 
 - **Endpoint:** `POST /functions/v1/parse-pdf`
 - **Auth:** Requires Supabase user JWT in Authorization header
@@ -170,8 +175,25 @@ Parses investment statement PDFs via OpenRouter (defaults to Gemini 2.5 Flash). 
   ```json
   {
     "holdings": [
-      { "name": "VTI", "quantity": 100.5, "total_value": 25125.00, "price": 250.00 }
+      {
+        "name": "Vanguard Total Stock Market ETF",
+        "ticker": "VTI",
+        "quantity": 100.5,
+        "total_value": 25125.00,
+        "price": 250.00
+      }
     ],
-    "statement_date": "2025-01-31"
+    "statement_date": "2025-01-31",
+    "last4": "1234"
   }
   ```
+
+`ticker` is null when the statement has no ticker printed. `statement_date` and `last4` are optional.
+
+### delete-account
+
+Deletes the authenticated user's auth account (and cascades related profile/family data via DB triggers). Invoked from Profile & Settings.
+
+- **Endpoint:** `POST /functions/v1/delete-account`
+- **Auth:** Requires Supabase user JWT in Authorization header
+- **Body:** none
