@@ -134,6 +134,18 @@ export default {
     }
   },
   methods: {
+    /**
+     * LLM last4 is unreliable: omitted, null, "null", "not provided", etc.
+     * Only accept exactly 4 digit characters; anything else is unset.
+     */
+    normalizeParsedLast4(value) {
+      if (value == null) return null
+      const s = String(value).trim()
+      if (s.length !== 4) return null
+      if (!/^\d{4}$/.test(s)) return null
+      return s
+    },
+
     displayAccount(account) {
       if (!account) return ''
       return account.last4 ? `${account.name} (****${account.last4})` : account.name
@@ -236,7 +248,7 @@ export default {
         price: h.price ?? null
       }))
       this.effectiveDate = result.statement_date || this.todayDate
-      this.parsedLast4 = result.last4 || null
+      this.parsedLast4 = this.normalizeParsedLast4(result.last4)
 
       if (this.parsedLast4) {
         const matches = await findAccountByLast4(this.parsedLast4)
