@@ -134,13 +134,17 @@ VITE_SUPABASE_URL=https://xxx.supabase.co VITE_SUPABASE_ANON_KEY=xxx npm run bui
 | Table | Purpose |
 |-------|---------|
 | `families` | Groups of users who share data |
+| `profiles` | Per-user name, family membership, and preferences |
 | `accounts` | Investment accounts (401k, IRA, brokerage, etc.) |
-| `statements` | Uploaded PDF statements per account |
 | `assets` | Securities and private assets (stocks, real estate, etc.) |
-| `asset_prices` | Price history per asset |
-| `asset_holdings` | Quantity/shares history per asset per account |
 | `asset_classes` | User-defined categories (stocks, bonds, cash, etc.) |
 | `asset_allocations` | Maps assets to classes with percentages |
+| `asset_aliases` | Per-account label → asset mappings (for ticker-less holdings) |
+| `updates` | Portfolio change events (statement, manual price/holdings, close) |
+| `price_updates` | Asset prices belonging to an update |
+| `holding_updates` | Asset quantities belonging to an update |
+
+Prices and holdings are stored as children of `updates` rather than standalone history tables. An update has a type (`statement`, `manual_price`, `manual_holdings`, or `mark_as_closed`), an effective date, and optional account scope.
 
 ### Family Sharing
 
