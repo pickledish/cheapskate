@@ -69,11 +69,11 @@ export default {
 </script>
 
 <template>
-  <div class="bg-surface rounded-lg shadow p-4 border-l-4" :class="config.borderClass">
+  <div class="bg-surface rounded-lg shadow p-4 border-l-4" v-bind:class="config.borderClass">
     <div>
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0">
-          <component :is="config.icon" class="h-5 w-5 shrink-0" :class="config.iconClass" />
+          <component v-bind:is="config.icon" class="h-5 w-5 shrink-0" v-bind:class="config.iconClass" />
           <span class="font-medium text-primary-text shrink-0 whitespace-nowrap">{{ config.title }}</span>
           <template v-if="accountName">
             <span class="text-placeholder-text shrink-0">-</span>
@@ -85,7 +85,7 @@ export default {
           <button
             v-on:click="$emit('undo')"
             class="w-8 h-8 -my-1 flex items-center justify-center text-placeholder-text hover:text-error-text hover:bg-error rounded cursor-pointer"
-            :title="config.undoTitle"
+            v-bind:title="config.undoTitle"
           >
             <TrashIcon class="w-5 h-5" />
           </button>

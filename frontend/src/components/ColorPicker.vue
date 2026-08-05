@@ -47,10 +47,10 @@ export default {
     <!-- Current color square -->
     <button
       type="button"
-      @click.stop="open = !open"
+      v-on:click.stop="open = !open"
       class="w-6 h-6 rounded-md border border-surface-border-strong focus:outline-none focus:ring-2 focus:ring-blue-500"
-      :style="{ backgroundColor: currentHex }"
-      :title="'Color: ' + modelValue"
+      v-bind:style="{ backgroundColor: currentHex }"
+      v-bind:title="'Color: ' + modelValue"
     />
 
     <!-- Dropdown grid -->
@@ -61,13 +61,13 @@ export default {
       <div class="grid grid-cols-6 gap-1.5">
         <button
           v-for="color in colors"
-          :key="color"
+          v-bind:key="color"
           type="button"
-          @click="select(color)"
+          v-on:click="select(color)"
           class="w-6 h-6 rounded-sm border hover:scale-110 transition-transform"
-          :class="color === modelValue ? 'border-transparent ring-2 ring-offset-2 ring-offset-surface ring-blue-500' : 'border-surface-border'"
-          :style="{ backgroundColor: tagColors[color].hex }"
-          :title="color"
+          v-bind:class="color === modelValue ? 'border-transparent ring-2 ring-offset-2 ring-offset-surface ring-blue-500' : 'border-surface-border'"
+          v-bind:style="{ backgroundColor: tagColors[color].hex }"
+          v-bind:title="color"
         />
       </div>
     </div>

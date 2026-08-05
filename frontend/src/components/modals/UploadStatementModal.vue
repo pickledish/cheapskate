@@ -977,7 +977,7 @@ export default {
       <p class="text-muted-text">Saving statement...</p>
     </div>
 
-    <template v-if="step !== 'saving'" #secondary>
+    <template v-if="step !== 'saving'" v-slot:secondary>
       <!-- Step 1: Upload -->
       <button
         v-if="step === 'upload'"
@@ -996,7 +996,7 @@ export default {
       </button>
     </template>
 
-    <template v-if="step !== 'saving'" #primary>
+    <template v-if="step !== 'saving'" v-slot:primary>
       <!-- Step 1: Upload -->
       <div v-if="step === 'upload'" class="inline-flex rounded-md">
         <button

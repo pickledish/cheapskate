@@ -151,13 +151,13 @@ export default {
         title="Update History"
         description="View all price and position updates, from statement uploads and manual entries. Undo mistakes."
       >
-        <template #actions>
+        <template v-slot:actions>
           <div class="inline-flex items-center text-sm font-medium text-secondary-text bg-surface border border-page-border rounded-md shrink-0">
-            <button @click="prevMonth" class="px-2 py-1.5 hover:bg-surface-recessed rounded-l-md border-r border-page-border">
+            <button v-on:click="prevMonth" class="px-2 py-1.5 hover:bg-surface-recessed rounded-l-md border-r border-page-border">
               <ChevronLeftIcon class="h-4 w-4" />
             </button>
             <span class="px-3 py-1.5 w-22 sm:w-24 text-center">{{ monthLabel }}</span>
-            <button @click="nextMonth" class="px-2 py-1.5 hover:bg-surface-recessed rounded-r-md border-l border-page-border">
+            <button v-on:click="nextMonth" class="px-2 py-1.5 hover:bg-surface-recessed rounded-r-md border-l border-page-border">
               <ChevronRightIcon class="h-4 w-4" />
             </button>
           </div>
@@ -174,21 +174,21 @@ export default {
       <div v-if="!loading && events.length > 0" class="space-y-4">
         <HistoryEventCard
           v-for="event in events"
-          :key="event.id"
-          :type="event.type"
-          :account-name="event.accountName"
-          :created-at="event.createdAt"
-          :creator-name="event.creatorName"
+          v-bind:key="event.id"
+          v-bind:type="event.type"
+          v-bind:account-name="event.accountName"
+          v-bind:created-at="event.createdAt"
+          v-bind:creator-name="event.creatorName"
           v-on:undo="onUndo(event)"
         >
           <div class="text-sm text-secondary-text">
             <p class="font-medium mb-2">As of {{ formatEffectiveDate(event.effectiveDate) }}:</p>
             <ul class="list-disc list-inside space-y-0.5 text-muted-text ml-2">
               <template v-if="event.type === 'statement'">
-                <li v-for="holding in event.holdings" :key="holding.assetName">
+                <li v-for="holding in event.holdings" v-bind:key="holding.assetName">
                   {{ holding.assetName }} is now {{ formatNumber(holding.quantity) }} shares<template v-if="getPriceForAsset(event, holding.assetName)"> at {{ formatCurrency(getPriceForAsset(event, holding.assetName)) }}<span class="hidden sm:inline"> per share</span></template>
                 </li>
-                <li v-for="price in event.prices.filter(p => !event.holdings.some(h => h.assetName === p.assetName))" :key="'price-' + price.assetName">
+                <li v-for="price in event.prices.filter(p => !event.holdings.some(h => h.assetName === p.assetName))" v-bind:key="'price-' + price.assetName">
                   {{ price.assetName }} is now {{ formatCurrency(price.price) }}<span class="hidden sm:inline"> per share</span>
                 </li>
               </template>
@@ -196,12 +196,12 @@ export default {
                 <li>All holdings set to zero</li>
               </template>
               <template v-else-if="event.type === 'manual_price'">
-                <li v-for="price in event.prices" :key="price.assetName">
+                <li v-for="price in event.prices" v-bind:key="price.assetName">
                   {{ price.assetName }} is now {{ formatCurrency(price.price) }}<span class="hidden sm:inline"> per share</span>
                 </li>
               </template>
               <template v-else-if="event.type === 'manual_holdings'">
-                <li v-for="holding in event.holdings" :key="holding.assetName">
+                <li v-for="holding in event.holdings" v-bind:key="holding.assetName">
                   {{ holding.assetName }} is now {{ formatNumber(holding.quantity) }} shares
                 </li>
               </template>

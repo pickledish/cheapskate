@@ -61,6 +61,6 @@ export default {
 
 <template>
   <div class="w-full h-full">
-    <VChart :option="chartOption" autoresize />
+    <VChart v-bind:option="chartOption" autoresize />
   </div>
 </template>

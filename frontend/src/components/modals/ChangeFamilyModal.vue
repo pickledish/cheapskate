@@ -136,7 +136,7 @@ export default {
       </label>
     </div>
 
-    <template #secondary>
+    <template v-slot:secondary>
       <button
         v-on:click="$emit('close')"
         class="px-4 py-2 text-secondary-text hover:text-primary-text"
@@ -144,7 +144,7 @@ export default {
         Cancel
       </button>
     </template>
-    <template #primary>
+    <template v-slot:primary>
       <button
         v-on:click="executeChange"
         v-bind:disabled="!canSubmit || loading"

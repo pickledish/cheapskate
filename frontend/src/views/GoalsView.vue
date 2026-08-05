@@ -183,7 +183,7 @@ export default {
         title="Goals"
         description='Create and manage asset classes. Define a "goal" portfolio allocation for the rebalancing view.'
       >
-        <template #actions>
+        <template v-slot:actions>
           <button
             v-on:click="showAddModal = true"
             class="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"

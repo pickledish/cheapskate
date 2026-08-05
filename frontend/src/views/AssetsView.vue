@@ -215,7 +215,7 @@ export default {
         title="Assets"
         description="Manage distinct assets and update metadata, like asset class. Manually update individual asset prices."
       >
-        <template #actions>
+        <template v-slot:actions>
           <input
             v-model="searchQuery"
             type="text"

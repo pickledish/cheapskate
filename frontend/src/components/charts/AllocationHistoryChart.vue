@@ -120,8 +120,8 @@ export default {
 
 <template>
   <div>
-    <div v-if="hasData" class="w-full" :style="{ height: chartHeight + 'px' }">
-      <VChart :option="chartOption" autoresize />
+    <div v-if="hasData" class="w-full" v-bind:style="{ height: chartHeight + 'px' }">
+      <VChart v-bind:option="chartOption" autoresize />
     </div>
     <div v-else class="text-center text-muted-text py-8">
       No allocation history to display.

@@ -251,7 +251,7 @@ export default {
             <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">Current vs Target Allocation</h3>
           </div>
           <div class="p-6">
-            <AllocationComparisonGrid v-if="comparisonAllocations.length > 0 && comparisonAllocations.some(a => a.current > 0)" :allocations="comparisonAllocations" :totalValue="currentTotalValue" />
+            <AllocationComparisonGrid v-if="comparisonAllocations.length > 0 && comparisonAllocations.some(a => a.current > 0)" v-bind:allocations="comparisonAllocations" v-bind:totalValue="currentTotalValue" />
             <div v-else class="text-center text-muted-text py-7">No allocation history to display.</div>
           </div>
         </div>
@@ -262,7 +262,7 @@ export default {
             <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">Allocation Over Time</h3>
           </div>
           <div class="p-6">
-            <AllocationHistoryChart :labels="monthLabels" :series="chartSeries" />
+            <AllocationHistoryChart v-bind:labels="monthLabels" v-bind:series="chartSeries" />
           </div>
         </div>
       </template>

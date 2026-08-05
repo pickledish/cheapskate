@@ -134,7 +134,7 @@ export default {
 <template>
   <div>
     <div v-if="hasData" class="w-full" style="height: 500px;">
-      <VChart ref="chart" :option="chartOption" autoresize @legendselectchanged="onLegendSelectChanged" />
+      <VChart ref="chart" v-bind:option="chartOption" autoresize v-on:legendselectchanged="onLegendSelectChanged" />
     </div>
     <div v-else class="text-center text-muted-text py-8">
       No net worth data to display.

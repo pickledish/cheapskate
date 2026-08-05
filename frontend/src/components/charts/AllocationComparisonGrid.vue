@@ -55,20 +55,20 @@ export default {
   <div class="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] justify-items-center gap-4">
     <div
       v-for="alloc in allocations"
-      :key="alloc.name"
+      v-bind:key="alloc.name"
       class="bg-surface-recessed rounded-lg p-3 flex flex-col w-full max-w-[160px] min-w-0"
     >
       <!-- Asset class name -->
-      <div class="text-sm font-medium text-secondary-text mb-2 truncate text-center" :title="alloc.name">
+      <div class="text-sm font-medium text-secondary-text mb-2 truncate text-center" v-bind:title="alloc.name">
         {{ alloc.name }}
       </div>
 
       <!-- Mini bar chart -->
-      <div class="flex items-end justify-center gap-2" :style="{ height: '60px' }">
+      <div class="flex items-end justify-center gap-2" v-bind:style="{ height: '60px' }">
         <!-- Current bar -->
         <div
           class="w-8 rounded-t transition-all"
-          :style="{
+          v-bind:style="{
             height: barHeightPx(currentDollars(alloc), globalMax),
             backgroundColor: getColor(alloc.color)
           }"
@@ -77,7 +77,7 @@ export default {
         <!-- Goal bar -->
         <div
           class="w-8 rounded-t transition-all"
-          :style="{
+          v-bind:style="{
             height: barHeightPx(goalDollars(alloc), globalMax),
             backgroundColor: getColor(alloc.color),
             opacity: 0.4

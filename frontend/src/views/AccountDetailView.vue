@@ -420,8 +420,8 @@ export default {
       <div v-if="loading" class="text-muted-text">Loading...</div>
 
       <template v-if="!loading && account">
-        <PageHeader :title="account.name" :description="isArchived ? 'CLOSED' : null">
-          <template #actions>
+        <PageHeader v-bind:title="account.name" v-bind:description="isArchived ? 'CLOSED' : null">
+          <template v-slot:actions>
             <Menu as="div" class="relative inline-block text-left shrink-0">
               <MenuButton class="inline-flex items-center rounded-md border border-page-border bg-surface px-4 py-2 text-sm font-medium text-secondary-text hover:bg-surface-recessed transition-colors">
                 Manage<span class="hidden sm:inline">&nbsp;Account</span>
