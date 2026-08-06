@@ -102,9 +102,7 @@ export default {
         ]);
 
         // Sort by name for dropdown display (original behavior)
-        this.assetClasses = classesData
-          .map((c) => ({ id: c.id, name: c.name }))
-          .sort((a, b) => a.name.localeCompare(b.name));
+        this.assetClasses = [...classesData].sort((a, b) => a.name.localeCompare(b.name));
 
         // Build map of asset_id -> { price, effectiveDate }
         const latestPriceByAsset = {};
@@ -131,10 +129,6 @@ export default {
             assetClasses: sortedAllocs.map((a) => ({
               name: a.asset_classes.name,
               color: a.asset_classes.color,
-            })),
-            allocations: asset.allocations.map((a) => ({
-              asset_class_id: a.asset_class_id,
-              percentage: Math.round(parseFloat(a.percentage) * 100),
             })),
           };
         });

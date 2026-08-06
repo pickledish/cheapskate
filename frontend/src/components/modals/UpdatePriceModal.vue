@@ -2,19 +2,14 @@
 import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
-import { insertUpdate, insertPriceUpdate } from '@/lib/data';
-
-interface PricedAsset {
-  id: number;
-  name: string;
-}
+import { insertUpdate, insertPriceUpdate, type Asset } from '@/lib/data';
 
 export default defineComponent({
   name: 'UpdatePriceModal',
   components: { BaseModal },
   props: {
     asset: {
-      type: Object as PropType<PricedAsset>,
+      type: Object as PropType<Asset>,
       required: true,
     },
   },

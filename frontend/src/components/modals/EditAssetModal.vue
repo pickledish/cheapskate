@@ -1,26 +1,20 @@
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
-import { updateAsset, deleteAssetAllocationsByAsset, insertAssetAllocation } from '@/lib/data';
+import {
+  updateAsset,
+  deleteAssetAllocationsByAsset,
+  insertAssetAllocation,
+  type AssetWithAllocations,
+  type AssetClass,
+} from '@/lib/data';
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue';
 import { TrashIcon } from '@heroicons/vue/24/solid';
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 
-interface AllocationRow {
+interface EditableAllocation {
   asset_class_id: number | null;
   percentage: number;
-}
-
-interface EditableAsset {
-  id: number;
-  name: string;
-  ticker: string | null;
-  allocations?: AllocationRow[];
-}
-
-interface AssetClassOption {
-  id: number;
-  name: string;
 }
 
 export default defineComponent({
@@ -37,11 +31,11 @@ export default defineComponent({
   },
   props: {
     asset: {
-      type: Object as PropType<EditableAsset>,
+      type: Object as PropType<AssetWithAllocations>,
       required: true,
     },
     assetClasses: {
-      type: Array as PropType<AssetClassOption[]>,
+      type: Array as PropType<AssetClass[]>,
       required: true,
     },
   },
@@ -50,7 +44,7 @@ export default defineComponent({
     return {
       name: '',
       ticker: '',
-      allocations: [] as AllocationRow[],
+      allocations: [] as EditableAllocation[],
       loading: false,
       error: null as string | null,
     };
@@ -69,12 +63,14 @@ export default defineComponent({
     },
   },
   mounted() {
-    // Initialize form with current values
-    this.name = this.asset.name || '';
+    this.name = this.asset.name;
     this.ticker = this.asset.ticker || '';
 
-    // Copy allocations from prop (already converted to percentages by parent)
-    this.allocations = (this.asset.allocations || []).map((a) => ({ ...a }));
+    // Form uses 0–100 percentages; DB/prop uses 0–1
+    this.allocations = this.asset.allocations.map((a) => ({
+      asset_class_id: a.asset_class_id,
+      percentage: Math.round(a.percentage * 100),
+    }));
 
     // If no allocations exist, add an empty row so the UI is visible by default
     if (this.allocations.length === 0 && this.assetClasses.length > 0) {
@@ -102,7 +98,7 @@ export default defineComponent({
       return c ? c.name : '';
     },
 
-    isClassUsed(classId: number, currentAlloc: AllocationRow) {
+    isClassUsed(classId: number, currentAlloc: EditableAllocation) {
       return this.allocations.some((a) => a.asset_class_id === classId && a !== currentAlloc);
     },
 
@@ -114,7 +110,7 @@ export default defineComponent({
 
       // Filter out allocations with no class selected (empty rows)
       const validAllocations = this.allocations.filter(
-        (a): a is AllocationRow & { asset_class_id: number } => a.asset_class_id !== null,
+        (a): a is EditableAllocation & { asset_class_id: number } => a.asset_class_id !== null,
       );
 
       // Validate allocations sum to 100 if any exist

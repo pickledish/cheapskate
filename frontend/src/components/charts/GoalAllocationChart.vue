@@ -7,21 +7,16 @@ import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import { getHexForColor } from '@/lib/tagColors';
 import { cssVar } from '@/lib/cssVar';
+import type { AssetClass } from '@/lib/data';
 
 use([PieChart, TooltipComponent, CanvasRenderer]);
-
-interface AssetClassSlice {
-  name: string;
-  goal: number;
-  color: string;
-}
 
 export default defineComponent({
   name: 'GoalAllocationChart',
   components: { VChart },
   props: {
     assetClasses: {
-      type: Array as PropType<AssetClassSlice[]>,
+      type: Array as PropType<AssetClass[]>,
       required: true,
     },
   },
