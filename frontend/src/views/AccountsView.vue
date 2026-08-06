@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import AppLayout from '@/components/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import AddAccountModal from '@/components/modals/AddAccountModal.vue';
@@ -12,11 +13,12 @@ import {
   listHoldingUpdatesWithContext,
   listPriceUpdatesWithContext,
   listAssetsWithAllocations,
+  type Account,
 } from '@/lib/data';
 import { getColorClasses } from '@/lib/tagColors';
 import { relativeDate } from '@/lib/format';
 
-export default {
+export default defineComponent({
   name: 'AccountsView',
   components: {
     AppLayout,
@@ -26,9 +28,22 @@ export default {
     OnboardingModal,
     OnboardingContinueCard,
   },
-  data() {
+  data(): {
+    accounts: Account[];
+    latestEffectiveByAccount: Record<number, string>;
+    assetClassesByAccount: Record<number, { name: string; color: string; sort_order: number }[]>;
+    hasAnyStatements: boolean;
+    loading: boolean;
+    error: string | null;
+    showAddAccountModal: boolean;
+    showUploadStatementModal: boolean;
+    showOnboardingModal: boolean;
+    accountsCompleted: boolean;
+  } {
     return {
       accounts: [],
+      latestEffectiveByAccount: {},
+      assetClassesByAccount: {},
       hasAnyStatements: false,
       loading: true,
       error: null,
@@ -42,10 +57,10 @@ export default {
     };
   },
   computed: {
-    filteredAccounts() {
+    filteredAccounts(): Account[] {
       return this.accounts.filter((account) => !account.archived_at);
     },
-    showContinueCard() {
+    showContinueCard(): boolean {
       // Show continue card if: has at least 1 account, has at least 1 statement, and not yet completed
       return this.accounts.length > 0 && this.hasAnyStatements && !this.accountsCompleted;
     },
@@ -82,20 +97,23 @@ export default {
         this.hasAnyStatements = updatesData.length > 0;
 
         // Build map of asset_id -> allocations (class info)
-        const allocationsByAsset = {};
+        const allocationsByAsset: Record<
+          number,
+          { name: string; color: string; sort_order: number; percentage: number }[]
+        > = {};
         for (const a of assetsData) {
           if (a.allocations.length > 0) {
             allocationsByAsset[a.id] = a.allocations.map((alloc) => ({
               name: alloc.asset_classes.name,
               color: alloc.asset_classes.color,
               sort_order: alloc.asset_classes.sort_order,
-              percentage: parseFloat(alloc.percentage),
+              percentage: parseFloat(String(alloc.percentage)),
             }));
           }
         }
 
         // Build map of account_id -> most recent effective date
-        const latestEffectiveByAccount = {};
+        const latestEffectiveByAccount: Record<number, string> = {};
         for (const update of updatesData) {
           if (update.account_id && !latestEffectiveByAccount[update.account_id]) {
             latestEffectiveByAccount[update.account_id] = update.effective_date;
@@ -103,22 +121,25 @@ export default {
         }
 
         // Build map of asset_id -> latest price
-        const latestPriceByAsset = {};
+        const latestPriceByAsset: Record<number, number> = {};
         for (const p of pricesData) {
           if (!latestPriceByAsset[p.asset_id]) {
-            latestPriceByAsset[p.asset_id] = parseFloat(p.price);
+            latestPriceByAsset[p.asset_id] = parseFloat(String(p.price));
           }
         }
 
         // Build map of (account_id, asset_id) -> latest holding info
-        const latestHoldingByAccountAsset = {};
+        const latestHoldingByAccountAsset: Record<
+          string,
+          { asset_id: number; account_id: number; quantity: number }
+        > = {};
         for (const h of holdingsData) {
           const key = `${h.account_id}-${h.asset_id}`;
           if (!latestHoldingByAccountAsset[key]) {
             latestHoldingByAccountAsset[key] = {
               asset_id: h.asset_id,
               account_id: h.account_id,
-              quantity: parseFloat(h.quantity),
+              quantity: parseFloat(String(h.quantity)),
             };
           }
         }
@@ -127,10 +148,11 @@ export default {
         // We use absolute values for accountValues to get total exposure (not net value),
         // so that the 10% threshold for showing asset class tags works correctly for
         // accounts with both long and short positions.
-        const accountValues = {};
-        const holdingsByAccount = {};
+        const accountValues: Record<number, number> = {};
+        const holdingsByAccount: Record<number, { asset_id: number; value: number }[]> = {};
         for (const key in latestHoldingByAccountAsset) {
           const holding = latestHoldingByAccountAsset[key];
+          if (!holding) continue;
           const price = latestPriceByAsset[holding.asset_id] || 0;
           const value = holding.quantity * price;
 
@@ -138,10 +160,12 @@ export default {
             (accountValues[holding.account_id] || 0) + Math.abs(value);
 
           if (holding.quantity !== 0) {
-            if (!holdingsByAccount[holding.account_id]) {
-              holdingsByAccount[holding.account_id] = [];
+            let accountHoldings = holdingsByAccount[holding.account_id];
+            if (!accountHoldings) {
+              accountHoldings = [];
+              holdingsByAccount[holding.account_id] = accountHoldings;
             }
-            holdingsByAccount[holding.account_id].push({
+            accountHoldings.push({
               asset_id: holding.asset_id,
               value: value,
             });
@@ -149,13 +173,18 @@ export default {
         }
 
         // Calculate asset classes per account
-        const assetClassesByAccount = {};
+        const assetClassesByAccount: Record<
+          number,
+          { name: string; color: string; sort_order: number }[]
+        > = {};
         for (const accountId in holdingsByAccount) {
           const holdings = holdingsByAccount[accountId];
-          const totalValue = accountValues[accountId] || 0;
+          if (!holdings) continue;
+          const totalValue = accountValues[Number(accountId)] || 0;
 
           // Aggregate value by class, track unclassified value
-          const classValues = {};
+          const classValues: Record<string, { value: number; color: string; sort_order: number }> =
+            {};
           let unclassifiedValue = 0;
           for (const h of holdings) {
             const allocations = allocationsByAsset[h.asset_id] || [];
@@ -165,14 +194,16 @@ export default {
             } else {
               for (const alloc of allocations) {
                 const classValue = h.value * alloc.percentage;
-                if (!classValues[alloc.name]) {
-                  classValues[alloc.name] = {
+                let classData = classValues[alloc.name];
+                if (!classData) {
+                  classData = {
                     value: 0,
                     color: alloc.color,
                     sort_order: alloc.sort_order,
                   };
+                  classValues[alloc.name] = classData;
                 }
-                classValues[alloc.name].value += classValue;
+                classData.value += classValue;
               }
             }
           }
@@ -189,17 +220,14 @@ export default {
             classes.push({ name: 'Unclassified', color: 'gray', sort_order: 9999 });
           }
 
-          assetClassesByAccount[accountId] = classes;
+          assetClassesByAccount[Number(accountId)] = classes;
         }
 
-        // Merge metadata into accounts
-        this.accounts = accountsData.map((account) => ({
-          ...account,
-          latestEffectiveDate: latestEffectiveByAccount[account.id] || null,
-          assetClasses: assetClassesByAccount[account.id] || [],
-        }));
+        this.accounts = accountsData;
+        this.latestEffectiveByAccount = latestEffectiveByAccount;
+        this.assetClassesByAccount = assetClassesByAccount;
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
@@ -217,11 +245,19 @@ export default {
 
     relativeDate,
 
-    getClassColor(colorName) {
+    latestEffectiveDate(accountId: number): string | null {
+      return this.latestEffectiveByAccount[accountId] ?? null;
+    },
+
+    accountAssetClasses(accountId: number): { name: string; color: string; sort_order: number }[] {
+      return this.assetClassesByAccount[accountId] || [];
+    },
+
+    getClassColor(colorName: string) {
       return getColorClasses(colorName);
     },
   },
-};
+});
 </script>
 
 <template>
@@ -262,9 +298,9 @@ export default {
           >
             <h3 class="font-semibold text-primary-text">{{ account.name }}</h3>
             <!-- Asset class tags -->
-            <div v-if="account.assetClasses.length" class="flex flex-wrap gap-1 mt-3">
+            <div v-if="accountAssetClasses(account.id).length" class="flex flex-wrap gap-1 mt-3">
               <span
-                v-for="ac in account.assetClasses"
+                v-for="ac in accountAssetClasses(account.id)"
                 v-bind:key="ac.name"
                 class="inline-block px-2 py-0.5 text-xs font-medium rounded"
                 v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
@@ -274,8 +310,8 @@ export default {
             </div>
             <!-- As of date -->
             <p class="mt-3 text-xs text-placeholder-text">
-              <span v-if="account.latestEffectiveDate">
-                Current as of {{ relativeDate(account.latestEffectiveDate) }}
+              <span v-if="latestEffectiveDate(account.id)">
+                Current as of {{ relativeDate(latestEffectiveDate(account.id)) }}
               </span>
               <span v-else class="italic">No data yet</span>
             </p>
