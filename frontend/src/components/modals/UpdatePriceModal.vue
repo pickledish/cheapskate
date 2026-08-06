@@ -1,14 +1,20 @@
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
 import { insertUpdate, insertPriceUpdate } from '@/lib/data';
 
-export default {
+interface PricedAsset {
+  id: number;
+  name: string;
+}
+
+export default defineComponent({
   name: 'UpdatePriceModal',
   components: { BaseModal },
   props: {
     asset: {
-      type: Object,
+      type: Object as PropType<PricedAsset>,
       required: true,
     },
   },
@@ -18,12 +24,12 @@ export default {
       effectiveDate: '',
       price: '',
       loading: false,
-      error: null,
+      error: null as string | null,
     };
   },
   mounted() {
     // Default to today's date
-    this.effectiveDate = new Date().toISOString().split('T')[0];
+    this.effectiveDate = new Date().toISOString().split('T')[0]!;
   },
   methods: {
     async save() {
@@ -63,13 +69,13 @@ export default {
 
         this.$emit('updated');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>

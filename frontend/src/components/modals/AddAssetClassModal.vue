@@ -1,14 +1,22 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import BaseModal from './BaseModal.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
 import { supabase } from '@/lib/supabase';
 import { getMaxSortOrder, insertAssetClass } from '@/lib/data';
+import type { TagColorName } from '@/lib/tagColors';
 
-export default {
+export default defineComponent({
   name: 'AddAssetClassModal',
   components: { BaseModal, ColorPicker },
   emits: ['close', 'created'],
-  data() {
+  data(): {
+    name: string;
+    color: TagColorName;
+    goal: number;
+    loading: boolean;
+    error: string | null;
+  } {
     return {
       name: '',
       color: 'red',
@@ -31,7 +39,9 @@ export default {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        const familyId = user.user_metadata.family_id;
+        if (!user) throw new Error('Not authenticated');
+
+        const familyId = user.user_metadata.family_id as string;
 
         // Get max sort_order for this family
         const maxOrder = await getMaxSortOrder(familyId);
@@ -48,13 +58,13 @@ export default {
 
         this.$emit('created');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>

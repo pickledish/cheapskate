@@ -1,11 +1,29 @@
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { updateAsset, deleteAssetAllocationsByAsset, insertAssetAllocation } from '@/lib/data';
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue';
 import { TrashIcon } from '@heroicons/vue/24/solid';
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 
-export default {
+interface AllocationRow {
+  asset_class_id: number | null;
+  percentage: number;
+}
+
+interface EditableAsset {
+  id: number;
+  name: string;
+  ticker: string | null;
+  allocations?: AllocationRow[];
+}
+
+interface AssetClassOption {
+  id: number;
+  name: string;
+}
+
+export default defineComponent({
   name: 'EditAssetModal',
   components: {
     BaseModal,
@@ -19,11 +37,11 @@ export default {
   },
   props: {
     asset: {
-      type: Object,
+      type: Object as PropType<EditableAsset>,
       required: true,
     },
     assetClasses: {
-      type: Array,
+      type: Array as PropType<AssetClassOption[]>,
       required: true,
     },
   },
@@ -32,9 +50,9 @@ export default {
     return {
       name: '',
       ticker: '',
-      allocations: [],
+      allocations: [] as AllocationRow[],
       loading: false,
-      error: null,
+      error: null as string | null,
     };
   },
   computed: {
@@ -42,7 +60,7 @@ export default {
       // Only count allocations with a class selected
       return this.allocations
         .filter((a) => a.asset_class_id !== null)
-        .reduce((sum, a) => sum + (parseFloat(a.percentage) || 0), 0);
+        .reduce((sum, a) => sum + (parseFloat(String(a.percentage)) || 0), 0);
     },
     availableClasses() {
       // Filter out null ids when computing available classes
@@ -75,17 +93,16 @@ export default {
       });
     },
 
-    removeAllocation(index) {
+    removeAllocation(index: number) {
       this.allocations.splice(index, 1);
     },
 
-    getClassName(classId) {
-      if (!classId) return '';
+    getClassName(classId: number) {
       const c = this.assetClasses.find((c) => c.id === classId);
       return c ? c.name : '';
     },
 
-    isClassUsed(classId, currentAlloc) {
+    isClassUsed(classId: number, currentAlloc: AllocationRow) {
       return this.allocations.some((a) => a.asset_class_id === classId && a !== currentAlloc);
     },
 
@@ -96,11 +113,16 @@ export default {
       }
 
       // Filter out allocations with no class selected (empty rows)
-      const validAllocations = this.allocations.filter((a) => a.asset_class_id !== null);
+      const validAllocations = this.allocations.filter(
+        (a): a is AllocationRow & { asset_class_id: number } => a.asset_class_id !== null,
+      );
 
       // Validate allocations sum to 100 if any exist
       if (validAllocations.length > 0) {
-        const total = validAllocations.reduce((sum, a) => sum + (parseFloat(a.percentage) || 0), 0);
+        const total = validAllocations.reduce(
+          (sum, a) => sum + (parseFloat(String(a.percentage)) || 0),
+          0,
+        );
         if (total !== 100) {
           this.error = `Allocations must sum to 100% (currently ${total}%)`;
           return;
@@ -131,13 +153,13 @@ export default {
 
         this.$emit('updated');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>

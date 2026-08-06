@@ -1,13 +1,14 @@
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
-import { updateAccount } from '@/lib/data';
+import { updateAccount, type Account } from '@/lib/data';
 
-export default {
+export default defineComponent({
   name: 'EditAccountModal',
   components: { BaseModal },
   props: {
     account: {
-      type: Object,
+      type: Object as PropType<Account>,
       required: true,
     },
   },
@@ -17,7 +18,7 @@ export default {
       name: '',
       last4: '',
       loading: false,
-      error: null,
+      error: null as string | null,
     };
   },
   mounted() {
@@ -41,13 +42,13 @@ export default {
         });
         this.$emit('updated');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>

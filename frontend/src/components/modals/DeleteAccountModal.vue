@@ -1,8 +1,9 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
 
-export default {
+export default defineComponent({
   name: 'DeleteAccountModal',
   components: { BaseModal },
   emits: ['close'],
@@ -10,7 +11,7 @@ export default {
     return {
       confirmText: '',
       loading: false,
-      error: null,
+      error: null as string | null,
     };
   },
   computed: {
@@ -31,15 +32,15 @@ export default {
 
         // Account deleted - sign out locally and redirect
         await supabase.auth.signOut();
-        this.$router.push('/login');
+        await this.$router.push('/login');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>

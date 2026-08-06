@@ -1,18 +1,19 @@
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
-import { insertUpdate, insertHoldingUpdate, updateAccount } from '@/lib/data';
+import { insertUpdate, insertHoldingUpdate, updateAccount, type Account } from '@/lib/data';
 
-export default {
+export default defineComponent({
   name: 'CloseAccountModal',
   components: { BaseModal },
   props: {
     account: {
-      type: Object,
+      type: Object as PropType<Account>,
       required: true,
     },
-    holdings: {
-      type: Array,
+    heldAssets: {
+      type: Array as PropType<number[]>,
       default: () => [],
     },
   },
@@ -21,11 +22,11 @@ export default {
     return {
       effectiveDate: '',
       loading: false,
-      error: null,
+      error: null as string | null,
     };
   },
   mounted() {
-    this.effectiveDate = new Date().toISOString().split('T')[0];
+    this.effectiveDate = new Date().toISOString().split('T')[0]!;
   },
   methods: {
     async save() {
@@ -43,7 +44,7 @@ export default {
         } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        if (this.holdings.length > 0) {
+        if (this.heldAssets.length > 0) {
           const update = await insertUpdate({
             family_id: user.user_metadata.family_id,
             account_id: this.account.id,
@@ -52,10 +53,10 @@ export default {
             created_by: user.id,
           });
 
-          for (const h of this.holdings) {
+          for (const assetId of this.heldAssets) {
             await insertHoldingUpdate({
               update_id: update.id,
-              asset_id: h.asset_id,
+              asset_id: assetId,
               quantity: 0,
             });
           }
@@ -64,13 +65,13 @@ export default {
         await updateAccount(this.account.id, { archived_at: this.effectiveDate });
         this.$emit('closed');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>

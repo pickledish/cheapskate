@@ -1,5 +1,7 @@
-<script>
-export default {
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
   name: 'OnboardingModal',
   props: {
     title: {
@@ -21,13 +23,13 @@ export default {
   },
   emits: ['close'],
   methods: {
-    onBackdropClick(event) {
+    onBackdropClick(event: MouseEvent) {
       if (event.target === event.currentTarget) {
         this.$emit('close');
       }
     },
   },
-};
+});
 </script>
 
 <template>

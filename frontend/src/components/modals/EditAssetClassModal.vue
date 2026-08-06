@@ -1,19 +1,27 @@
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
-import { updateAssetClass } from '@/lib/data';
+import { updateAssetClass, type AssetClass } from '@/lib/data';
+import type { TagColorName } from '@/lib/tagColors';
 
-export default {
+export default defineComponent({
   name: 'EditAssetClassModal',
   components: { BaseModal, ColorPicker },
   props: {
     assetClass: {
-      type: Object,
+      type: Object as PropType<AssetClass>,
       required: true,
     },
   },
   emits: ['close', 'updated'],
-  data() {
+  data(): {
+    name: string;
+    color: TagColorName;
+    goal: number;
+    loading: boolean;
+    error: string | null;
+  } {
     return {
       name: '',
       color: 'red',
@@ -23,9 +31,9 @@ export default {
     };
   },
   mounted() {
-    this.name = this.assetClass.name || '';
-    this.color = this.assetClass.color || 'red';
-    this.goal = (this.assetClass.goal || 0) * 100;
+    this.name = this.assetClass.name;
+    this.color = this.assetClass.color as TagColorName;
+    this.goal = this.assetClass.goal * 100;
   },
   methods: {
     async save() {
@@ -46,13 +54,13 @@ export default {
 
         this.$emit('updated');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>

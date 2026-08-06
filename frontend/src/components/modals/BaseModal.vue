@@ -1,5 +1,7 @@
-<script>
-export default {
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
   name: 'BaseModal',
   props: {
     title: {
@@ -13,14 +15,14 @@ export default {
   },
   emits: ['close'],
   methods: {
-    onBackdropClick(event) {
+    onBackdropClick(event: MouseEvent) {
       // Only close if clicking the backdrop itself, not the modal content
       if (event.target === event.currentTarget) {
         this.$emit('close');
       }
     },
   },
-};
+});
 </script>
 
 <template>

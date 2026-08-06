@@ -1,9 +1,10 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
 import { insertAccount } from '@/lib/data';
 
-export default {
+export default defineComponent({
   name: 'AddAccountModal',
   components: { BaseModal },
   emits: ['close', 'created'],
@@ -13,7 +14,7 @@ export default {
       last4: '',
       rebalancing: true,
       loading: false,
-      error: null,
+      error: null as string | null,
     };
   },
   methods: {
@@ -30,6 +31,7 @@ export default {
         const {
           data: { user },
         } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
         await insertAccount({
           family_id: user.user_metadata.family_id,
@@ -41,13 +43,13 @@ export default {
 
         this.$emit('created');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>

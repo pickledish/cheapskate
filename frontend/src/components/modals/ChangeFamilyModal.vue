@@ -1,14 +1,20 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
 
-export default {
+export default defineComponent({
   name: 'ChangeFamilyModal',
   components: { BaseModal },
   emits: ['close', 'changed'],
-  data() {
+  data(): {
+    mode: 'create' | 'join';
+    familyId: string;
+    loading: boolean;
+    error: string | null;
+  } {
     return {
-      mode: 'create', // 'create' | 'join'
+      mode: 'create',
       familyId: '',
       loading: false,
       error: null,
@@ -33,7 +39,7 @@ export default {
         } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        let newFamilyId;
+        let newFamilyId: string;
 
         if (this.mode === 'create') {
           // Generate UUID client-side (same pattern as SetupView)
@@ -73,13 +79,13 @@ export default {
 
         this.$emit('changed');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>

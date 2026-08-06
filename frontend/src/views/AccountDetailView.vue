@@ -833,7 +833,7 @@ export default {
     <CloseAccountModal
       v-if="showCloseAccountModal"
       v-bind:account="account"
-      v-bind:holdings="holdings"
+      v-bind:held-assets="holdings.map((h) => h.asset_id)"
       v-on:close="showCloseAccountModal = false"
       v-on:closed="onAccountClosed"
     />
