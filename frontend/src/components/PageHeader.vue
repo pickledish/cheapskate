@@ -1,5 +1,7 @@
-<script>
-export default {
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
+
+export default defineComponent({
   name: 'PageHeader',
   props: {
     title: {
@@ -7,11 +9,11 @@ export default {
       required: true,
     },
     description: {
-      type: String,
+      type: String as PropType<string | null>,
       default: null,
     },
   },
-};
+});
 </script>
 
 <template>
