@@ -1,14 +1,22 @@
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
 import { getHexForColor } from '@/lib/tagColors';
 
 const BAR_MAX_HEIGHT = 60; // pixels
 
-export default {
+interface AllocationComparison {
+  name: string;
+  color: string;
+  current: number;
+  goal: number;
+}
+
+export default defineComponent({
   name: 'AllocationComparisonGrid',
   props: {
     // Array of { name, current, goal } where current/goal are percentages (0-1)
     allocations: {
-      type: Array,
+      type: Array as PropType<AllocationComparison[]>,
       required: true,
     },
     // Total portfolio value (for computing dollar amounts)
@@ -27,28 +35,28 @@ export default {
     },
   },
   methods: {
-    getColor(colorName) {
+    getColor(colorName: string) {
       return getHexForColor(colorName);
     },
-    formatCurrency(value) {
+    formatCurrency(value: number) {
       const rounded = Math.round(value / 1000);
       return rounded === 0 ? '$0' : `$${rounded}k`;
     },
-    currentDollars(alloc) {
+    currentDollars(alloc: AllocationComparison) {
       return alloc.current * this.totalValue;
     },
-    goalDollars(alloc) {
+    goalDollars(alloc: AllocationComparison) {
       return alloc.goal * this.totalValue;
     },
     // Scale bar height in pixels relative to the max of current/goal
-    barHeightPx(value, maxValue) {
+    barHeightPx(value: number, maxValue: number) {
       if (maxValue === 0) return '0px';
       const pct = value / maxValue;
       const height = Math.round(pct * BAR_MAX_HEIGHT);
       return `${Math.max(height, value > 0 ? 4 : 0)}px`;
     },
   },
-};
+});
 </script>
 
 <template>

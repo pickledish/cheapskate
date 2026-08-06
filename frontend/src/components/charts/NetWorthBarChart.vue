@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
 import { use } from 'echarts/core';
 import { BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
@@ -27,22 +28,40 @@ const COLORS = [
   '#0EA5E9',
 ];
 
-export default {
+interface NetWorthSeries {
+  name: string;
+  data: number[];
+}
+
+// Local stub instead of echarts CallbackDataParams — we only read a few fields.
+interface TooltipParam {
+  name?: string;
+  value?: unknown;
+  color?: string;
+  seriesName?: string;
+}
+
+// Local stub instead of the echarts legendselectchanged payload — we only read `name`.
+interface LegendSelectChangedParams {
+  name: string;
+}
+
+export default defineComponent({
   name: 'NetWorthBarChart',
   components: { VChart },
   props: {
     labels: {
-      type: Array,
+      type: Array as PropType<string[]>,
       required: true,
     },
     series: {
-      type: Array,
+      type: Array as PropType<NetWorthSeries[]>,
       required: true,
     },
   },
   data() {
     return {
-      selectedSingle: null, // null = show all, string = show only this series
+      selectedSingle: null as string | null, // null = show all, string = show only this series
     };
   },
   computed: {
@@ -51,22 +70,22 @@ export default {
     },
     chartOption() {
       const secondaryText = cssVar('--color-secondary-text');
-      const fmt = (value) =>
+      const fmt = (value: number) =>
         formatCurrency(value, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
       return {
         animation: false,
         tooltip: {
-          trigger: 'item',
+          trigger: 'item' as const,
           transitionDuration: 0,
-          formatter: (p) => {
-            if (!p.name || p.value == null) return '';
+          formatter: (p: TooltipParam) => {
+            if (!p.name || p.value == null || typeof p.value !== 'number') return '';
             return `<strong>${p.name}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${fmt(p.value)}`;
           },
         },
         legend: this.isStacked
           ? {
-              type: 'scroll',
+              type: 'scroll' as const,
               bottom: 0,
               textStyle: { color: secondaryText },
             }
@@ -79,19 +98,19 @@ export default {
           containLabel: true,
         },
         xAxis: {
-          type: 'category',
+          type: 'category' as const,
           data: this.labels,
           axisLabel: { color: secondaryText },
           axisPointer: {
             show: true,
-            type: 'shadow',
+            type: 'shadow' as const,
           },
         },
         yAxis: {
-          type: 'value',
+          type: 'value' as const,
           axisLabel: {
             color: secondaryText,
-            formatter: (value) => {
+            formatter: (value: number) => {
               if (value >= 1000000) {
                 return '$' + (value / 1000000).toFixed(1) + 'M';
               } else if (value >= 1000) {
@@ -103,11 +122,11 @@ export default {
         },
         series: this.series.map((s, i) => ({
           name: s.name,
-          type: 'bar',
+          type: 'bar' as const,
           stack: this.isStacked ? 'total' : undefined,
           data: s.data,
           itemStyle: { color: COLORS[i % COLORS.length] },
-          emphasis: { focus: 'series' },
+          emphasis: { focus: 'series' as const },
           cursor: 'crosshair',
         })),
       };
@@ -117,8 +136,8 @@ export default {
     },
   },
   methods: {
-    onLegendSelectChanged(params) {
-      const chart = this.$refs.chart;
+    onLegendSelectChanged(params: LegendSelectChangedParams) {
+      const chart = this.$refs.chart as { dispatchAction: (payload: object) => void } | undefined;
       if (!chart) return;
 
       const clickedName = params.name;
@@ -143,7 +162,7 @@ export default {
       }
     },
   },
-};
+});
 </script>
 
 <template>

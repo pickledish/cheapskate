@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
 import { use } from 'echarts/core';
 import { PieChart } from 'echarts/charts';
 import { TooltipComponent } from 'echarts/components';
@@ -9,12 +10,18 @@ import { cssVar } from '@/lib/cssVar';
 
 use([PieChart, TooltipComponent, CanvasRenderer]);
 
-export default {
+interface AssetClassSlice {
+  name: string;
+  goal: number;
+  color: string;
+}
+
+export default defineComponent({
   name: 'GoalAllocationChart',
   components: { VChart },
   props: {
     assetClasses: {
-      type: Array,
+      type: Array as PropType<AssetClassSlice[]>,
       required: true,
     },
   },
@@ -35,12 +42,12 @@ export default {
         tooltip: { show: false },
         series: [
           {
-            type: 'pie',
+            type: 'pie' as const,
             radius: ['35%', '70%'],
             data,
             label: {
               show: true,
-              position: 'outside',
+              position: 'outside' as const,
               formatter: '{b}',
               fontSize: 13,
               color: secondaryText,
@@ -58,7 +65,7 @@ export default {
       };
     },
   },
-};
+});
 </script>
 
 <template>

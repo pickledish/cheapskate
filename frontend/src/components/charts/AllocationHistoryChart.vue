@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
 import { use } from 'echarts/core';
 import { BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
@@ -9,26 +10,42 @@ import { cssVar } from '@/lib/cssVar';
 
 use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
-export default {
+interface AllocationSeries {
+  name: string;
+  color: string;
+  data: number[];
+}
+
+// Local stub instead of echarts CallbackDataParams — we only read a few fields.
+interface TooltipParam {
+  name?: string;
+  value?: unknown;
+  color?: string;
+  seriesName?: string;
+  dataIndex?: number;
+}
+
+export default defineComponent({
   name: 'AllocationHistoryChart',
   components: { VChart },
   props: {
     // Array of month labels (e.g., ['Jan 2024', 'Feb 2024', ...])
     labels: {
-      type: Array,
+      type: Array as PropType<string[]>,
       required: true,
     },
     // Array of series: [{ name: 'US Stocks', data: [0.4, 0.38, ...] }, ...]
     // Each data value is a percentage (0-1)
     series: {
-      type: Array,
+      type: Array as PropType<AllocationSeries[]>,
       required: true,
     },
   },
   data() {
     return {
       isMobile: false,
-      mobileQuery: null,
+      mobileQuery: null as MediaQueryList | null,
+      onMobileChange: null as ((event: MediaQueryListEvent) => void) | null,
     };
   },
   computed: {
@@ -42,12 +59,12 @@ export default {
       return {
         animation: false,
         tooltip: {
-          trigger: 'item',
+          trigger: 'item' as const,
           transitionDuration: 0,
-          formatter: (p) => {
-            if (!p.name || p.value == null) return '';
+          formatter: (p: TooltipParam) => {
+            if (!p.name || p.value == null || typeof p.value !== 'number') return '';
             // Use the full label in tooltips even when the axis shows a short form
-            const fullLabel = this.labels[p.dataIndex] || p.name;
+            const fullLabel = this.labels[p.dataIndex ?? -1] || p.name;
             const pct = (p.value * 100).toFixed(1);
             return `<strong>${fullLabel}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${pct}%`;
           },
@@ -61,33 +78,33 @@ export default {
           containLabel: true,
         },
         xAxis: {
-          type: 'value',
+          type: 'value' as const,
           max: 1,
           interval: this.isMobile ? 0.5 : 0.2,
           axisLabel: {
             color: secondaryText,
             // Keep "100%" inside the canvas without extra right padding
-            alignMaxLabel: 'right',
-            formatter: (value) => `${(value * 100).toFixed(0)}%`,
+            alignMaxLabel: 'right' as const,
+            formatter: (value: number) => `${(value * 100).toFixed(0)}%`,
           },
         },
         yAxis: {
-          type: 'category',
+          type: 'category' as const,
           data: this.axisLabels,
           axisLabel: { color: secondaryText },
           axisPointer: {
             show: true,
-            type: 'shadow',
+            type: 'shadow' as const,
           },
         },
         series: this.series.map((s) => ({
           name: s.name,
-          type: 'bar',
+          type: 'bar' as const,
           stack: 'total',
           barWidth: 14,
           data: s.data,
           itemStyle: { color: getHexForColor(s.color) },
-          emphasis: { focus: 'series' },
+          emphasis: { focus: 'series' as const },
           cursor: 'crosshair',
         })),
       };
@@ -105,17 +122,17 @@ export default {
   mounted() {
     this.mobileQuery = window.matchMedia('(max-width: 639px)');
     this.isMobile = this.mobileQuery.matches;
+    this.onMobileChange = (event: MediaQueryListEvent) => {
+      this.isMobile = event.matches;
+    };
     this.mobileQuery.addEventListener('change', this.onMobileChange);
   },
   beforeUnmount() {
-    this.mobileQuery?.removeEventListener('change', this.onMobileChange);
+    if (this.mobileQuery && this.onMobileChange) {
+      this.mobileQuery.removeEventListener('change', this.onMobileChange);
+    }
   },
-  methods: {
-    onMobileChange(event) {
-      this.isMobile = event.matches;
-    },
-  },
-};
+});
 </script>
 
 <template>
