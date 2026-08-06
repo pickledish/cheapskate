@@ -1,20 +1,27 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import { supabase } from '@/lib/supabase';
 import { insertFamily, insertProfile } from '@/lib/data';
 
-export default {
+export default defineComponent({
   name: 'SetupView',
-  data() {
+  data(): {
+    name: string;
+    mode: 'create' | 'join';
+    familyId: string;
+    loading: boolean;
+    error: string | null;
+  } {
     return {
       name: '',
-      mode: 'create', // 'create' or 'join'
+      mode: 'create',
       familyId: '',
       loading: false,
       error: null,
     };
   },
   computed: {
-    canSubmit() {
+    canSubmit(): boolean {
       if (!this.name.trim()) return false;
       if (this.mode === 'join' && !this.familyId.trim()) return false;
       return true;
@@ -42,7 +49,7 @@ export default {
         } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        let familyId;
+        let familyId: string;
 
         if (this.mode === 'create') {
           // Generate UUID client-side (we can't SELECT it back due to RLS)
@@ -60,7 +67,7 @@ export default {
         // Update user metadata with the family_id
         // If joining an existing family, skip onboarding - the family already has data set up,
         // so there's no need to walk them through goals/accounts/assets setup.
-        const metadata = { family_id: familyId };
+        const metadata: Record<string, string | boolean> = { family_id: familyId };
         if (this.mode === 'join') {
           metadata.goals_completed = true;
           metadata.accounts_completed = true;
@@ -84,15 +91,15 @@ export default {
         });
 
         // Redirect: new families start onboarding, joining families go to accounts
-        this.$router.push(this.mode === 'create' ? '/goals' : '/accounts');
+        await this.$router.push(this.mode === 'create' ? '/goals' : '/accounts');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>
