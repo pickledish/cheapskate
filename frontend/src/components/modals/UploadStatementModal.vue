@@ -1,31 +1,6 @@
-<script>
-/**
- * Holding resolution shapes used by this modal (JSDoc stand-in until this is .ts).
- *
- * ParsedHolding — raw LLM output, kept immutable so re-resolving for a different account works:
- *   { name: string, ticker: string | null, quantity: number, total_value: number | null, price: number | null }
- *
- * ResolvedHolding — preview/save row after matching against tickers + per-account aliases:
- *   {
- *     name: string,              // fund name as printed on the statement
- *     ticker: string | null,     // ticker as printed (uppercased), or null
- *     quantity: number,
- *     total_value: number | null,
- *     price: number | null,
- *     kind: 'ticker' | 'new-ticker' | 'alias' | 'unresolved' | 'sold',
- *     assetId: number | null,    // set for ticker / alias / sold; null until materialize for the rest
- *     display: string,           // label shown in the preview table
- *     chosenAsset: Asset | null, // unresolved only: combobox selection (null => create new)
- *     assetQuery: string,        // unresolved only: combobox filter text
- *   }
- *
- * kind meanings:
- *   'ticker'      — statement printed a ticker we already have; assetId is set
- *   'new-ticker'  — statement printed a ticker we don't have; create asset with that ticker on save
- *   'alias'       — no ticker, but (account, normalized name) maps to an existing asset
- *   'unresolved'  — no ticker and no alias; user picks an asset or leaves blank to create + write alias
- *   'sold'        — previously held in this account but missing from this statement; quantity forced to 0
- */
+<script lang="ts">
+import { defineComponent, type ComponentPublicInstance } from 'vue';
+import type { User } from '@supabase/supabase-js';
 import BaseModal from './BaseModal.vue';
 import {
   Disclosure,
@@ -59,12 +34,83 @@ import {
   insertAssetAlias,
   normalizeLabel,
   getProfile,
+  type Account,
+  type Asset,
 } from '@/lib/data';
 import { parseWithLocalLlm } from '@/lib/local-llm';
 import { pdfToQuantizedTsv } from '@/lib/pdf';
 import { formatCurrency, formatNumber } from '@/lib/format';
+import {
+  ParsePdfResponseSchema,
+  type ParsePdfResponse,
+  type Holding as ParsedHolding,
+} from '@shared/parse-pdf-schema';
 
-export default {
+/**
+ * ResolvedHolding — preview/save row after matching against tickers + per-account aliases.
+ * Discriminated on `kind`:
+ *   'ticker'      — statement printed a ticker we already have; assetId is set
+ *   'new-ticker'  — statement printed a ticker we don't have; create asset with that ticker on save
+ *   'alias'       — no ticker, but (account, normalized name) maps to an existing asset
+ *   'unresolved'  — no ticker and no alias; user picks an asset or leaves blank to create + write alias
+ *   'sold'        — previously held in this account but missing from this statement; quantity forced to 0
+ */
+interface TickerHolding {
+  kind: 'ticker';
+  assetId: number;
+  quantity: number;
+  total_value: number;
+  price?: number;
+  display: string;
+}
+
+interface NewTickerHolding {
+  kind: 'new-ticker';
+  name: string;
+  ticker: string;
+  quantity: number;
+  total_value: number;
+  price?: number;
+  display: string;
+}
+
+interface AliasHolding {
+  kind: 'alias';
+  assetId: number;
+  quantity: number;
+  total_value: number;
+  price?: number;
+  display: string;
+}
+
+interface UnresolvedHolding {
+  kind: 'unresolved';
+  name: string;
+  quantity: number;
+  total_value: number;
+  price?: number;
+  chosenAsset: Asset | null;
+  assetQuery: string;
+}
+
+interface SoldHolding {
+  kind: 'sold';
+  assetId: number;
+  name: string;
+  ticker: string | null;
+  display: string;
+}
+
+type ResolvedHolding =
+  TickerHolding | NewTickerHolding | AliasHolding | UnresolvedHolding | SoldHolding;
+
+interface ExistingHolding {
+  asset_id: number;
+  ticker: string | null;
+  name: string;
+}
+
+export default defineComponent({
   name: 'UploadStatementModal',
   components: {
     BaseModal,
@@ -86,14 +132,33 @@ export default {
     TrashIcon,
   },
   emits: ['close', 'uploaded'],
-  data() {
+  data(): {
+    step: 'upload' | 'match' | 'preview' | 'saving';
+    file: File | null;
+    parseMode: 'cloud' | 'local';
+    parsedHoldings: ParsedHolding[];
+    effectiveDate: string;
+    parsedLast4: string | null;
+    holdings: ResolvedHolding[];
+    matchedAccount: Account | null;
+    allAccounts: Account[];
+    selectedAccount: Account | null;
+    accountQuery: string;
+    createNewAccount: boolean;
+    newAccountName: string;
+    matchingAccountIds: number[];
+    allAssets: Asset[];
+    existingHoldings: ExistingHolding[];
+    loading: boolean;
+    error: string | null;
+    comboboxAnchors: Record<number, HTMLElement>;
+  } {
     return {
-      // Step: 'upload' | 'match' | 'preview' | 'saving'
       step: 'upload',
 
       // File state
       file: null,
-      parseMode: 'cloud', // 'cloud' | 'local'
+      parseMode: 'cloud',
 
       // Raw LLM output (kept so re-resolving for a different account works)
       parsedHoldings: [],
@@ -125,44 +190,42 @@ export default {
     };
   },
   computed: {
-    todayDate() {
-      return new Date().toISOString().split('T')[0];
+    todayDate(): string {
+      return new Date().toISOString().split('T')[0]!;
     },
-    parseButtonText() {
+    parseButtonText(): string {
       if (this.loading) return 'Parsing...';
       return this.parseMode === 'local' ? 'Parse with Local LLM' : 'Parse with Cloud AI';
     },
-    modalTitle() {
+    modalTitle(): string {
       if (this.step === 'match') return 'Select Account';
       return 'Upload Statement';
     },
-    filteredAccounts() {
+    filteredAccounts(): Account[] {
       const query = this.accountQuery.toLowerCase().trim();
       if (!query) return this.allAccounts;
       return this.allAccounts.filter(
         (a) => a.name.toLowerCase().includes(query) || (a.last4 && a.last4.includes(query)),
       );
     },
-    sortedAccounts() {
+    sortedAccounts(): Account[] {
       const matching = this.filteredAccounts.filter((a) => this.matchingAccountIds.includes(a.id));
       const others = this.filteredAccounts.filter((a) => !this.matchingAccountIds.includes(a.id));
       return [...matching, ...others];
     },
-    resolvedAccount() {
+    resolvedAccount(): Account | null {
       return this.matchedAccount;
     },
-    duplicateAssetIds() {
-      const counts = {};
+    duplicateAssetIds(): number[] {
+      const counts = new Map<number, number>();
       for (const h of this.holdings) {
         const id = this.resolvedAssetId(h);
         if (id == null) continue;
-        counts[id] = (counts[id] || 0) + 1;
+        counts.set(id, (counts.get(id) ?? 0) + 1);
       }
-      return Object.keys(counts)
-        .filter((id) => counts[id] > 1)
-        .map(Number);
+      return [...counts.entries()].filter(([, n]) => n > 1).map(([id]) => id);
     },
-    canSave() {
+    canSave(): boolean {
       return this.holdings.length > 0 && this.duplicateAssetIds.length === 0;
     },
   },
@@ -171,33 +234,34 @@ export default {
      * LLM last4 is unreliable: omitted, null, "null", "not provided", etc.
      * Only accept exactly 4 digit characters; anything else is unset.
      */
-    normalizeParsedLast4(value) {
+    normalizeParsedLast4(value: string | null | undefined): string | null {
       if (value == null) return null;
-      const s = String(value).trim();
+      const s = value.trim();
       if (s.length !== 4) return null;
       if (!/^\d{4}$/.test(s)) return null;
       return s;
     },
 
-    displayAccount(account) {
-      if (!account) return '';
-      return account.last4 ? `${account.name} (****${account.last4})` : account.name;
+    // HeadlessUI types displayValue as (item: unknown) => string
+    displayAccount(account: unknown): string {
+      if (!account || typeof account !== 'object') return '';
+      const a = account as Account;
+      return a.last4 ? `${a.name} (****${a.last4})` : a.name;
     },
 
-    displayAsset(asset) {
-      if (!asset) return '';
+    displayAsset(asset: { name: string; ticker: string | null }): string {
       return asset.ticker ? `${asset.name} (${asset.ticker})` : asset.name;
     },
 
-    setComboboxAnchor(index, el) {
-      if (el) {
+    setComboboxAnchor(index: number, el: Element | ComponentPublicInstance | null) {
+      if (el instanceof HTMLElement) {
         this.comboboxAnchors[index] = el;
       } else {
         delete this.comboboxAnchors[index];
       }
     },
 
-    comboboxDropdownStyle(index) {
+    comboboxDropdownStyle(index: number): Record<string, string> {
       const el = this.comboboxAnchors[index];
       if (!el) return {};
       const rect = el.getBoundingClientRect();
@@ -208,7 +272,12 @@ export default {
       };
     },
 
-    filteredAssetsFor(holding) {
+    focusAccountCombobox() {
+      const button = this.$refs.comboboxButton as ComponentPublicInstance | undefined;
+      (button?.$el as HTMLElement | undefined)?.click();
+    },
+
+    filteredAssetsFor(holding: UnresolvedHolding): Asset[] {
       const query = (holding.assetQuery || '').toLowerCase().trim();
       if (!query) return this.allAssets;
       return this.allAssets.filter(
@@ -218,8 +287,9 @@ export default {
       );
     },
 
-    onFileChange(event) {
-      this.file = event.target.files[0];
+    onFileChange(event: Event) {
+      const input = event.target as HTMLInputElement;
+      this.file = input.files?.[0] ?? null;
       this.error = null;
     },
 
@@ -229,32 +299,35 @@ export default {
         return;
       }
 
+      const file = this.file;
       this.loading = true;
       this.error = null;
 
       try {
         const result =
-          this.parseMode === 'local' ? await this.parseWithLocal() : await this.parseWithCloud();
+          this.parseMode === 'local'
+            ? await this.parseWithLocal(file)
+            : await this.parseWithCloud(file);
 
         await this.handleParseResult(result);
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
 
-    async parseWithCloud() {
-      const pdfArrayBuffer = await this.file.arrayBuffer();
+    async parseWithCloud(file: File): Promise<ParsePdfResponse> {
+      const pdfArrayBuffer = await file.arrayBuffer();
       const tsv = await pdfToQuantizedTsv(pdfArrayBuffer);
       const { data, error } = await supabase.functions.invoke('parse-pdf', {
         body: { tsv },
       });
       if (error) throw error;
-      return data;
+      return ParsePdfResponseSchema.parse(data);
     },
 
-    async parseWithLocal() {
+    async parseWithLocal(file: File): Promise<ParsePdfResponse> {
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -267,21 +340,15 @@ export default {
         throw new Error('Local LLM not configured. Go to Profile & Settings to set it up.');
       }
 
-      const pdfArrayBuffer = await this.file.arrayBuffer();
+      const pdfArrayBuffer = await file.arrayBuffer();
       return parseWithLocalLlm({
         config: { provider: llmConfig.api, port: llmConfig.port },
         pdfArrayBuffer,
       });
     },
 
-    async handleParseResult(result) {
-      this.parsedHoldings = (result.holdings || []).map((h) => ({
-        name: h.name,
-        ticker: h.ticker?.trim() || null,
-        quantity: h.quantity,
-        total_value: h.total_value,
-        price: h.price ?? null,
-      }));
+    async handleParseResult(result: ParsePdfResponse) {
+      this.parsedHoldings = result.holdings;
       this.effectiveDate = result.statement_date || this.todayDate;
       this.parsedLast4 = this.normalizeParsedLast4(result.last4);
 
@@ -290,8 +357,11 @@ export default {
         this.matchingAccountIds = matches.map((a) => a.id);
 
         if (matches.length === 1) {
-          this.matchedAccount = matches[0];
-          listAccounts().then((accts) => (this.allAccounts = accts));
+          this.matchedAccount = matches[0]!;
+
+          // Prefetch if user clicks "Not the right account?" - don't block auto-match on it
+          void listAccounts().then((accts) => (this.allAccounts = accts));
+
           await this.onAccountResolved();
           return;
         }
@@ -334,7 +404,7 @@ export default {
           this.matchingAccountIds = [];
           await this.onAccountResolved();
         } catch (err) {
-          this.error = err.message;
+          this.error = err instanceof Error ? err.message : String(err);
           this.loading = false;
         }
         return;
@@ -351,7 +421,7 @@ export default {
         this.matchingAccountIds = [];
         await this.onAccountResolved();
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
         this.loading = false;
       }
     },
@@ -369,6 +439,8 @@ export default {
 
     async onAccountResolved() {
       try {
+        if (!this.matchedAccount) throw new Error('No account selected');
+
         // Fetch assets, aliases, and existing holdings for sold-position detection
         const [holdingsData, assetsData, aliasesData] = await Promise.all([
           listHoldingUpdatesByAccount(this.matchedAccount.id, 'desc'),
@@ -378,13 +450,13 @@ export default {
 
         this.allAssets = assetsData;
 
-        const assetsById = {};
+        const assetsById: Record<number, Asset> = {};
         for (const a of assetsData) {
           assetsById[a.id] = a;
         }
 
         // Get latest holding per asset
-        const latestByAsset = {};
+        const latestByAsset: Record<number, (typeof holdingsData)[number]> = {};
         for (const h of holdingsData) {
           if (!latestByAsset[h.asset_id]) {
             latestByAsset[h.asset_id] = h;
@@ -392,20 +464,21 @@ export default {
         }
 
         this.existingHoldings = Object.values(latestByAsset)
-          .filter((h) => parseFloat(h.quantity) > 0)
+          .filter((h) => Number(h.quantity) > 0)
           .map((h) => ({
             asset_id: h.asset_id,
-            ticker: assetsById[h.asset_id]?.ticker || null,
-            name: assetsById[h.asset_id]?.name || null,
+            ticker: assetsById[h.asset_id]?.ticker ?? null,
+            name: assetsById[h.asset_id]?.name ?? 'Unknown',
           }));
 
-        // Build alias lookup: normalized statement label -> asset_id
-        const assetsByLabel = {};
+        // Build alias lookup: normalized statement label -> asset
+        const assetsByLabel: Record<string, Asset> = {};
         for (const alias of aliasesData) {
-          assetsByLabel[alias.label] = alias.asset_id;
+          const asset = assetsById[alias.asset_id];
+          if (asset) assetsByLabel[alias.label] = asset;
         }
 
-        const assetsByTicker = {};
+        const assetsByTicker: Record<string, Asset> = {};
         for (const a of assetsData) {
           if (a.ticker) {
             assetsByTicker[a.ticker.toUpperCase()] = a;
@@ -413,69 +486,71 @@ export default {
         }
 
         this.holdings = this.parsedHoldings.map((h) =>
-          this.resolveHolding(h, assetsByTicker, assetsByLabel, assetsById),
+          this.resolveHolding(h, assetsByTicker, assetsByLabel),
         );
         this.addSoldPositions();
         this.step = 'preview';
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
 
     /** Classify a parsed holding into a ResolvedHolding using ticker, then alias. */
-    resolveHolding(h, assetsByTicker, assetsByLabel, assetsById) {
-      const base = {
-        name: h.name,
-        ticker: h.ticker,
-        quantity: h.quantity,
-        total_value: h.total_value,
-        price: h.price,
-        chosenAsset: null,
-        assetQuery: '',
-      };
-
+    resolveHolding(
+      h: ParsedHolding,
+      assetsByTicker: Record<string, Asset>,
+      assetsByLabel: Record<string, Asset>,
+    ): ResolvedHolding {
       // Path 1: statement printed a ticker
-      if (h.ticker) {
-        const key = h.ticker.toUpperCase();
+      const ticker = h.ticker?.trim() || null;
+      if (ticker) {
+        const key = ticker.toUpperCase();
         const hit = assetsByTicker[key];
         if (hit) {
           return {
-            ...base,
-            ticker: key,
             kind: 'ticker',
             assetId: hit.id,
+            quantity: h.quantity,
+            total_value: h.total_value,
+            price: h.price,
             display: this.displayAsset(hit),
           };
         }
         return {
-          ...base,
-          ticker: key,
           kind: 'new-ticker',
-          assetId: null,
+          name: h.name,
+          ticker: key,
+          quantity: h.quantity,
+          total_value: h.total_value,
+          price: h.price,
           display: this.displayAsset({ name: h.name, ticker: key }),
         };
       }
 
       // Path 2: no ticker, but we've mapped this label in this account before
-      const assetId = assetsByLabel[normalizeLabel(h.name)];
-      if (assetId && assetsById[assetId]) {
-        const asset = assetsById[assetId];
+      const asset = assetsByLabel[normalizeLabel(h.name)];
+      if (asset) {
         return {
-          ...base,
           kind: 'alias',
-          assetId: assetId,
+          assetId: asset.id,
+          quantity: h.quantity,
+          total_value: h.total_value,
+          price: h.price,
           display: this.displayAsset(asset),
         };
       }
 
       // Path 3: nothing to go on — user picks or leaves blank to create
       return {
-        ...base,
         kind: 'unresolved',
-        assetId: null,
-        display: h.name,
+        name: h.name,
+        quantity: h.quantity,
+        total_value: h.total_value,
+        price: h.price,
+        chosenAsset: null,
+        assetQuery: '',
       };
     },
 
@@ -484,7 +559,7 @@ export default {
      * Used for sold-position detection and duplicate checks — does not create anything.
      * Returns null for new-ticker and for unresolved rows with no combobox selection yet.
      */
-    resolvedAssetId(holding) {
+    resolvedAssetId(holding: ResolvedHolding): number | null {
       if (holding.kind === 'ticker' || holding.kind === 'alias' || holding.kind === 'sold') {
         return holding.assetId;
       }
@@ -494,7 +569,7 @@ export default {
       return null;
     },
 
-    removeHolding(index) {
+    removeHolding(index: number) {
       this.holdings.splice(index, 1);
       this.refreshSoldPositions();
     },
@@ -512,7 +587,7 @@ export default {
     addSoldPositions() {
       // Assets already represented by a resolved holding in this statement
       const present = new Set(
-        this.holdings.map((h) => this.resolvedAssetId(h)).filter((id) => id != null),
+        this.holdings.map((h) => this.resolvedAssetId(h)).filter((id): id is number => id != null),
       );
 
       // Check each existing holding to see if it's missing from the parsed results
@@ -520,27 +595,23 @@ export default {
         if (!present.has(existing.asset_id)) {
           // Asset not in statement - add as sold (quantity=0)
           this.holdings.push({
-            name: existing.name,
-            ticker: existing.ticker,
-            quantity: 0,
-            total_value: null,
-            price: null,
             kind: 'sold',
             assetId: existing.asset_id,
-            chosenAsset: null,
-            assetQuery: '',
+            name: existing.name,
+            ticker: existing.ticker,
             display: this.displayAsset(existing),
           });
         }
       }
     },
 
-    computePrice(holding) {
-      if (holding.price) return holding.price;
-      if (holding.quantity && holding.quantity !== 0) {
+    computePrice(holding: ResolvedHolding): number | null {
+      if (holding.kind === 'sold') return null;
+      if (holding.price != null) return holding.price;
+      if (holding.quantity !== 0) {
         return holding.total_value / holding.quantity;
       }
-      return holding.total_value; // fallback for quantity=0 edge case
+      return holding.total_value;
     },
 
     formatCurrency,
@@ -553,7 +624,11 @@ export default {
      * - unresolved: use combobox selection, or insert a ticker-less asset; always write
      *   an asset_aliases row so this account's label maps here next time
      */
-    async materializeAsset(holding, accountId, user) {
+    async materializeAsset(
+      holding: ResolvedHolding,
+      accountId: number,
+      user: User,
+    ): Promise<number> {
       if (holding.kind === 'ticker' || holding.kind === 'alias' || holding.kind === 'sold') {
         return holding.assetId;
       }
@@ -670,7 +745,7 @@ export default {
             await insertHoldingUpdate({
               update_id: update.id,
               asset_id: assetId,
-              quantity: holding.quantity,
+              quantity: holding.kind === 'sold' ? 0 : holding.quantity,
             });
           } catch (holdingError) {
             await deleteUpdate(update.id);
@@ -681,14 +756,14 @@ export default {
         // Success!
         this.$emit('uploaded');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
         this.step = 'preview';
       } finally {
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>
@@ -787,7 +862,7 @@ export default {
                 placeholder="Search accounts..."
                 class="w-full px-3 py-2 pr-8 text-sm border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
                 v-on:change="accountQuery = $event.target.value"
-                v-on:focus="$refs.comboboxButton.$el.click()"
+                v-on:focus="focusAccountCombobox"
               />
               <ComboboxButton
                 ref="comboboxButton"
@@ -948,12 +1023,12 @@ export default {
                     nullable
                     as="div"
                     class="relative"
-                    v-on:update:model-value="onChosenAssetChange(holding)"
+                    v-on:update:model-value="onChosenAssetChange"
                   >
                     <div v-bind:ref="(el) => setComboboxAnchor(index, el)" class="relative">
                       <ComboboxInput
                         v-bind:display-value="
-                          (asset) => (asset ? displayAsset(asset) : holding.name)
+                          (asset) => (asset ? displayAsset(asset as Asset) : holding.name)
                         "
                         placeholder="Search assets…"
                         v-bind:class="[
@@ -1014,10 +1089,10 @@ export default {
                   </Combobox>
                 </td>
                 <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">
-                  {{ formatNumber(holding.quantity) }}
+                  {{ formatNumber(holding.kind === 'sold' ? 0 : holding.quantity) }}
                 </td>
                 <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">
-                  {{ formatCurrency(holding.total_value) }}
+                  {{ formatCurrency(holding.kind === 'sold' ? null : holding.total_value) }}
                 </td>
                 <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">
                   {{ formatCurrency(computePrice(holding)) }}
