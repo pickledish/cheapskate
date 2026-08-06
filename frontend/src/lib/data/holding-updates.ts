@@ -76,7 +76,7 @@ export async function listHoldingUpdatesWithContext(
 
   if (error) throw error;
 
-  return ((data || []) as HoldingUpdateRow[]).map(mapHoldingUpdateRow);
+  return ((data || []) as unknown as HoldingUpdateRow[]).map(mapHoldingUpdateRow);
 }
 
 export async function listHoldingUpdatesByAccount(
@@ -103,5 +103,5 @@ export async function listHoldingUpdatesByAccount(
 
   if (error) throw error;
 
-  return ((data || []) as HoldingUpdateRow[]).map(mapHoldingUpdateRow);
+  return ((data || []) as unknown as HoldingUpdateRow[]).map(mapHoldingUpdateRow);
 }

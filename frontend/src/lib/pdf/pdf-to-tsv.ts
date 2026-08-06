@@ -67,7 +67,7 @@ export async function pdfToQuantizedTsv(
     page.cleanup();
   }
 
-  pdf.destroy();
+  await pdf.destroy();
   return parts.join('\n');
 }
 

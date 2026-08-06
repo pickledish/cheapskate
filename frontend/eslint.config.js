@@ -2,26 +2,23 @@ import js from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import pluginVue from 'eslint-plugin-vue';
 import globals from 'globals';
-import tseslint from 'typescript-eslint';
+import { withVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 
-export default tseslint.config(
+export default withVueTs(
+  {
+    // Vue SFCs in this project use plain <script>, not lang="ts".
+    scriptLangs: ['ts', 'js'],
+    rootDir: import.meta.dirname,
+  },
   {
     ignores: ['dist/**', 'node_modules/**'],
   },
   {
-    files: ['**/*.{ts,vue}'],
-    extends: [
-      js.configs.recommended,
-      ...tseslint.configs.recommended,
-      ...pluginVue.configs['flat/recommended'],
-    ],
+    files: ['**/*.{js,ts,vue}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: globals.browser,
-      parserOptions: {
-        parser: tseslint.parser,
-      },
     },
     rules: {
       'vue/v-bind-style': ['error', 'longform'],
@@ -30,5 +27,13 @@ export default tseslint.config(
       'vue/component-api-style': ['error', ['options']],
     },
   },
+  js.configs.recommended,
+  pluginVue.configs['flat/recommended'],
+  vueTsConfigs.recommendedTypeChecked,
+  // Plain JS config files aren't part of a TS project.
+  vueTsConfigs.disableTypeChecked.map((config) => ({
+    ...config,
+    files: ['**/*.js'],
+  })),
   eslintConfigPrettier,
 );

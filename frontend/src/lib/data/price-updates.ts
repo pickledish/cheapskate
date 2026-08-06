@@ -61,7 +61,7 @@ export async function listPriceUpdatesWithContext(
     };
   };
 
-  return ((data || []) as PriceUpdateRow[]).map((row) => ({
+  return ((data || []) as unknown as PriceUpdateRow[]).map((row) => ({
     asset_id: row.asset_id,
     effective_date: row.updates.effective_date,
     price: row.price,

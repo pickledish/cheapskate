@@ -18,4 +18,4 @@ async function bootstrap() {
   createApp(App).use(router).mount('#app');
 }
 
-bootstrap();
+void bootstrap();
