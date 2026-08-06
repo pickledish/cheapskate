@@ -1,11 +1,11 @@
 <script>
-import AppNav from './AppNav.vue'
-import AppFooter from './AppFooter.vue'
+import AppNav from './AppNav.vue';
+import AppFooter from './AppFooter.vue';
 
 export default {
   name: 'AppLayout',
-  components: { AppNav, AppFooter }
-}
+  components: { AppNav, AppFooter },
+};
 </script>
 
 <template>

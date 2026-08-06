@@ -1,8 +1,8 @@
 <script>
-import BaseModal from './BaseModal.vue'
-import ColorPicker from '@/components/ColorPicker.vue'
-import { supabase } from '@/lib/supabase'
-import { getMaxSortOrder, insertAssetClass } from '@/lib/data'
+import BaseModal from './BaseModal.vue';
+import ColorPicker from '@/components/ColorPicker.vue';
+import { supabase } from '@/lib/supabase';
+import { getMaxSortOrder, insertAssetClass } from '@/lib/data';
 
 export default {
   name: 'AddAssetClassModal',
@@ -14,26 +14,28 @@ export default {
       color: 'red',
       goal: 0,
       loading: false,
-      error: null
-    }
+      error: null,
+    };
   },
   methods: {
     async save() {
       if (!this.name.trim()) {
-        this.error = 'Please enter a name'
-        return
+        this.error = 'Please enter a name';
+        return;
       }
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        const familyId = user.user_metadata.family_id
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        const familyId = user.user_metadata.family_id;
 
         // Get max sort_order for this family
-        const maxOrder = await getMaxSortOrder(familyId)
-        const nextSortOrder = maxOrder + 1
+        const maxOrder = await getMaxSortOrder(familyId);
+        const nextSortOrder = maxOrder + 1;
 
         await insertAssetClass({
           family_id: familyId,
@@ -41,18 +43,18 @@ export default {
           name: this.name.trim(),
           color: this.color,
           goal: this.goal / 100,
-          sort_order: nextSortOrder
-        })
+          sort_order: nextSortOrder,
+        });
 
-        this.$emit('created')
+        this.$emit('created');
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -63,15 +65,14 @@ export default {
     </div>
 
     <p class="text-sm text-muted-text mb-4">
-      Create an asset class for categorizing your portfolio (e.g., stocks, bonds, cash, real estate).
+      Create an asset class for categorizing your portfolio (e.g., stocks, bonds, cash, real
+      estate).
     </p>
 
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-secondary-text mb-1">
-          Name
-        </label>
+        <label class="block text-sm font-medium text-secondary-text mb-1"> Name </label>
         <div class="flex items-center gap-2">
           <input
             v-model="name"

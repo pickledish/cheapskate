@@ -2,8 +2,7 @@ import { supabase } from '../supabase';
 import { type PriceUpdate } from './price-updates';
 import { type HoldingUpdate } from './holding-updates';
 
-export type UpdateType =
-  'statement' | 'manual_price' | 'manual_holdings' | 'mark_as_closed';
+export type UpdateType = 'statement' | 'manual_price' | 'manual_holdings' | 'mark_as_closed';
 
 export interface Update {
   id: number;

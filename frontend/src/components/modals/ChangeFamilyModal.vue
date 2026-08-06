@@ -1,6 +1,6 @@
 <script>
-import BaseModal from './BaseModal.vue'
-import { supabase } from '@/lib/supabase'
+import BaseModal from './BaseModal.vue';
+import { supabase } from '@/lib/supabase';
 
 export default {
   name: 'ChangeFamilyModal',
@@ -11,75 +11,75 @@ export default {
       mode: 'create', // 'create' | 'join'
       familyId: '',
       loading: false,
-      error: null
-    }
+      error: null,
+    };
   },
   computed: {
     canSubmit() {
-      if (this.mode === 'create') return true
-      return this.familyId.trim().length > 0
-    }
+      if (this.mode === 'create') return true;
+      return this.familyId.trim().length > 0;
+    },
   },
   methods: {
     async executeChange() {
-      if (!this.canSubmit) return
+      if (!this.canSubmit) return;
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
-        let newFamilyId
+        let newFamilyId;
 
         if (this.mode === 'create') {
           // Generate UUID client-side (same pattern as SetupView)
-          newFamilyId = crypto.randomUUID()
+          newFamilyId = crypto.randomUUID();
 
           const { error: insertError } = await supabase
             .from('families')
-            .insert({ id: newFamilyId })
+            .insert({ id: newFamilyId });
 
-          if (insertError) throw insertError
-
+          if (insertError) throw insertError;
         } else {
           // Validate UUID format
-          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
           if (!uuidRegex.test(this.familyId.trim())) {
-            throw new Error('Invalid family ID format. Please enter a valid UUID.')
+            throw new Error('Invalid family ID format. Please enter a valid UUID.');
           }
-          newFamilyId = this.familyId.trim()
+          newFamilyId = this.familyId.trim();
         }
 
         // Update profile first (trigger cleanup_empty_family() handles deleting old family if empty)
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ family_id: newFamilyId })
-          .eq('id', user.id)
+          .eq('id', user.id);
 
-        if (profileError) throw profileError
+        if (profileError) throw profileError;
 
         // Now update user_metadata to match
         const { error: updateError } = await supabase.auth.updateUser({
-          data: { family_id: newFamilyId }
-        })
-        if (updateError) throw updateError
+          data: { family_id: newFamilyId },
+        });
+        if (updateError) throw updateError;
 
         // Refresh session to get new JWT with updated metadata
-        const { error: refreshError } = await supabase.auth.refreshSession()
-        if (refreshError) throw refreshError
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) throw refreshError;
 
-        this.$emit('changed')
-
+        this.$emit('changed');
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -93,7 +93,11 @@ export default {
       <!-- Create new family -->
       <label
         class="block p-4 border rounded-lg cursor-pointer transition-colors"
-        v-bind:class="mode === 'create' ? 'border-blue-500 bg-surface-recessed-deep' : 'border-surface-border hover:border-surface-border-strong'"
+        v-bind:class="
+          mode === 'create'
+            ? 'border-blue-500 bg-surface-recessed-deep'
+            : 'border-surface-border hover:border-surface-border-strong'
+        "
       >
         <div class="flex items-center">
           <input
@@ -112,7 +116,11 @@ export default {
       <!-- Join existing family -->
       <label
         class="block p-4 border rounded-lg cursor-pointer transition-colors"
-        v-bind:class="mode === 'join' ? 'border-blue-500 bg-surface-recessed-deep' : 'border-surface-border hover:border-surface-border-strong'"
+        v-bind:class="
+          mode === 'join'
+            ? 'border-blue-500 bg-surface-recessed-deep'
+            : 'border-surface-border hover:border-surface-border-strong'
+        "
       >
         <div class="flex items-center">
           <input

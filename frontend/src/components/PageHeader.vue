@@ -4,14 +4,14 @@ export default {
   props: {
     title: {
       type: String,
-      required: true
+      required: true,
     },
     description: {
       type: String,
-      default: null
-    }
-  }
-}
+      default: null,
+    },
+  },
+};
 </script>
 
 <template>

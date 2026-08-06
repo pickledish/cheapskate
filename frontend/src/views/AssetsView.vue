@@ -1,17 +1,22 @@
 <script>
-import AppLayout from '@/components/AppLayout.vue'
-import PageHeader from '@/components/PageHeader.vue'
-import AddAssetModal from '@/components/modals/AddAssetModal.vue'
-import EditAssetModal from '@/components/modals/EditAssetModal.vue'
-import UpdatePriceModal from '@/components/modals/UpdatePriceModal.vue'
-import OnboardingModal from '@/components/modals/OnboardingModal.vue'
-import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
-import { supabase } from '@/lib/supabase'
-import { listAssetsWithAllocations, listPriceUpdatesWithContext, listAssetClasses, deleteAsset } from '@/lib/data'
-import { getColorClasses } from '@/lib/tagColors'
-import { formatCurrency, relativeDate } from '@/lib/format'
-import { Bars3Icon } from '@heroicons/vue/24/solid'
-import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
+import AppLayout from '@/components/AppLayout.vue';
+import PageHeader from '@/components/PageHeader.vue';
+import AddAssetModal from '@/components/modals/AddAssetModal.vue';
+import EditAssetModal from '@/components/modals/EditAssetModal.vue';
+import UpdatePriceModal from '@/components/modals/UpdatePriceModal.vue';
+import OnboardingModal from '@/components/modals/OnboardingModal.vue';
+import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue';
+import { supabase } from '@/lib/supabase';
+import {
+  listAssetsWithAllocations,
+  listPriceUpdatesWithContext,
+  listAssetClasses,
+  deleteAsset,
+} from '@/lib/data';
+import { getColorClasses } from '@/lib/tagColors';
+import { formatCurrency, relativeDate } from '@/lib/format';
+import { Bars3Icon } from '@heroicons/vue/24/solid';
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 
 export default {
   name: 'AssetsView',
@@ -27,7 +32,7 @@ export default {
     Menu,
     MenuButton,
     MenuItems,
-    MenuItem
+    MenuItem,
   },
   data() {
     return {
@@ -46,166 +51,174 @@ export default {
 
       // Onboarding state
       showOnboardingModal: false,
-      assetsCompleted: false
-    }
+      assetsCompleted: false,
+    };
   },
   computed: {
     filteredAssets() {
-      const query = this.searchQuery.toLowerCase().trim()
-      if (!query) return this.assets
+      const query = this.searchQuery.toLowerCase().trim();
+      if (!query) return this.assets;
 
-      return this.assets.filter(asset => {
+      return this.assets.filter((asset) => {
         // Search in name
-        if (asset.name.toLowerCase().includes(query)) return true
+        if (asset.name.toLowerCase().includes(query)) return true;
 
         // Search in ticker
-        if (asset.ticker && asset.ticker.toLowerCase().includes(query)) return true
+        if (asset.ticker && asset.ticker.toLowerCase().includes(query)) return true;
 
-        return false
-      })
+        return false;
+      });
     },
     allAssetsCategorized() {
       // All assets must have at least one allocation
-      return this.assets.length > 0 && this.assets.every(a => a.allocations.length > 0)
+      return this.assets.length > 0 && this.assets.every((a) => a.allocations.length > 0);
     },
     showContinueCard() {
-      return this.allAssetsCategorized && !this.assetsCompleted
-    }
+      return this.allAssetsCategorized && !this.assetsCompleted;
+    },
   },
   async mounted() {
     // Check onboarding state
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session) {
-      this.assetsCompleted = session.user.user_metadata?.assets_completed ?? false
+      this.assetsCompleted = session.user.user_metadata?.assets_completed ?? false;
       // Show onboarding modal if assets not yet completed
-      this.showOnboardingModal = !this.assetsCompleted
+      this.showOnboardingModal = !this.assetsCompleted;
     }
-    await this.loadData()
+    await this.loadData();
   },
   methods: {
     async loadData() {
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
       try {
         // Load all data in parallel
         const [assetsData, pricesData, classesData] = await Promise.all([
           listAssetsWithAllocations(),
           listPriceUpdatesWithContext('desc'),
-          listAssetClasses()
-        ])
+          listAssetClasses(),
+        ]);
 
         // Sort by name for dropdown display (original behavior)
         this.assetClasses = classesData
-          .map(c => ({ id: c.id, name: c.name }))
-          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((c) => ({ id: c.id, name: c.name }))
+          .sort((a, b) => a.name.localeCompare(b.name));
 
         // Build map of asset_id -> { price, effectiveDate }
-        const latestPriceByAsset = {}
+        const latestPriceByAsset = {};
         for (const p of pricesData) {
           if (!latestPriceByAsset[p.asset_id]) {
             latestPriceByAsset[p.asset_id] = {
               price: p.price,
-              effectiveDate: p.effective_date
-            }
+              effectiveDate: p.effective_date,
+            };
           }
         }
 
         // Merge metadata into assets
-        this.assets = assetsData.map(asset => {
+        this.assets = assetsData.map((asset) => {
           // Sort allocations by sort_order for display
           const sortedAllocs = [...asset.allocations].sort(
-            (a, b) => a.asset_classes.sort_order - b.asset_classes.sort_order
-          )
+            (a, b) => a.asset_classes.sort_order - b.asset_classes.sort_order,
+          );
 
           return {
             ...asset,
             latestPrice: latestPriceByAsset[asset.id]?.price || null,
             latestEffectiveDate: latestPriceByAsset[asset.id]?.effectiveDate || null,
-            assetClasses: sortedAllocs.map(a => ({ name: a.asset_classes.name, color: a.asset_classes.color })),
-            allocations: asset.allocations.map(a => ({
+            assetClasses: sortedAllocs.map((a) => ({
+              name: a.asset_classes.name,
+              color: a.asset_classes.color,
+            })),
+            allocations: asset.allocations.map((a) => ({
               asset_class_id: a.asset_class_id,
-              percentage: Math.round(parseFloat(a.percentage) * 100)
-            }))
-          }
-        })
-
+              percentage: Math.round(parseFloat(a.percentage) * 100),
+            })),
+          };
+        });
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
     openEditModal(asset) {
-      this.selectedAsset = asset
-      this.showEditAssetModal = true
+      this.selectedAsset = asset;
+      this.showEditAssetModal = true;
     },
 
     closeEditModal() {
-      this.showEditAssetModal = false
-      this.selectedAsset = null
+      this.showEditAssetModal = false;
+      this.selectedAsset = null;
     },
 
     openUpdatePriceModal(asset) {
-      this.selectedAsset = asset
-      this.showUpdatePriceModal = true
+      this.selectedAsset = asset;
+      this.showUpdatePriceModal = true;
     },
 
     closeUpdatePriceModal() {
-      this.showUpdatePriceModal = false
-      this.selectedAsset = null
+      this.showUpdatePriceModal = false;
+      this.selectedAsset = null;
     },
 
     async onAssetCreated() {
-      this.showAddAssetModal = false
-      await this.loadData()
+      this.showAddAssetModal = false;
+      await this.loadData();
     },
 
     async onAssetUpdated() {
-      this.closeEditModal()
-      this.closeUpdatePriceModal()
-      await this.loadData()
+      this.closeEditModal();
+      this.closeUpdatePriceModal();
+      await this.loadData();
     },
 
     formatPrice: formatCurrency,
     relativeDate,
 
     getClassColor(colorName) {
-      return getColorClasses(colorName)
+      return getColorClasses(colorName);
     },
 
     setMenuAnchor(index, el) {
       if (el) {
-        this.menuAnchors[index] = el
+        this.menuAnchors[index] = el;
       } else {
-        delete this.menuAnchors[index]
+        delete this.menuAnchors[index];
       }
     },
 
     menuDropdownStyle(index) {
-      const el = this.menuAnchors[index]
-      if (!el) return {}
-      const rect = el.getBoundingClientRect()
+      const el = this.menuAnchors[index];
+      if (!el) return {};
+      const rect = el.getBoundingClientRect();
       return {
         top: `${rect.bottom + 4}px`,
-        right: `${document.documentElement.clientWidth - rect.right}px`
-      }
+        right: `${document.documentElement.clientWidth - rect.right}px`,
+      };
     },
 
     async doDeleteAsset(asset) {
-      if (!confirm(`Delete "${asset.name}"? This will also delete all price history and holdings for this asset.`)) {
-        return
+      if (
+        !confirm(
+          `Delete "${asset.name}"? This will also delete all price history and holdings for this asset.`,
+        )
+      ) {
+        return;
       }
 
       try {
-        await deleteAsset(asset.id)
-        await this.loadData()
+        await deleteAsset(asset.id);
+        await this.loadData();
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -238,19 +251,29 @@ export default {
           <table class="min-w-full divide-y divide-surface-border">
             <thead>
               <tr>
-                <th class="bg-header rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th
+                  class="bg-header rounded-tl-lg px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap"
+                >
                   Name
                 </th>
-                <th class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th
+                  class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap"
+                >
                   Ticker
                 </th>
-                <th class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th
+                  class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap"
+                >
                   Asset Class
                 </th>
-                <th class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th
+                  class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap"
+                >
                   Latest Price
                 </th>
-                <th class="bg-header rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap">
+                <th
+                  class="bg-header rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap"
+                >
                   Actions
                 </th>
               </tr>
@@ -290,11 +313,10 @@ export default {
                   v-bind:class="{ 'rounded-br-lg': index === filteredAssets.length - 1 }"
                 >
                   <Menu v-slot="{ open }" as="div" class="relative inline-block text-left">
-                    <div
-                      class="inline-block"
-                      v-bind:ref="(el) => setMenuAnchor(index, el)"
-                    >
-                      <MenuButton class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-surface-recessed-deep rounded cursor-pointer">
+                    <div class="inline-block" v-bind:ref="(el) => setMenuAnchor(index, el)">
+                      <MenuButton
+                        class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-surface-recessed-deep rounded cursor-pointer"
+                      >
                         <Bars3Icon class="w-5 h-5" />
                       </MenuButton>
                     </div>
@@ -306,7 +328,12 @@ export default {
                       >
                         <MenuItem v-slot="{ active }">
                           <button
-                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text']"
+                            v-bind:class="[
+                              'w-full text-left px-4 py-2 text-sm cursor-pointer',
+                              active
+                                ? 'bg-surface-recessed-deep text-primary-text'
+                                : 'text-secondary-text',
+                            ]"
                             v-on:click="openEditModal(asset)"
                           >
                             Edit
@@ -314,7 +341,12 @@ export default {
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
                           <button
-                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text']"
+                            v-bind:class="[
+                              'w-full text-left px-4 py-2 text-sm cursor-pointer',
+                              active
+                                ? 'bg-surface-recessed-deep text-primary-text'
+                                : 'text-secondary-text',
+                            ]"
                             v-on:click="openUpdatePriceModal(asset)"
                           >
                             Update Price
@@ -322,7 +354,10 @@ export default {
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
                           <button
-                            v-bind:class="['w-full text-left px-4 py-2 text-sm cursor-pointer', active ? 'bg-error text-error-text' : 'text-secondary-text']"
+                            v-bind:class="[
+                              'w-full text-left px-4 py-2 text-sm cursor-pointer',
+                              active ? 'bg-error text-error-text' : 'text-secondary-text',
+                            ]"
                             v-on:click="doDeleteAsset(asset)"
                           >
                             Delete
@@ -388,19 +423,16 @@ export default {
       v-on:close="showOnboardingModal = false"
     >
       <div class="space-y-4 text-muted-text">
+        <p>Almost done! Now let's <strong>categorize your assets</strong>.</p>
         <p>
-          Almost done! Now let's <strong>categorize your assets</strong>.
+          Each asset needs to be assigned an asset class. This is what allows Cheapskate to compare
+          your <strong>actual portfolio allocation</strong> to the goal you specified.
         </p>
         <p>
-          Each asset needs to be assigned an asset class.
-          This is what allows Cheapskate to compare your <strong>actual portfolio allocation</strong> to the goal you specified.
+          You can also assign multiple classes to a single asset, good for Target Date funds for
+          example!
         </p>
-        <p>
-          You can also assign multiple classes to a single asset, good for Target Date funds for example!
-        </p>
-        <p>
-          Click <strong>Edit</strong> on each asset to assign its asset classes.
-        </p>
+        <p>Click <strong>Edit</strong> on each asset to assign its asset classes.</p>
       </div>
     </OnboardingModal>
   </AppLayout>

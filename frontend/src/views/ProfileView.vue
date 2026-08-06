@@ -1,15 +1,15 @@
 <script>
-import AppLayout from '@/components/AppLayout.vue'
-import PageHeader from '@/components/PageHeader.vue'
-import ChangeFamilyModal from '@/components/modals/ChangeFamilyModal.vue'
-import DeleteAccountModal from '@/components/modals/DeleteAccountModal.vue'
-import { supabase } from '@/lib/supabase'
-import { getProfile, listProfilesByFamily, updateProfile, updatePreferences } from '@/lib/data'
-import { testConnection } from '@/lib/local-llm'
-import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
-import { ClipboardIcon } from '@heroicons/vue/24/outline'
-import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
-import dayjs from 'dayjs'
+import AppLayout from '@/components/AppLayout.vue';
+import PageHeader from '@/components/PageHeader.vue';
+import ChangeFamilyModal from '@/components/modals/ChangeFamilyModal.vue';
+import DeleteAccountModal from '@/components/modals/DeleteAccountModal.vue';
+import { supabase } from '@/lib/supabase';
+import { getProfile, listProfilesByFamily, updateProfile, updatePreferences } from '@/lib/data';
+import { testConnection } from '@/lib/local-llm';
+import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue';
+import { ClipboardIcon } from '@heroicons/vue/24/outline';
+import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
+import dayjs from 'dayjs';
 
 export default {
   name: 'ProfileView',
@@ -24,7 +24,7 @@ export default {
     ListboxOptions,
     ListboxOption,
     ChevronUpDownIcon,
-    CheckIcon
+    CheckIcon,
   },
   data() {
     return {
@@ -58,167 +58,170 @@ export default {
       localLlmOptions: [
         { id: 'disabled', name: 'Disabled' },
         { id: 'ollama', name: 'Ollama' },
-        { id: 'openai', name: 'OpenAI Compatible' }
+        { id: 'openai', name: 'OpenAI Compatible' },
       ],
       localLlmProvider: 'disabled',
-      localLlmPort: '11434'
-    }
+      localLlmPort: '11434',
+    };
   },
   computed: {
     selectedLlmOption() {
-      return this.localLlmOptions.find(o => o.id === this.localLlmProvider)
+      return this.localLlmOptions.find((o) => o.id === this.localLlmProvider);
     },
     hasProfileChanges() {
-      return this.userName !== this.originalName
+      return this.userName !== this.originalName;
     },
     hasLlmChanges() {
-      return this.localLlmProvider !== this.originalLlmProvider ||
+      return (
+        this.localLlmProvider !== this.originalLlmProvider ||
         this.localLlmPort !== this.originalLlmPort
-    }
+      );
+    },
   },
   async mounted() {
-    await this.loadData()
+    await this.loadData();
   },
   methods: {
     async loadData() {
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
         // Get current user
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
-        this.userId = user.id
-        this.userEmail = user.email
-        this.familyId = user.user_metadata?.family_id
+        this.userId = user.id;
+        this.userEmail = user.email;
+        this.familyId = user.user_metadata?.family_id;
 
         // Load profile and family members in parallel
         const [profile, members] = await Promise.all([
           getProfile(user.id),
-          listProfilesByFamily(this.familyId)
-        ])
+          listProfilesByFamily(this.familyId),
+        ]);
 
         // Set current values
-        this.userName = profile?.name || ''
-        this.familyMembers = members
+        this.userName = profile?.name || '';
+        this.familyMembers = members;
 
         // Load local LLM preferences
-        const llmConfig = profile?.preferences?.local_llm
-        this.localLlmProvider = llmConfig?.api || 'disabled'
-        this.localLlmPort = llmConfig?.port || '11434'
+        const llmConfig = profile?.preferences?.local_llm;
+        this.localLlmProvider = llmConfig?.api || 'disabled';
+        this.localLlmPort = llmConfig?.port || '11434';
 
         // Store original values for change detection
-        this.originalName = this.userName
-        this.originalLlmProvider = this.localLlmProvider
-        this.originalLlmPort = this.localLlmPort
-
+        this.originalName = this.userName;
+        this.originalLlmProvider = this.localLlmProvider;
+        this.originalLlmPort = this.localLlmPort;
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
     toggleFamilyIdReveal() {
-      this.familyIdRevealed = !this.familyIdRevealed
+      this.familyIdRevealed = !this.familyIdRevealed;
     },
 
     async copyFamilyId() {
       try {
-        await navigator.clipboard.writeText(this.familyId)
-        this.copyFeedback = true
+        await navigator.clipboard.writeText(this.familyId);
+        this.copyFeedback = true;
         setTimeout(() => {
-          this.copyFeedback = false
-        }, 2000)
+          this.copyFeedback = false;
+        }, 2000);
       } catch (err) {
         // Fallback: select the text
-        this.error = 'Failed to copy. Please select and copy manually.'
+        this.error = 'Failed to copy. Please select and copy manually.';
       }
     },
 
     async signOut() {
-      await supabase.auth.signOut()
-      this.$router.push('/login')
+      await supabase.auth.signOut();
+      this.$router.push('/login');
     },
 
     async saveProfile() {
-      if (!this.hasProfileChanges) return
+      if (!this.hasProfileChanges) return;
 
-      this.saving = true
-      this.error = null
+      this.saving = true;
+      this.error = null;
 
       try {
-        await updateProfile(this.userId, { name: this.userName })
-        this.originalName = this.userName
+        await updateProfile(this.userId, { name: this.userName });
+        this.originalName = this.userName;
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.saving = false
+        this.saving = false;
       }
     },
 
     async saveLlmSettings() {
-      if (!this.hasLlmChanges) return
+      if (!this.hasLlmChanges) return;
 
-      this.saving = true
-      this.error = null
+      this.saving = true;
+      this.error = null;
 
       try {
         await updatePreferences(this.userId, {
           local_llm: {
             api: this.localLlmProvider,
-            port: this.localLlmPort
-          }
-        })
-        this.originalLlmProvider = this.localLlmProvider
-        this.originalLlmPort = this.localLlmPort
+            port: this.localLlmPort,
+          },
+        });
+        this.originalLlmProvider = this.localLlmProvider;
+        this.originalLlmPort = this.localLlmPort;
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.saving = false
+        this.saving = false;
       }
     },
 
     async testLlmConnection() {
-      if (this.localLlmProvider === 'disabled') return
+      if (this.localLlmProvider === 'disabled') return;
 
-      this.testing = true
+      this.testing = true;
       try {
-        const result = await testConnection(this.localLlmProvider, this.localLlmPort)
-        alert(result.message)
+        const result = await testConnection(this.localLlmProvider, this.localLlmPort);
+        alert(result.message);
       } finally {
-        this.testing = false
+        this.testing = false;
       }
     },
 
     // Modal handlers
     openChangeFamilyModal() {
-      this.showChangeFamilyModal = true
+      this.showChangeFamilyModal = true;
     },
 
     closeChangeFamilyModal() {
-      this.showChangeFamilyModal = false
+      this.showChangeFamilyModal = false;
     },
 
     async onFamilyChanged() {
-      this.closeChangeFamilyModal()
-      await this.loadData()
+      this.closeChangeFamilyModal();
+      await this.loadData();
     },
 
     openDeleteAccountModal() {
-      this.showDeleteAccountModal = true
+      this.showDeleteAccountModal = true;
     },
 
     closeDeleteAccountModal() {
-      this.showDeleteAccountModal = false
+      this.showDeleteAccountModal = false;
     },
 
     formatJoinDate(dateStr) {
-      return dayjs(dateStr).format('MMM YYYY')
-    }
-  }
-}
+      return dayjs(dateStr).format('MMM YYYY');
+    },
+  },
+};
 </script>
 
 <template>
@@ -294,14 +297,22 @@ export default {
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p class="font-medium text-primary-text">Provider</p>
-                <p class="text-sm text-muted-text">Parse PDFs locally instead of using the cloud service</p>
+                <p class="text-sm text-muted-text">
+                  Parse PDFs locally instead of using the cloud service
+                </p>
               </div>
-              <Listbox v-model="localLlmProvider" as="div" class="relative w-full sm:w-44 sm:shrink-0 sm:ml-4">
+              <Listbox
+                v-model="localLlmProvider"
+                as="div"
+                class="relative w-full sm:w-44 sm:shrink-0 sm:ml-4"
+              >
                 <ListboxButton
                   class="relative w-full px-3 py-2 text-left text-sm border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <span>{{ selectedLlmOption?.name }}</span>
-                  <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                  <span
+                    class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"
+                  >
                     <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
                   </span>
                 </ListboxButton>
@@ -326,7 +337,7 @@ export default {
                         v-bind:class="[
                           'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
                           active ? 'bg-surface-recessed-deep' : '',
-                          selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
+                          selected ? 'text-blue-600 font-medium' : 'text-secondary-text',
                         ]"
                       >
                         {{ option.name }}
@@ -343,8 +354,18 @@ export default {
             <!-- Port row -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p class="font-medium text-primary-text" v-bind:class="{ 'text-placeholder-text': localLlmProvider === 'disabled' }">Port</p>
-                <p class="text-sm text-muted-text" v-bind:class="{ 'text-placeholder-text': localLlmProvider === 'disabled' }">Local server port (default: 11434 for Ollama)</p>
+                <p
+                  class="font-medium text-primary-text"
+                  v-bind:class="{ 'text-placeholder-text': localLlmProvider === 'disabled' }"
+                >
+                  Port
+                </p>
+                <p
+                  class="text-sm text-muted-text"
+                  v-bind:class="{ 'text-placeholder-text': localLlmProvider === 'disabled' }"
+                >
+                  Local server port (default: 11434 for Ollama)
+                </p>
               </div>
               <input
                 v-model="localLlmPort"
@@ -408,20 +429,16 @@ export default {
                   {{ copyFeedback ? 'Copied!' : 'Copy' }}
                 </button>
               </div>
-              <p
-                v-if="familyIdRevealed"
-                class="text-amber-600 text-sm mt-2 flex items-start gap-1"
-              >
+              <p v-if="familyIdRevealed" class="text-amber-600 text-sm mt-2 flex items-start gap-1">
                 <span class="shrink-0">&#9888;</span>
+                <!-- prettier-ignore -->
                 <span>Be careful - anyone with this value can view and edit your family's data.</span>
               </p>
             </div>
 
             <!-- Family Members -->
             <div>
-              <dt class="text-sm text-muted-text mb-2">
-                Members ({{ familyMembers.length }})
-              </dt>
+              <dt class="text-sm text-muted-text mb-2">Members ({{ familyMembers.length }})</dt>
               <ul class="list-disc list-inside space-y-1">
                 <li
                   v-for="member in familyMembers"
@@ -429,13 +446,11 @@ export default {
                   class="text-primary-text"
                 >
                   {{ member.name }}
-                  <span class="text-placeholder-text text-sm"> — joined {{ formatJoinDate(member.created_at) }}</span>
+                  <!-- prettier-ignore -->
+                  <span class="text-placeholder-text text-sm">— joined {{ formatJoinDate(member.created_at) }}</span>
                 </li>
               </ul>
-              <p
-                v-if="familyMembers.length === 1"
-                class="text-sm text-muted-text mt-2 italic"
-              >
+              <p v-if="familyMembers.length === 1" class="text-sm text-muted-text mt-2 italic">
                 You are the only member of this family.
               </p>
             </div>
@@ -444,7 +459,9 @@ export default {
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2">
               <div>
                 <p class="font-medium text-primary-text">Leave Family</p>
-                <p class="text-sm text-muted-text">Create or join another (access to this family's data will be lost)</p>
+                <p class="text-sm text-muted-text">
+                  Create or join another (access to this family's data will be lost)
+                </p>
               </div>
               <button
                 v-on:click="openChangeFamilyModal"
@@ -493,7 +510,6 @@ export default {
             </div>
           </div>
         </section>
-
       </template>
     </div>
 
@@ -504,9 +520,6 @@ export default {
       v-on:changed="onFamilyChanged"
     />
 
-    <DeleteAccountModal
-      v-if="showDeleteAccountModal"
-      v-on:close="closeDeleteAccountModal"
-    />
+    <DeleteAccountModal v-if="showDeleteAccountModal" v-on:close="closeDeleteAccountModal" />
   </AppLayout>
 </template>

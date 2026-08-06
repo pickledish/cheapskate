@@ -1,7 +1,7 @@
 <script>
-import BaseModal from './BaseModal.vue'
-import ColorPicker from '@/components/ColorPicker.vue'
-import { updateAssetClass } from '@/lib/data'
+import BaseModal from './BaseModal.vue';
+import ColorPicker from '@/components/ColorPicker.vue';
+import { updateAssetClass } from '@/lib/data';
 
 export default {
   name: 'EditAssetClassModal',
@@ -9,8 +9,8 @@ export default {
   props: {
     assetClass: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: ['close', 'updated'],
   data() {
@@ -19,40 +19,40 @@ export default {
       color: 'red',
       goal: 0,
       loading: false,
-      error: null
-    }
+      error: null,
+    };
   },
   mounted() {
-    this.name = this.assetClass.name || ''
-    this.color = this.assetClass.color || 'red'
-    this.goal = (this.assetClass.goal || 0) * 100
+    this.name = this.assetClass.name || '';
+    this.color = this.assetClass.color || 'red';
+    this.goal = (this.assetClass.goal || 0) * 100;
   },
   methods: {
     async save() {
       if (!this.name.trim()) {
-        this.error = 'Please enter a name'
-        return
+        this.error = 'Please enter a name';
+        return;
       }
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
         await updateAssetClass(this.assetClass.id, {
           name: this.name.trim(),
           color: this.color,
-          goal: this.goal / 100
-        })
+          goal: this.goal / 100,
+        });
 
-        this.$emit('updated')
+        this.$emit('updated');
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -65,9 +65,7 @@ export default {
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-secondary-text mb-1">
-          Name
-        </label>
+        <label class="block text-sm font-medium text-secondary-text mb-1"> Name </label>
         <div class="flex items-center gap-2">
           <input
             v-model="name"

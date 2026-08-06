@@ -1,7 +1,7 @@
 <script>
-import BaseModal from './BaseModal.vue'
-import { supabase } from '@/lib/supabase'
-import { insertAsset } from '@/lib/data'
+import BaseModal from './BaseModal.vue';
+import { supabase } from '@/lib/supabase';
+import { insertAsset } from '@/lib/data';
 
 export default {
   name: 'AddAssetModal',
@@ -12,37 +12,39 @@ export default {
       name: '',
       ticker: '',
       loading: false,
-      error: null
-    }
+      error: null,
+    };
   },
   methods: {
     async save() {
       if (!this.name.trim()) {
-        this.error = 'Please enter an asset name'
-        return
+        this.error = 'Please enter an asset name';
+        return;
       }
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         await insertAsset({
           family_id: user.user_metadata.family_id,
           created_by: user.id,
           name: this.name.trim(),
-          ticker: this.ticker.trim() || null
-        })
+          ticker: this.ticker.trim() || null,
+        });
 
-        this.$emit('created')
+        this.$emit('created');
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -59,9 +61,7 @@ export default {
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-secondary-text mb-1">
-          Name
-        </label>
+        <label class="block text-sm font-medium text-secondary-text mb-1"> Name </label>
         <input
           v-model="name"
           type="text"
@@ -84,7 +84,6 @@ export default {
           Leave blank for private assets without ticker symbols.
         </p>
       </div>
-
     </div>
 
     <template v-slot:secondary>

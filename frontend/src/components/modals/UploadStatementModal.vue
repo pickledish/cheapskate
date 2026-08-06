@@ -26,10 +26,23 @@
  *   'unresolved'  — no ticker and no alias; user picks an asset or leaves blank to create + write alias
  *   'sold'        — previously held in this account but missing from this statement; quantity forced to 0
  */
-import BaseModal from './BaseModal.vue'
-import { Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
-import { CheckIcon, ChevronUpDownIcon, ChevronUpIcon, TrashIcon } from '@heroicons/vue/24/solid'
-import { supabase } from '@/lib/supabase'
+import BaseModal from './BaseModal.vue';
+import {
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+  Combobox,
+  ComboboxInput,
+  ComboboxButton,
+  ComboboxOptions,
+  ComboboxOption,
+  Menu,
+  MenuButton,
+  MenuItems,
+  MenuItem,
+} from '@headlessui/vue';
+import { CheckIcon, ChevronUpDownIcon, ChevronUpIcon, TrashIcon } from '@heroicons/vue/24/solid';
+import { supabase } from '@/lib/supabase';
 import {
   listAccounts,
   findAccountByLast4,
@@ -45,15 +58,33 @@ import {
   listAliasesByAccount,
   insertAssetAlias,
   normalizeLabel,
-  getProfile
-} from '@/lib/data'
-import { parseWithLocalLlm } from '@/lib/local-llm'
-import { pdfToQuantizedTsv } from '@/lib/pdf'
-import { formatCurrency, formatNumber } from '@/lib/format'
+  getProfile,
+} from '@/lib/data';
+import { parseWithLocalLlm } from '@/lib/local-llm';
+import { pdfToQuantizedTsv } from '@/lib/pdf';
+import { formatCurrency, formatNumber } from '@/lib/format';
 
 export default {
   name: 'UploadStatementModal',
-  components: { BaseModal, Disclosure, DisclosureButton, DisclosurePanel, Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption, Menu, MenuButton, MenuItems, MenuItem, CheckIcon, ChevronUpDownIcon, ChevronUpIcon, TrashIcon },
+  components: {
+    BaseModal,
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel,
+    Combobox,
+    ComboboxInput,
+    ComboboxButton,
+    ComboboxOptions,
+    ComboboxOption,
+    Menu,
+    MenuButton,
+    MenuItems,
+    MenuItem,
+    CheckIcon,
+    ChevronUpDownIcon,
+    ChevronUpIcon,
+    TrashIcon,
+  },
   emits: ['close', 'uploaded'],
   data() {
     return {
@@ -90,49 +121,50 @@ export default {
       error: null,
 
       // Anchor els for portaled asset combobox dropdowns (escape table overflow)
-      comboboxAnchors: {}
-    }
+      comboboxAnchors: {},
+    };
   },
   computed: {
     todayDate() {
-      return new Date().toISOString().split('T')[0]
+      return new Date().toISOString().split('T')[0];
     },
     parseButtonText() {
-      if (this.loading) return 'Parsing...'
-      return this.parseMode === 'local' ? 'Parse with Local LLM' : 'Parse with Cloud AI'
+      if (this.loading) return 'Parsing...';
+      return this.parseMode === 'local' ? 'Parse with Local LLM' : 'Parse with Cloud AI';
     },
     modalTitle() {
-      if (this.step === 'match') return 'Select Account'
-      return 'Upload Statement'
+      if (this.step === 'match') return 'Select Account';
+      return 'Upload Statement';
     },
     filteredAccounts() {
-      const query = this.accountQuery.toLowerCase().trim()
-      if (!query) return this.allAccounts
-      return this.allAccounts.filter(a =>
-        a.name.toLowerCase().includes(query) ||
-        (a.last4 && a.last4.includes(query))
-      )
+      const query = this.accountQuery.toLowerCase().trim();
+      if (!query) return this.allAccounts;
+      return this.allAccounts.filter(
+        (a) => a.name.toLowerCase().includes(query) || (a.last4 && a.last4.includes(query)),
+      );
     },
     sortedAccounts() {
-      const matching = this.filteredAccounts.filter(a => this.matchingAccountIds.includes(a.id))
-      const others = this.filteredAccounts.filter(a => !this.matchingAccountIds.includes(a.id))
-      return [...matching, ...others]
+      const matching = this.filteredAccounts.filter((a) => this.matchingAccountIds.includes(a.id));
+      const others = this.filteredAccounts.filter((a) => !this.matchingAccountIds.includes(a.id));
+      return [...matching, ...others];
     },
     resolvedAccount() {
-      return this.matchedAccount
+      return this.matchedAccount;
     },
     duplicateAssetIds() {
-      const counts = {}
+      const counts = {};
       for (const h of this.holdings) {
-        const id = this.resolvedAssetId(h)
-        if (id == null) continue
-        counts[id] = (counts[id] || 0) + 1
+        const id = this.resolvedAssetId(h);
+        if (id == null) continue;
+        counts[id] = (counts[id] || 0) + 1;
       }
-      return Object.keys(counts).filter(id => counts[id] > 1).map(Number)
+      return Object.keys(counts)
+        .filter((id) => counts[id] > 1)
+        .map(Number);
     },
     canSave() {
-      return this.holdings.length > 0 && this.duplicateAssetIds.length === 0
-    }
+      return this.holdings.length > 0 && this.duplicateAssetIds.length === 0;
+    },
   },
   methods: {
     /**
@@ -140,195 +172,199 @@ export default {
      * Only accept exactly 4 digit characters; anything else is unset.
      */
     normalizeParsedLast4(value) {
-      if (value == null) return null
-      const s = String(value).trim()
-      if (s.length !== 4) return null
-      if (!/^\d{4}$/.test(s)) return null
-      return s
+      if (value == null) return null;
+      const s = String(value).trim();
+      if (s.length !== 4) return null;
+      if (!/^\d{4}$/.test(s)) return null;
+      return s;
     },
 
     displayAccount(account) {
-      if (!account) return ''
-      return account.last4 ? `${account.name} (****${account.last4})` : account.name
+      if (!account) return '';
+      return account.last4 ? `${account.name} (****${account.last4})` : account.name;
     },
 
     displayAsset(asset) {
-      if (!asset) return ''
-      return asset.ticker ? `${asset.name} (${asset.ticker})` : asset.name
+      if (!asset) return '';
+      return asset.ticker ? `${asset.name} (${asset.ticker})` : asset.name;
     },
 
     setComboboxAnchor(index, el) {
       if (el) {
-        this.comboboxAnchors[index] = el
+        this.comboboxAnchors[index] = el;
       } else {
-        delete this.comboboxAnchors[index]
+        delete this.comboboxAnchors[index];
       }
     },
 
     comboboxDropdownStyle(index) {
-      const el = this.comboboxAnchors[index]
-      if (!el) return {}
-      const rect = el.getBoundingClientRect()
+      const el = this.comboboxAnchors[index];
+      if (!el) return {};
+      const rect = el.getBoundingClientRect();
       return {
         top: `${rect.bottom + 4}px`,
         left: `${rect.left}px`,
-        width: `${rect.width}px`
-      }
+        width: `${rect.width}px`,
+      };
     },
 
     filteredAssetsFor(holding) {
-      const query = (holding.assetQuery || '').toLowerCase().trim()
-      if (!query) return this.allAssets
-      return this.allAssets.filter(a =>
-        a.name.toLowerCase().includes(query) ||
-        (a.ticker && a.ticker.toLowerCase().includes(query))
-      )
+      const query = (holding.assetQuery || '').toLowerCase().trim();
+      if (!query) return this.allAssets;
+      return this.allAssets.filter(
+        (a) =>
+          a.name.toLowerCase().includes(query) ||
+          (a.ticker && a.ticker.toLowerCase().includes(query)),
+      );
     },
 
     onFileChange(event) {
-      this.file = event.target.files[0]
-      this.error = null
+      this.file = event.target.files[0];
+      this.error = null;
     },
 
     async parseFile() {
       if (!this.file) {
-        this.error = 'Please select a file'
-        return
+        this.error = 'Please select a file';
+        return;
       }
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
-        const result = this.parseMode === 'local'
-          ? await this.parseWithLocal()
-          : await this.parseWithCloud()
+        const result =
+          this.parseMode === 'local' ? await this.parseWithLocal() : await this.parseWithCloud();
 
-        await this.handleParseResult(result)
+        await this.handleParseResult(result);
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
     async parseWithCloud() {
-      const pdfArrayBuffer = await this.file.arrayBuffer()
-      const tsv = await pdfToQuantizedTsv(pdfArrayBuffer)
+      const pdfArrayBuffer = await this.file.arrayBuffer();
+      const tsv = await pdfToQuantizedTsv(pdfArrayBuffer);
       const { data, error } = await supabase.functions.invoke('parse-pdf', {
-        body: { tsv }
-      })
-      if (error) throw error
-      return data
+        body: { tsv },
+      });
+      if (error) throw error;
+      return data;
     },
 
     async parseWithLocal() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
 
-      const profile = await getProfile(user.id)
-      const llmConfig = profile?.preferences?.local_llm
+      const profile = await getProfile(user.id);
+      const llmConfig = profile?.preferences?.local_llm;
 
       if (!llmConfig || llmConfig.api === 'disabled') {
-        throw new Error('Local LLM not configured. Go to Profile & Settings to set it up.')
+        throw new Error('Local LLM not configured. Go to Profile & Settings to set it up.');
       }
 
-      const pdfArrayBuffer = await this.file.arrayBuffer()
+      const pdfArrayBuffer = await this.file.arrayBuffer();
       return parseWithLocalLlm({
         config: { provider: llmConfig.api, port: llmConfig.port },
-        pdfArrayBuffer
-      })
+        pdfArrayBuffer,
+      });
     },
 
     async handleParseResult(result) {
-      this.parsedHoldings = (result.holdings || []).map(h => ({
+      this.parsedHoldings = (result.holdings || []).map((h) => ({
         name: h.name,
         ticker: h.ticker?.trim() || null,
         quantity: h.quantity,
         total_value: h.total_value,
-        price: h.price ?? null
-      }))
-      this.effectiveDate = result.statement_date || this.todayDate
-      this.parsedLast4 = this.normalizeParsedLast4(result.last4)
+        price: h.price ?? null,
+      }));
+      this.effectiveDate = result.statement_date || this.todayDate;
+      this.parsedLast4 = this.normalizeParsedLast4(result.last4);
 
       if (this.parsedLast4) {
-        const matches = await findAccountByLast4(this.parsedLast4)
-        this.matchingAccountIds = matches.map(a => a.id)
+        const matches = await findAccountByLast4(this.parsedLast4);
+        this.matchingAccountIds = matches.map((a) => a.id);
 
         if (matches.length === 1) {
-          this.matchedAccount = matches[0]
-          listAccounts().then(accts => this.allAccounts = accts)
-          await this.onAccountResolved()
-          return
+          this.matchedAccount = matches[0];
+          listAccounts().then((accts) => (this.allAccounts = accts));
+          await this.onAccountResolved();
+          return;
         }
 
         if (matches.length > 1) {
-          this.allAccounts = await listAccounts()
-          this.step = 'match'
-          return
+          this.allAccounts = await listAccounts();
+          this.step = 'match';
+          return;
         }
       }
 
-      this.allAccounts = await listAccounts()
-      this.step = 'match'
+      this.allAccounts = await listAccounts();
+      this.step = 'match';
     },
 
     async confirmAccountSelection() {
-      this.error = null
+      this.error = null;
 
       if (this.createNewAccount) {
         if (!this.newAccountName.trim()) {
-          this.error = 'Please enter an account name'
-          return
+          this.error = 'Please enter an account name';
+          return;
         }
 
-        this.loading = true
+        this.loading = true;
         try {
-          const { data: { user } } = await supabase.auth.getUser()
-          if (!user) throw new Error('Not authenticated')
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (!user) throw new Error('Not authenticated');
 
           const newAccount = await insertAccount({
             family_id: user.user_metadata.family_id,
             created_by: user.id,
             name: this.newAccountName.trim(),
             rebalancing: true, // uhh just hardcode 'true' for now I guess
-            last4: this.parsedLast4
-          })
-          this.matchedAccount = newAccount
-          this.matchingAccountIds = []
-          await this.onAccountResolved()
+            last4: this.parsedLast4,
+          });
+          this.matchedAccount = newAccount;
+          this.matchingAccountIds = [];
+          await this.onAccountResolved();
         } catch (err) {
-          this.error = err.message
-          this.loading = false
+          this.error = err.message;
+          this.loading = false;
         }
-        return
+        return;
       }
 
       if (!this.selectedAccount) {
-        this.error = 'Please select an account'
-        return
+        this.error = 'Please select an account';
+        return;
       }
 
-      this.loading = true
+      this.loading = true;
       try {
-        this.matchedAccount = this.selectedAccount
-        this.matchingAccountIds = []
-        await this.onAccountResolved()
+        this.matchedAccount = this.selectedAccount;
+        this.matchingAccountIds = [];
+        await this.onAccountResolved();
       } catch (err) {
-        this.error = err.message
-        this.loading = false
+        this.error = err.message;
+        this.loading = false;
       }
     },
 
     async rejectAutoMatch() {
-      this.matchedAccount = null
-      this.selectedAccount = null
-      this.holdings = []
+      this.matchedAccount = null;
+      this.selectedAccount = null;
+      this.holdings = [];
       // might've already been loaded in prefetch
       if (this.allAccounts.length === 0) {
-        this.allAccounts = await listAccounts()
+        this.allAccounts = await listAccounts();
       }
-      this.step = 'match'
+      this.step = 'match';
     },
 
     async onAccountResolved() {
@@ -337,54 +373,54 @@ export default {
         const [holdingsData, assetsData, aliasesData] = await Promise.all([
           listHoldingUpdatesByAccount(this.matchedAccount.id, 'desc'),
           listAssets(),
-          listAliasesByAccount(this.matchedAccount.id)
-        ])
+          listAliasesByAccount(this.matchedAccount.id),
+        ]);
 
-        this.allAssets = assetsData
+        this.allAssets = assetsData;
 
-        const assetsById = {}
+        const assetsById = {};
         for (const a of assetsData) {
-          assetsById[a.id] = a
+          assetsById[a.id] = a;
         }
 
         // Get latest holding per asset
-        const latestByAsset = {}
+        const latestByAsset = {};
         for (const h of holdingsData) {
           if (!latestByAsset[h.asset_id]) {
-            latestByAsset[h.asset_id] = h
+            latestByAsset[h.asset_id] = h;
           }
         }
 
         this.existingHoldings = Object.values(latestByAsset)
-          .filter(h => parseFloat(h.quantity) > 0)
-          .map(h => ({
+          .filter((h) => parseFloat(h.quantity) > 0)
+          .map((h) => ({
             asset_id: h.asset_id,
             ticker: assetsById[h.asset_id]?.ticker || null,
-            name: assetsById[h.asset_id]?.name || null
-          }))
+            name: assetsById[h.asset_id]?.name || null,
+          }));
 
         // Build alias lookup: normalized statement label -> asset_id
-        const assetsByLabel = {}
+        const assetsByLabel = {};
         for (const alias of aliasesData) {
-          assetsByLabel[alias.label] = alias.asset_id
+          assetsByLabel[alias.label] = alias.asset_id;
         }
 
-        const assetsByTicker = {}
+        const assetsByTicker = {};
         for (const a of assetsData) {
           if (a.ticker) {
-            assetsByTicker[a.ticker.toUpperCase()] = a
+            assetsByTicker[a.ticker.toUpperCase()] = a;
           }
         }
 
-        this.holdings = this.parsedHoldings.map(h =>
-          this.resolveHolding(h, assetsByTicker, assetsByLabel, assetsById)
-        )
-        this.addSoldPositions()
-        this.step = 'preview'
+        this.holdings = this.parsedHoldings.map((h) =>
+          this.resolveHolding(h, assetsByTicker, assetsByLabel, assetsById),
+        );
+        this.addSoldPositions();
+        this.step = 'preview';
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
@@ -397,41 +433,41 @@ export default {
         total_value: h.total_value,
         price: h.price,
         chosenAsset: null,
-        assetQuery: ''
-      }
+        assetQuery: '',
+      };
 
       // Path 1: statement printed a ticker
       if (h.ticker) {
-        const key = h.ticker.toUpperCase()
-        const hit = assetsByTicker[key]
+        const key = h.ticker.toUpperCase();
+        const hit = assetsByTicker[key];
         if (hit) {
           return {
             ...base,
             ticker: key,
             kind: 'ticker',
             assetId: hit.id,
-            display: this.displayAsset(hit)
-          }
+            display: this.displayAsset(hit),
+          };
         }
         return {
           ...base,
           ticker: key,
           kind: 'new-ticker',
           assetId: null,
-          display: this.displayAsset({ name: h.name, ticker: key })
-        }
+          display: this.displayAsset({ name: h.name, ticker: key }),
+        };
       }
 
       // Path 2: no ticker, but we've mapped this label in this account before
-      const assetId = assetsByLabel[normalizeLabel(h.name)]
+      const assetId = assetsByLabel[normalizeLabel(h.name)];
       if (assetId && assetsById[assetId]) {
-        const asset = assetsById[assetId]
+        const asset = assetsById[assetId];
         return {
           ...base,
           kind: 'alias',
           assetId: assetId,
-          display: this.displayAsset(asset)
-        }
+          display: this.displayAsset(asset),
+        };
       }
 
       // Path 3: nothing to go on — user picks or leaves blank to create
@@ -439,8 +475,8 @@ export default {
         ...base,
         kind: 'unresolved',
         assetId: null,
-        display: h.name
-      }
+        display: h.name,
+      };
     },
 
     /**
@@ -450,34 +486,34 @@ export default {
      */
     resolvedAssetId(holding) {
       if (holding.kind === 'ticker' || holding.kind === 'alias' || holding.kind === 'sold') {
-        return holding.assetId
+        return holding.assetId;
       }
       if (holding.kind === 'unresolved' && holding.chosenAsset) {
-        return holding.chosenAsset.id
+        return holding.chosenAsset.id;
       }
-      return null
+      return null;
     },
 
     removeHolding(index) {
-      this.holdings.splice(index, 1)
-      this.refreshSoldPositions()
+      this.holdings.splice(index, 1);
+      this.refreshSoldPositions();
     },
 
     onChosenAssetChange() {
-      this.refreshSoldPositions()
+      this.refreshSoldPositions();
     },
 
     refreshSoldPositions() {
       // Drop previous sold rows, then recompute from current resolutions
-      this.holdings = this.holdings.filter(h => h.kind !== 'sold')
-      this.addSoldPositions()
+      this.holdings = this.holdings.filter((h) => h.kind !== 'sold');
+      this.addSoldPositions();
     },
 
     addSoldPositions() {
       // Assets already represented by a resolved holding in this statement
       const present = new Set(
-        this.holdings.map(h => this.resolvedAssetId(h)).filter(id => id != null)
-      )
+        this.holdings.map((h) => this.resolvedAssetId(h)).filter((id) => id != null),
+      );
 
       // Check each existing holding to see if it's missing from the parsed results
       for (const existing of this.existingHoldings) {
@@ -493,18 +529,18 @@ export default {
             assetId: existing.asset_id,
             chosenAsset: null,
             assetQuery: '',
-            display: this.displayAsset(existing)
-          })
+            display: this.displayAsset(existing),
+          });
         }
       }
     },
 
     computePrice(holding) {
-      if (holding.price) return holding.price
+      if (holding.price) return holding.price;
       if (holding.quantity && holding.quantity !== 0) {
-        return holding.total_value / holding.quantity
+        return holding.total_value / holding.quantity;
       }
-      return holding.total_value // fallback for quantity=0 edge case
+      return holding.total_value; // fallback for quantity=0 edge case
     },
 
     formatCurrency,
@@ -519,7 +555,7 @@ export default {
      */
     async materializeAsset(holding, accountId, user) {
       if (holding.kind === 'ticker' || holding.kind === 'alias' || holding.kind === 'sold') {
-        return holding.assetId
+        return holding.assetId;
       }
 
       if (holding.kind === 'new-ticker') {
@@ -527,62 +563,68 @@ export default {
           family_id: user.user_metadata.family_id,
           created_by: user.id,
           ticker: holding.ticker,
-          name: holding.name
-        })
-        return asset.id
+          name: holding.name,
+        });
+        return asset.id;
       }
 
       // unresolved: chosen from combobox, or blank => create ticker-less asset
-      const assetId = holding.chosenAsset?.id ?? (await insertAsset({
-        family_id: user.user_metadata.family_id,
-        created_by: user.id,
-        ticker: null,
-        name: holding.name
-      })).id
+      const assetId =
+        holding.chosenAsset?.id ??
+        (
+          await insertAsset({
+            family_id: user.user_metadata.family_id,
+            created_by: user.id,
+            ticker: null,
+            name: holding.name,
+          })
+        ).id;
 
       await insertAssetAlias({
         account_id: accountId,
         label: holding.name,
-        asset_id: assetId
-      })
-      return assetId
+        asset_id: assetId,
+      });
+      return assetId;
     },
 
     async saveStatement() {
       if (this.holdings.length === 0) {
-        this.error = 'No holdings to save'
-        return
+        this.error = 'No holdings to save';
+        return;
       }
 
       if (!this.effectiveDate) {
-        this.error = 'Please select a date'
-        return
+        this.error = 'Please select a date';
+        return;
       }
 
       if (this.duplicateAssetIds.length > 0) {
-        this.error = 'Two holdings resolve to the same asset. Remove or remap one before saving.'
-        return
+        this.error = 'Two holdings resolve to the same asset. Remove or remap one before saving.';
+        return;
       }
 
-      const account = this.resolvedAccount
+      const account = this.resolvedAccount;
       if (!account) {
-        this.error = 'No account selected'
-        return
+        this.error = 'No account selected';
+        return;
       }
 
-      this.step = 'saving'
-      this.loading = true
-      this.error = null
+      this.step = 'saving';
+      this.loading = true;
+      this.error = null;
 
-      let update = null
+      let update = null;
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
         // Backfill last4 if the account doesn't have one yet
         if (this.parsedLast4 && !account.last4) {
-          await updateAccount(account.id, { last4: this.parsedLast4 })
+          await updateAccount(account.id, { last4: this.parsedLast4 });
         }
 
         // 1. Create the update record
@@ -591,23 +633,23 @@ export default {
           account_id: account.id,
           update_type: 'statement',
           effective_date: this.effectiveDate,
-          created_by: user.id
-        })
+          created_by: user.id,
+        });
 
         // 2. Process each holding
         for (const holding of this.holdings) {
           // Resolve / create the asset (and alias, when needed)
-          let assetId
+          let assetId;
           try {
-            assetId = await this.materializeAsset(holding, account.id, user)
+            assetId = await this.materializeAsset(holding, account.id, user);
           } catch (createError) {
             // Rollback: delete the update
-            await deleteUpdate(update.id)
-            throw createError
+            await deleteUpdate(update.id);
+            throw createError;
           }
 
           // Compute price (null for sold positions)
-          const price = this.computePrice(holding)
+          const price = this.computePrice(holding);
 
           // Insert price (skip for sold positions where price is null)
           if (price != null) {
@@ -615,11 +657,11 @@ export default {
               await insertPriceUpdate({
                 update_id: update.id,
                 asset_id: assetId,
-                price: price
-              })
+                price: price,
+              });
             } catch (priceError) {
-              await deleteUpdate(update.id)
-              throw priceError
+              await deleteUpdate(update.id);
+              throw priceError;
             }
           }
 
@@ -628,34 +670,29 @@ export default {
             await insertHoldingUpdate({
               update_id: update.id,
               asset_id: assetId,
-              quantity: holding.quantity
-            })
+              quantity: holding.quantity,
+            });
           } catch (holdingError) {
-            await deleteUpdate(update.id)
-            throw holdingError
+            await deleteUpdate(update.id);
+            throw holdingError;
           }
         }
 
         // Success!
-        this.$emit('uploaded')
-
+        this.$emit('uploaded');
       } catch (err) {
-        this.error = err.message
-        this.step = 'preview'
+        this.error = err.message;
+        this.step = 'preview';
       } finally {
-        this.loading = false
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
-  <BaseModal
-    v-bind:title="modalTitle"
-    max-width="max-w-2xl"
-    v-on:close="$emit('close')"
-  >
+  <BaseModal v-bind:title="modalTitle" max-width="max-w-2xl" v-on:close="$emit('close')">
     <!-- Error display -->
     <div v-if="error" class="mb-4 p-3 bg-error text-error-text rounded-md text-sm">
       {{ error }}
@@ -667,7 +704,11 @@ export default {
         Select a PDF statement to upload. It will be parsed using AI to extract holdings.
       </p>
 
-      <Disclosure v-slot="{ open }" as="div" class="mb-5 p-4 bg-info border border-info-border rounded-lg">
+      <Disclosure
+        v-slot="{ open }"
+        as="div"
+        class="mb-5 p-4 bg-info border border-info-border rounded-lg"
+      >
         <DisclosureButton class="w-full flex items-center justify-between text-left">
           <h4 class="text-sm font-medium text-info-text">Privacy Notice</h4>
           <svg
@@ -677,7 +718,12 @@ export default {
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </DisclosureButton>
         <div
@@ -687,8 +733,11 @@ export default {
           <DisclosurePanel static class="overflow-hidden">
             <div class="mt-2">
               <p class="text-sm text-info-text mb-2">
-                Cheapskate extracts and stores only ticker symbols, share quantities, and account last-4 digits from your statement -- no full account numbers, addresses, or other personal information.
+                Cheapskate extracts and stores only ticker symbols, share quantities, and account
+                last-4 digits from your statement -- no full account numbers, addresses, or other
+                personal information.
               </p>
+              <!-- prettier-ignore -->
               <p class="text-sm text-info-text">
                 The AI provider is configured with <a href="https://openrouter.ai/docs/guides/features/zdr" class="font-semibold underline hover:text-info-text">zero data retention</a>, so your document is not stored or used for training after parsing.
               </p>
@@ -708,29 +757,30 @@ export default {
     <!-- Step 2: Account matching (only shown when no auto-match) -->
     <div v-if="step === 'match'">
       <p class="text-sm text-muted-text mb-2">
+        <!-- prettier-ignore -->
         <template v-if="matchingAccountIds.length > 1">
           Multiple accounts match account number ending in <strong>{{ parsedLast4 }}</strong>.
         </template>
+        <!-- prettier-ignore -->
         <template v-else-if="parsedLast4">
           No account found matching account number ending in <strong>{{ parsedLast4 }}</strong>.
         </template>
-        <template v-else>
-          Could not detect an account number in the statement.
-        </template>
+        <template v-else> Could not detect an account number in the statement. </template>
       </p>
       <p class="text-sm text-muted-text mb-4">
-        <template v-if="matchingAccountIds.length > 1">
-          Please select the correct one.
-        </template>
-        <template v-else>
-          Please select an existing account or create a new one.
-        </template>
+        <template v-if="matchingAccountIds.length > 1"> Please select the correct one. </template>
+        <template v-else> Please select an existing account or create a new one. </template>
       </p>
 
       <div class="space-y-4">
         <!-- Account combobox -->
         <div>
-          <Combobox v-model="selectedAccount" as="div" class="relative" v-on:update:model-value="createNewAccount = false">
+          <Combobox
+            v-model="selectedAccount"
+            as="div"
+            class="relative"
+            v-on:update:model-value="createNewAccount = false"
+          >
             <div class="relative">
               <ComboboxInput
                 v-bind:display-value="displayAccount"
@@ -739,11 +789,16 @@ export default {
                 placeholder="Search accounts..."
                 class="w-full px-3 py-2 pr-8 text-sm border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <ComboboxButton ref="comboboxButton" class="absolute inset-y-0 right-0 flex items-center pr-2">
+              <ComboboxButton
+                ref="comboboxButton"
+                class="absolute inset-y-0 right-0 flex items-center pr-2"
+              >
                 <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
               </ComboboxButton>
             </div>
-            <ComboboxOptions class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none">
+            <ComboboxOptions
+              class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none"
+            >
               <div v-if="sortedAccounts.length === 0" class="px-3 py-2 text-sm text-muted-text">
                 No accounts found
               </div>
@@ -757,15 +812,13 @@ export default {
                   v-bind:class="[
                     'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
                     active ? 'bg-surface-recessed-deep' : '',
-                    selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
+                    selected ? 'text-blue-600 font-medium' : 'text-secondary-text',
                   ]"
                 >
                   <span class="flex items-center gap-2">
                     {{ acct.last4 ? `${acct.name} (****${acct.last4})` : acct.name }}
-                    <span
-                      v-if="matchingAccountIds.includes(acct.id)"
-                      class="text-xs bg-info text-info-text px-1.5 py-0.5 rounded"
-                    >Matches</span>
+                    <!-- prettier-ignore -->
+                    <span v-if="matchingAccountIds.includes(acct.id)" class="text-xs bg-info text-info-text px-1.5 py-0.5 rounded">Matches</span>
                   </span>
                   <CheckIcon v-if="selected" class="w-4 h-4 flex-shrink-0" />
                 </div>
@@ -779,7 +832,7 @@ export default {
           <input
             type="checkbox"
             v-model="createNewAccount"
-            v-on:change="createNewAccount ? selectedAccount = null : null"
+            v-on:change="createNewAccount ? (selectedAccount = null) : null"
             class="rounded border-surface-border-strong text-blue-600 mt-0.5"
           />
           <div class="flex-1">
@@ -800,20 +853,25 @@ export default {
     <div v-if="step === 'preview'">
       <p class="text-sm text-muted-text mb-2">
         <template v-if="resolvedAccount">
+          <!-- prettier-ignore -->
           <template v-if="matchingAccountIds.length === 1">
             Auto-matched to <strong>{{ resolvedAccount.name }}</strong><template v-if="resolvedAccount.last4 || parsedLast4"> (****{{ resolvedAccount.last4 || parsedLast4 }})</template>.
             <button
               v-on:click="rejectAutoMatch"
               class="text-blue-600 hover:text-blue-800 underline"
-            >Not the right account?</button>
+            >
+              Not the right account?
+            </button>
           </template>
+          <!-- prettier-ignore -->
           <template v-else>
             Uploading to <strong>{{ resolvedAccount.name }}</strong><template v-if="resolvedAccount.last4 || parsedLast4"> (****{{ resolvedAccount.last4 || parsedLast4 }})</template>.
           </template>
         </template>
       </p>
       <p class="text-sm text-muted-text mb-4">
-        Review the parsed holdings below. Holdings without a ticker need an asset chosen (or leave blank to create a new one).
+        Review the parsed holdings below. Holdings without a ticker need an asset chosen (or leave
+        blank to create a new one).
       </p>
 
       <div
@@ -825,9 +883,7 @@ export default {
 
       <!-- As of date -->
       <div class="mb-4">
-        <label class="block text-sm font-medium text-secondary-text mb-1">
-          As Of
-        </label>
+        <label class="block text-sm font-medium text-secondary-text mb-1"> As Of </label>
         <input
           v-model="effectiveDate"
           type="date"
@@ -836,23 +892,43 @@ export default {
       </div>
 
       <!-- Holdings table -->
-      <div class="border border-surface-border-strong rounded-md max-h-80 overflow-x-auto overflow-y-auto">
+      <div
+        class="border border-surface-border-strong rounded-md max-h-80 overflow-x-auto overflow-y-auto"
+      >
         <table class="min-w-full divide-y divide-surface-border">
           <thead class="bg-surface-recessed sticky top-0">
             <tr>
-              <th class="px-4 py-2 text-left text-xs font-medium text-muted-text uppercase whitespace-nowrap">Name</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase whitespace-nowrap">Qty</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase whitespace-nowrap">Value</th>
-              <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase whitespace-nowrap">Price</th>
+              <th
+                class="px-4 py-2 text-left text-xs font-medium text-muted-text uppercase whitespace-nowrap"
+              >
+                Name
+              </th>
+              <th
+                class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase whitespace-nowrap"
+              >
+                Qty
+              </th>
+              <th
+                class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase whitespace-nowrap"
+              >
+                Value
+              </th>
+              <th
+                class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase whitespace-nowrap"
+              >
+                Price
+              </th>
               <th class="px-4 py-2 text-right text-xs font-medium text-muted-text uppercase"></th>
             </tr>
           </thead>
           <tbody class="bg-surface">
             <template v-for="(holding, index) in holdings" v-bind:key="index">
               <tr
-                v-bind:class="holding.kind === 'unresolved' && !holding.chosenAsset
-                  ? ''
-                  : 'border-b border-surface-border'"
+                v-bind:class="
+                  holding.kind === 'unresolved' && !holding.chosenAsset
+                    ? ''
+                    : 'border-b border-surface-border'
+                "
               >
                 <td class="px-4 py-2 text-sm whitespace-nowrap min-w-[16rem]">
                   <!-- Resolved: same chrome as the combobox, but disabled -->
@@ -874,19 +950,18 @@ export default {
                     class="relative"
                     v-on:update:model-value="onChosenAssetChange(holding)"
                   >
-                    <div
-                      class="relative"
-                      v-bind:ref="(el) => setComboboxAnchor(index, el)"
-                    >
+                    <div class="relative" v-bind:ref="(el) => setComboboxAnchor(index, el)">
                       <ComboboxInput
-                        v-bind:display-value="(asset) => asset ? displayAsset(asset) : holding.name"
+                        v-bind:display-value="
+                          (asset) => (asset ? displayAsset(asset) : holding.name)
+                        "
                         v-on:change="holding.assetQuery = $event.target.value"
                         placeholder="Search assets…"
                         v-bind:class="[
                           'w-full px-3 py-1.5 pr-8 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
                           holding.chosenAsset
                             ? 'border border-surface-border-strong bg-surface text-primary-text'
-                            : 'border border-dashed border-surface-border-strong bg-surface text-muted-text'
+                            : 'border border-dashed border-surface-border-strong bg-surface text-muted-text',
                         ]"
                       />
                       <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -899,22 +974,22 @@ export default {
                         v-bind:style="open ? comboboxDropdownStyle(index) : undefined"
                         class="fixed z-50 max-h-48 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none"
                       >
-                        <ComboboxOption
-                          v-bind:value="null"
-                          v-slot="{ active, selected }"
-                        >
+                        <ComboboxOption v-bind:value="null" v-slot="{ active, selected }">
                           <div
                             v-bind:class="[
                               'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
                               active ? 'bg-surface-recessed-deep' : '',
-                              selected ? 'text-blue-600 font-medium' : 'text-muted-text'
+                              selected ? 'text-blue-600 font-medium' : 'text-muted-text',
                             ]"
                           >
                             <span>Create new asset</span>
                             <CheckIcon v-if="selected" class="w-4 h-4 flex-shrink-0" />
                           </div>
                         </ComboboxOption>
-                        <div v-if="filteredAssetsFor(holding).length === 0" class="px-3 py-2 text-sm text-muted-text">
+                        <div
+                          v-if="filteredAssetsFor(holding).length === 0"
+                          class="px-3 py-2 text-sm text-muted-text"
+                        >
                           No matching assets
                         </div>
                         <ComboboxOption
@@ -927,7 +1002,7 @@ export default {
                             v-bind:class="[
                               'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
                               active ? 'bg-surface-recessed-deep' : '',
-                              selected ? 'text-blue-600 font-medium' : 'text-secondary-text'
+                              selected ? 'text-blue-600 font-medium' : 'text-secondary-text',
                             ]"
                           >
                             <span>{{ displayAsset(asset) }}</span>
@@ -938,9 +1013,15 @@ export default {
                     </Teleport>
                   </Combobox>
                 </td>
-                <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatNumber(holding.quantity) }}</td>
-                <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatCurrency(holding.total_value) }}</td>
-                <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">{{ formatCurrency(computePrice(holding)) }}</td>
+                <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">
+                  {{ formatNumber(holding.quantity) }}
+                </td>
+                <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">
+                  {{ formatCurrency(holding.total_value) }}
+                </td>
+                <td class="px-4 py-2 text-sm text-primary-text text-right whitespace-nowrap">
+                  {{ formatCurrency(computePrice(holding)) }}
+                </td>
                 <td class="px-4 py-2 text-right whitespace-nowrap">
                   <button
                     v-on:click="removeHolding(index)"
@@ -1013,13 +1094,15 @@ export default {
           >
             <ChevronUpIcon class="w-4 h-4" />
           </MenuButton>
-          <MenuItems class="absolute right-0 bottom-full mb-1 w-48 bg-surface border border-surface-border rounded-md shadow-lg z-50 py-1">
+          <MenuItems
+            class="absolute right-0 bottom-full mb-1 w-48 bg-surface border border-surface-border rounded-md shadow-lg z-50 py-1"
+          >
             <MenuItem v-slot="{ active }">
               <button
                 v-on:click="parseMode = 'cloud'"
                 v-bind:class="[
                   'w-full text-left px-4 py-2 text-sm',
-                  active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text'
+                  active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text',
                 ]"
               >
                 Parse with Cloud AI
@@ -1030,7 +1113,7 @@ export default {
                 v-on:click="parseMode = 'local'"
                 v-bind:class="[
                   'w-full text-left px-4 py-2 text-sm',
-                  active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text'
+                  active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text',
                 ]"
               >
                 Parse with Local LLM

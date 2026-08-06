@@ -1,65 +1,65 @@
 <script>
-import { supabase } from '@/lib/supabase'
-import { CheckCircleIcon } from '@heroicons/vue/24/solid'
+import { supabase } from '@/lib/supabase';
+import { CheckCircleIcon } from '@heroicons/vue/24/solid';
 
 export default {
   name: 'OnboardingContinueCard',
   components: {
-    CheckCircleIcon
+    CheckCircleIcon,
   },
   props: {
     step: {
       type: String,
       required: true,
-      validator: (v) => ['goals', 'accounts', 'assets'].includes(v)
+      validator: (v) => ['goals', 'accounts', 'assets'].includes(v),
     },
     message: {
       type: String,
-      required: true
+      required: true,
     },
     nextStepLabel: {
       type: String,
-      required: true
+      required: true,
     },
     nextRoute: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
       loading: false,
-      error: null
-    }
+      error: null,
+    };
   },
   methods: {
     async continueToNextStep() {
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
         // Determine which flag to update
-        const flagName = `${this.step}_completed`
+        const flagName = `${this.step}_completed`;
 
         // Update user metadata
         const { error } = await supabase.auth.updateUser({
-          data: { [flagName]: true }
-        })
+          data: { [flagName]: true },
+        });
 
-        if (error) throw error
+        if (error) throw error;
 
         // Refresh session to get updated JWT
-        await supabase.auth.refreshSession()
+        await supabase.auth.refreshSession();
 
         // Navigate to next step
-        this.$router.push(this.nextRoute)
+        this.$router.push(this.nextRoute);
       } catch (err) {
-        this.error = err.message
-        this.loading = false
+        this.error = err.message;
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>

@@ -60,18 +60,12 @@ export async function insertProfile(profile: {
 }
 
 export async function updateProfile(id: string, updates: { name: string }): Promise<void> {
-  const { error } = await supabase
-    .from('profiles')
-    .update({ name: updates.name })
-    .eq('id', id);
+  const { error } = await supabase.from('profiles').update({ name: updates.name }).eq('id', id);
 
   if (error) throw error;
 }
 
-export async function updatePreferences(
-  id: string,
-  preferences: UserPreferences,
-): Promise<void> {
+export async function updatePreferences(id: string, preferences: UserPreferences): Promise<void> {
   const { error } = await supabase.from('profiles').update({ preferences }).eq('id', id);
 
   if (error) throw error;

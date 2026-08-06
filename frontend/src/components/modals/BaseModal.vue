@@ -4,23 +4,23 @@ export default {
   props: {
     title: {
       type: String,
-      required: true
+      required: true,
     },
     maxWidth: {
       type: String,
-      default: 'max-w-md'
-    }
+      default: 'max-w-md',
+    },
   },
   emits: ['close'],
   methods: {
     onBackdropClick(event) {
       // Only close if clicking the backdrop itself, not the modal content
       if (event.target === event.currentTarget) {
-        this.$emit('close')
+        this.$emit('close');
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>

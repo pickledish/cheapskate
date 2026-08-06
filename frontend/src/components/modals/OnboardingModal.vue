@@ -4,30 +4,30 @@ export default {
   props: {
     title: {
       type: String,
-      required: true
+      required: true,
     },
     stepNumber: {
       type: Number,
-      required: true
+      required: true,
     },
     totalSteps: {
       type: Number,
-      default: 3
+      default: 3,
     },
     maxWidth: {
       type: String,
-      default: 'max-w-lg'
-    }
+      default: 'max-w-lg',
+    },
   },
   emits: ['close'],
   methods: {
     onBackdropClick(event) {
       if (event.target === event.currentTarget) {
-        this.$emit('close')
+        this.$emit('close');
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>

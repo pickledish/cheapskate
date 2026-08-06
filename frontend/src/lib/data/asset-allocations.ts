@@ -30,10 +30,7 @@ export async function insertAssetAllocation(allocation: {
 }
 
 export async function deleteAssetAllocationsByAsset(assetId: number): Promise<void> {
-  const { error } = await supabase
-    .from('asset_allocations')
-    .delete()
-    .eq('asset_id', assetId);
+  const { error } = await supabase.from('asset_allocations').delete().eq('asset_id', assetId);
 
   if (error) throw error;
 }

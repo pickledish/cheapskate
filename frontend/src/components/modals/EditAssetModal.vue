@@ -1,22 +1,31 @@
 <script>
-import BaseModal from './BaseModal.vue'
-import { updateAsset, deleteAssetAllocationsByAsset, insertAssetAllocation } from '@/lib/data'
-import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
-import { TrashIcon } from '@heroicons/vue/24/solid'
-import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid'
+import BaseModal from './BaseModal.vue';
+import { updateAsset, deleteAssetAllocationsByAsset, insertAssetAllocation } from '@/lib/data';
+import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue';
+import { TrashIcon } from '@heroicons/vue/24/solid';
+import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 
 export default {
   name: 'EditAssetModal',
-  components: { BaseModal, Listbox, ListboxButton, ListboxOptions, ListboxOption, TrashIcon, ChevronUpDownIcon, CheckIcon },
+  components: {
+    BaseModal,
+    Listbox,
+    ListboxButton,
+    ListboxOptions,
+    ListboxOption,
+    TrashIcon,
+    ChevronUpDownIcon,
+    CheckIcon,
+  },
   props: {
     asset: {
       type: Object,
-      required: true
+      required: true,
     },
     assetClasses: {
       type: Array,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: ['close', 'updated'],
   data() {
@@ -25,110 +34,110 @@ export default {
       ticker: '',
       allocations: [],
       loading: false,
-      error: null
-    }
+      error: null,
+    };
   },
   computed: {
     totalAllocation() {
       // Only count allocations with a class selected
       return this.allocations
-        .filter(a => a.asset_class_id !== null)
-        .reduce((sum, a) => sum + (parseFloat(a.percentage) || 0), 0)
+        .filter((a) => a.asset_class_id !== null)
+        .reduce((sum, a) => sum + (parseFloat(a.percentage) || 0), 0);
     },
     availableClasses() {
       // Filter out null ids when computing available classes
-      const usedIds = this.allocations.map(a => a.asset_class_id).filter(id => id !== null)
-      return this.assetClasses.filter(c => !usedIds.includes(c.id))
-    }
+      const usedIds = this.allocations.map((a) => a.asset_class_id).filter((id) => id !== null);
+      return this.assetClasses.filter((c) => !usedIds.includes(c.id));
+    },
   },
   mounted() {
     // Initialize form with current values
-    this.name = this.asset.name || ''
-    this.ticker = this.asset.ticker || ''
+    this.name = this.asset.name || '';
+    this.ticker = this.asset.ticker || '';
 
     // Copy allocations from prop (already converted to percentages by parent)
-    this.allocations = (this.asset.allocations || []).map(a => ({ ...a }))
+    this.allocations = (this.asset.allocations || []).map((a) => ({ ...a }));
 
     // If no allocations exist, add an empty row so the UI is visible by default
     if (this.allocations.length === 0 && this.assetClasses.length > 0) {
       this.allocations.push({
         asset_class_id: null,
-        percentage: 100
-      })
+        percentage: 100,
+      });
     }
   },
   methods: {
     addAllocation() {
-      if (this.availableClasses.length === 0) return
+      if (this.availableClasses.length === 0) return;
       this.allocations.push({
         asset_class_id: null,
-        percentage: 0
-      })
+        percentage: 0,
+      });
     },
 
     removeAllocation(index) {
-      this.allocations.splice(index, 1)
+      this.allocations.splice(index, 1);
     },
 
     getClassName(classId) {
-      if (!classId) return ''
-      const c = this.assetClasses.find(c => c.id === classId)
-      return c ? c.name : ''
+      if (!classId) return '';
+      const c = this.assetClasses.find((c) => c.id === classId);
+      return c ? c.name : '';
     },
 
     isClassUsed(classId, currentAlloc) {
-      return this.allocations.some(a => a.asset_class_id === classId && a !== currentAlloc)
+      return this.allocations.some((a) => a.asset_class_id === classId && a !== currentAlloc);
     },
 
     async save() {
       if (!this.name.trim()) {
-        this.error = 'Please enter an asset name'
-        return
+        this.error = 'Please enter an asset name';
+        return;
       }
 
       // Filter out allocations with no class selected (empty rows)
-      const validAllocations = this.allocations.filter(a => a.asset_class_id !== null)
+      const validAllocations = this.allocations.filter((a) => a.asset_class_id !== null);
 
       // Validate allocations sum to 100 if any exist
       if (validAllocations.length > 0) {
-        const total = validAllocations.reduce((sum, a) => sum + (parseFloat(a.percentage) || 0), 0)
+        const total = validAllocations.reduce((sum, a) => sum + (parseFloat(a.percentage) || 0), 0);
         if (total !== 100) {
-          this.error = `Allocations must sum to 100% (currently ${total}%)`
-          return
+          this.error = `Allocations must sum to 100% (currently ${total}%)`;
+          return;
         }
       }
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
         // Update asset
         await updateAsset(this.asset.id, {
           name: this.name.trim(),
-          ticker: this.ticker.trim() || null
-        })
+          ticker: this.ticker.trim() || null,
+        });
 
         // Delete old allocations
-        await deleteAssetAllocationsByAsset(this.asset.id)
+        await deleteAssetAllocationsByAsset(this.asset.id);
 
         // Insert new allocations (only valid ones)
         for (const a of validAllocations) {
           await insertAssetAllocation({
             asset_id: this.asset.id,
             asset_class_id: a.asset_class_id,
-            percentage: a.percentage / 100
-          })
+            percentage: a.percentage / 100,
+          });
         }
 
-        this.$emit('updated')
+        this.$emit('updated');
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -141,9 +150,7 @@ export default {
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-secondary-text mb-1">
-          Name
-        </label>
+        <label class="block text-sm font-medium text-secondary-text mb-1"> Name </label>
         <input
           v-model="name"
           type="text"
@@ -180,7 +187,9 @@ export default {
                 class="relative w-full px-3 py-2 text-left text-sm border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <span v-bind:class="{ 'text-placeholder-text': !alloc.asset_class_id }">
-                  {{ alloc.asset_class_id ? getClassName(alloc.asset_class_id) : 'Select class...' }}
+                  {{
+                    alloc.asset_class_id ? getClassName(alloc.asset_class_id) : 'Select class...'
+                  }}
                 </span>
                 <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                   <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
@@ -210,7 +219,7 @@ export default {
                         disabled ? 'text-placeholder-text cursor-not-allowed' : 'cursor-pointer',
                         !disabled && active ? 'bg-surface-recessed-deep' : '',
                         !disabled && selected ? 'text-blue-600 font-medium' : '',
-                        !disabled && !selected ? 'text-secondary-text' : ''
+                        !disabled && !selected ? 'text-secondary-text' : '',
                       ]"
                     >
                       {{ c.name }}

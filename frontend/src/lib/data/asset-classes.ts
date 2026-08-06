@@ -12,21 +12,14 @@ export interface AssetClass {
 }
 
 export async function listAssetClasses(): Promise<AssetClass[]> {
-  const { data, error } = await supabase
-    .from('asset_classes')
-    .select('*')
-    .order('sort_order');
+  const { data, error } = await supabase.from('asset_classes').select('*').order('sort_order');
 
   if (error) throw error;
   return data || [];
 }
 
 export async function getAssetClass(id: number): Promise<AssetClass | null> {
-  const { data, error } = await supabase
-    .from('asset_classes')
-    .select('*')
-    .eq('id', id)
-    .single();
+  const { data, error } = await supabase.from('asset_classes').select('*').eq('id', id).single();
 
   if (error) {
     if (error.code === 'PGRST116') return null;

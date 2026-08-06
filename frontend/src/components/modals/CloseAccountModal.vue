@@ -1,7 +1,7 @@
 <script>
-import BaseModal from './BaseModal.vue'
-import { supabase } from '@/lib/supabase'
-import { insertUpdate, insertHoldingUpdate, updateAccount } from '@/lib/data'
+import BaseModal from './BaseModal.vue';
+import { supabase } from '@/lib/supabase';
+import { insertUpdate, insertHoldingUpdate, updateAccount } from '@/lib/data';
 
 export default {
   name: 'CloseAccountModal',
@@ -9,37 +9,39 @@ export default {
   props: {
     account: {
       type: Object,
-      required: true
+      required: true,
     },
     holdings: {
       type: Array,
-      default: () => []
-    }
+      default: () => [],
+    },
   },
   emits: ['close', 'closed'],
   data() {
     return {
       effectiveDate: '',
       loading: false,
-      error: null
-    }
+      error: null,
+    };
   },
   mounted() {
-    this.effectiveDate = new Date().toISOString().split('T')[0]
+    this.effectiveDate = new Date().toISOString().split('T')[0];
   },
   methods: {
     async save() {
       if (!this.effectiveDate) {
-        this.error = 'Please select a date'
-        return
+        this.error = 'Please select a date';
+        return;
       }
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
         if (this.holdings.length > 0) {
           const update = await insertUpdate({
@@ -47,28 +49,28 @@ export default {
             account_id: this.account.id,
             update_type: 'mark_as_closed',
             effective_date: this.effectiveDate,
-            created_by: user.id
-          })
+            created_by: user.id,
+          });
 
           for (const h of this.holdings) {
             await insertHoldingUpdate({
               update_id: update.id,
               asset_id: h.asset_id,
-              quantity: 0
-            })
+              quantity: 0,
+            });
           }
         }
 
-        await updateAccount(this.account.id, { archived_at: this.effectiveDate })
-        this.$emit('closed')
+        await updateAccount(this.account.id, { archived_at: this.effectiveDate });
+        this.$emit('closed');
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -78,15 +80,13 @@ export default {
     </div>
 
     <p class="text-sm text-muted-text mb-4">
-      Mark <strong>{{ account.name }}</strong> as closed? All holdings will be set to zero
-      and the account will be hidden from the accounts list. Historical data is preserved.
+      Mark <strong>{{ account.name }}</strong> as closed? All holdings will be set to zero and the
+      account will be hidden from the accounts list. Historical data is preserved.
     </p>
 
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-secondary-text mb-1">
-          As Of
-        </label>
+        <label class="block text-sm font-medium text-secondary-text mb-1"> As Of </label>
         <input
           v-model="effectiveDate"
           type="date"

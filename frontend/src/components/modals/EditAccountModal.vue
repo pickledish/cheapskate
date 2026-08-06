@@ -1,6 +1,6 @@
 <script>
-import BaseModal from './BaseModal.vue'
-import { updateAccount } from '@/lib/data'
+import BaseModal from './BaseModal.vue';
+import { updateAccount } from '@/lib/data';
 
 export default {
   name: 'EditAccountModal',
@@ -8,8 +8,8 @@ export default {
   props: {
     account: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: ['close', 'updated'],
   data() {
@@ -17,37 +17,37 @@ export default {
       name: '',
       last4: '',
       loading: false,
-      error: null
-    }
+      error: null,
+    };
   },
   mounted() {
-    this.name = this.account.name || ''
-    this.last4 = this.account.last4 || ''
+    this.name = this.account.name || '';
+    this.last4 = this.account.last4 || '';
   },
   methods: {
     async save() {
       if (!this.name.trim()) {
-        this.error = 'Please enter an account name'
-        return
+        this.error = 'Please enter an account name';
+        return;
       }
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
         await updateAccount(this.account.id, {
           name: this.name.trim(),
-          last4: this.last4.trim() || null
-        })
-        this.$emit('updated')
+          last4: this.last4.trim() || null,
+        });
+        this.$emit('updated');
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -60,9 +60,7 @@ export default {
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-secondary-text mb-1">
-          Account Name
-        </label>
+        <label class="block text-sm font-medium text-secondary-text mb-1"> Account Name </label>
         <input
           v-model="name"
           type="text"

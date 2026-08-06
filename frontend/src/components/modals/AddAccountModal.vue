@@ -1,7 +1,7 @@
 <script>
-import BaseModal from './BaseModal.vue'
-import { supabase } from '@/lib/supabase'
-import { insertAccount } from '@/lib/data'
+import BaseModal from './BaseModal.vue';
+import { supabase } from '@/lib/supabase';
+import { insertAccount } from '@/lib/data';
 
 export default {
   name: 'AddAccountModal',
@@ -13,39 +13,41 @@ export default {
       last4: '',
       rebalancing: true,
       loading: false,
-      error: null
-    }
+      error: null,
+    };
   },
   methods: {
     async save() {
       if (!this.name.trim()) {
-        this.error = 'Please enter an account name'
-        return
+        this.error = 'Please enter an account name';
+        return;
       }
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
         await insertAccount({
           family_id: user.user_metadata.family_id,
           created_by: user.id,
           name: this.name.trim(),
           rebalancing: this.rebalancing,
-          last4: this.last4.trim() || null
-        })
+          last4: this.last4.trim() || null,
+        });
 
-        this.$emit('created')
+        this.$emit('created');
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -62,9 +64,7 @@ export default {
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-secondary-text mb-1">
-          Account Name
-        </label>
+        <label class="block text-sm font-medium text-secondary-text mb-1"> Account Name </label>
         <input
           v-model="name"
           type="text"
@@ -96,12 +96,11 @@ export default {
             type="checkbox"
             class="rounded border-surface-border-strong"
           />
-          <span class="text-sm text-secondary-text">
-            Include in rebalancing
-          </span>
+          <span class="text-sm text-secondary-text"> Include in rebalancing </span>
         </label>
         <p class="mt-1 text-xs text-muted-text">
-          Uncheck for accounts you don't want included in the portfolio rebalancing dashboard (this is for illiquid assets, like home equity).
+          Uncheck for accounts you don't want included in the portfolio rebalancing dashboard (this
+          is for illiquid assets, like home equity).
         </p>
       </div>
     </div>

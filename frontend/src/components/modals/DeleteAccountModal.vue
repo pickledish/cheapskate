@@ -1,6 +1,6 @@
 <script>
-import BaseModal from './BaseModal.vue'
-import { supabase } from '@/lib/supabase'
+import BaseModal from './BaseModal.vue';
+import { supabase } from '@/lib/supabase';
 
 export default {
   name: 'DeleteAccountModal',
@@ -10,37 +10,36 @@ export default {
     return {
       confirmText: '',
       loading: false,
-      error: null
-    }
+      error: null,
+    };
   },
   computed: {
     canDelete() {
-      return this.confirmText === 'DELETE'
-    }
+      return this.confirmText === 'DELETE';
+    },
   },
   methods: {
     async deleteAccount() {
-      if (!this.canDelete) return
+      if (!this.canDelete) return;
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
-        const { error: invokeError } = await supabase.functions.invoke('delete-account')
-        if (invokeError) throw invokeError
+        const { error: invokeError } = await supabase.functions.invoke('delete-account');
+        if (invokeError) throw invokeError;
 
         // Account deleted - sign out locally and redirect
-        await supabase.auth.signOut()
-        this.$router.push('/login')
-
+        await supabase.auth.signOut();
+        this.$router.push('/login');
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -49,8 +48,8 @@ export default {
     <div class="bg-error border border-error-border rounded-lg p-4 mb-4">
       <p class="text-error-text font-medium">This action cannot be undone</p>
       <p class="text-error-text text-sm mt-1">
-        Deleting your account will permanently remove your profile.
-        If you are the only member of your family, all family data (accounts, assets, statements) will also be deleted.
+        Deleting your account will permanently remove your profile. If you are the only member of
+        your family, all family data (accounts, assets, statements) will also be deleted.
       </p>
     </div>
 
@@ -62,7 +61,9 @@ export default {
     <!-- Confirmation input -->
     <div class="mb-4">
       <label class="block text-sm font-medium text-secondary-text mb-1">
-        Type <span class="font-mono font-bold bg-surface-recessed-deep px-1 rounded">DELETE</span> to confirm
+        Type
+        <span class="font-mono font-bold bg-surface-recessed-deep px-1 rounded">DELETE</span> to
+        confirm
       </label>
       <input
         v-model="confirmText"

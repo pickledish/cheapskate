@@ -1,7 +1,7 @@
 <script>
-import BaseModal from './BaseModal.vue'
-import { supabase } from '@/lib/supabase'
-import { insertUpdate, insertPriceUpdate } from '@/lib/data'
+import BaseModal from './BaseModal.vue';
+import { supabase } from '@/lib/supabase';
+import { insertUpdate, insertPriceUpdate } from '@/lib/data';
 
 export default {
   name: 'UpdatePriceModal',
@@ -9,8 +9,8 @@ export default {
   props: {
     asset: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: ['close', 'updated'],
   data() {
@@ -18,56 +18,58 @@ export default {
       effectiveDate: '',
       price: '',
       loading: false,
-      error: null
-    }
+      error: null,
+    };
   },
   mounted() {
     // Default to today's date
-    this.effectiveDate = new Date().toISOString().split('T')[0]
+    this.effectiveDate = new Date().toISOString().split('T')[0];
   },
   methods: {
     async save() {
       if (!this.effectiveDate) {
-        this.error = 'Please select a date'
-        return
+        this.error = 'Please select a date';
+        return;
       }
 
-      const priceNum = parseFloat(this.price)
+      const priceNum = parseFloat(this.price);
       if (isNaN(priceNum)) {
-        this.error = 'Please enter a valid price'
-        return
+        this.error = 'Please enter a valid price';
+        return;
       }
 
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
 
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
         const update = await insertUpdate({
           family_id: user.user_metadata.family_id,
           account_id: null,
           update_type: 'manual_price',
           effective_date: this.effectiveDate,
-          created_by: user.id
-        })
+          created_by: user.id,
+        });
 
         await insertPriceUpdate({
           update_id: update.id,
           asset_id: this.asset.id,
-          price: priceNum
-        })
+          price: priceNum,
+        });
 
-        this.$emit('updated')
+        this.$emit('updated');
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -77,6 +79,7 @@ export default {
       {{ error }}
     </div>
 
+    <!-- prettier-ignore -->
     <p class="text-sm text-muted-text mb-4">
       Update the price for <strong>{{ asset.name }}</strong>.
     </p>
@@ -84,9 +87,7 @@ export default {
     <!-- Form -->
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-secondary-text mb-1">
-          As Of
-        </label>
+        <label class="block text-sm font-medium text-secondary-text mb-1"> As Of </label>
         <input
           v-model="effectiveDate"
           type="date"

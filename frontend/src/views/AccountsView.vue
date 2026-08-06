@@ -1,20 +1,20 @@
 <script>
-import AppLayout from '@/components/AppLayout.vue'
-import PageHeader from '@/components/PageHeader.vue'
-import AddAccountModal from '@/components/modals/AddAccountModal.vue'
-import UploadStatementModal from '@/components/modals/UploadStatementModal.vue'
-import OnboardingModal from '@/components/modals/OnboardingModal.vue'
-import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue'
-import { supabase } from '@/lib/supabase'
+import AppLayout from '@/components/AppLayout.vue';
+import PageHeader from '@/components/PageHeader.vue';
+import AddAccountModal from '@/components/modals/AddAccountModal.vue';
+import UploadStatementModal from '@/components/modals/UploadStatementModal.vue';
+import OnboardingModal from '@/components/modals/OnboardingModal.vue';
+import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue';
+import { supabase } from '@/lib/supabase';
 import {
   listAccounts,
   listUpdates,
   listHoldingUpdatesWithContext,
   listPriceUpdatesWithContext,
-  listAssetsWithAllocations
-} from '@/lib/data'
-import { getColorClasses } from '@/lib/tagColors'
-import { relativeDate } from '@/lib/format'
+  listAssetsWithAllocations,
+} from '@/lib/data';
+import { getColorClasses } from '@/lib/tagColors';
+import { relativeDate } from '@/lib/format';
 
 export default {
   name: 'AccountsView',
@@ -24,7 +24,7 @@ export default {
     AddAccountModal,
     UploadStatementModal,
     OnboardingModal,
-    OnboardingContinueCard
+    OnboardingContinueCard,
   },
   data() {
     return {
@@ -38,84 +38,88 @@ export default {
 
       // Onboarding state
       showOnboardingModal: false,
-      accountsCompleted: false
-    }
+      accountsCompleted: false,
+    };
   },
   computed: {
     filteredAccounts() {
-      return this.accounts.filter(account => !account.archived_at)
+      return this.accounts.filter((account) => !account.archived_at);
     },
     showContinueCard() {
       // Show continue card if: has at least 1 account, has at least 1 statement, and not yet completed
-      return this.accounts.length > 0 && this.hasAnyStatements && !this.accountsCompleted
-    }
+      return this.accounts.length > 0 && this.hasAnyStatements && !this.accountsCompleted;
+    },
   },
   async mounted() {
     // Check onboarding state
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session) {
-      this.accountsCompleted = session.user.user_metadata?.accounts_completed ?? false
+      this.accountsCompleted = session.user.user_metadata?.accounts_completed ?? false;
       // Show onboarding modal if accounts not yet completed
-      this.showOnboardingModal = !this.accountsCompleted
+      this.showOnboardingModal = !this.accountsCompleted;
     }
-    await this.loadData()
+    await this.loadData();
   },
   methods: {
     async loadData() {
-      this.loading = true
-      this.error = null
+      this.loading = true;
+      this.error = null;
       try {
         // Load all data in parallel
-        const [accountsData, updatesData, holdingsData, pricesData, assetsData] = await Promise.all([
-          listAccounts(),
-          listUpdates(),
-          listHoldingUpdatesWithContext('desc'),
-          listPriceUpdatesWithContext('desc'),
-          listAssetsWithAllocations()
-        ])
+        const [accountsData, updatesData, holdingsData, pricesData, assetsData] = await Promise.all(
+          [
+            listAccounts(),
+            listUpdates(),
+            listHoldingUpdatesWithContext('desc'),
+            listPriceUpdatesWithContext('desc'),
+            listAssetsWithAllocations(),
+          ],
+        );
 
         // Track if any updates exist (for onboarding continue card)
-        this.hasAnyStatements = updatesData.length > 0
+        this.hasAnyStatements = updatesData.length > 0;
 
         // Build map of asset_id -> allocations (class info)
-        const allocationsByAsset = {}
+        const allocationsByAsset = {};
         for (const a of assetsData) {
           if (a.allocations.length > 0) {
-            allocationsByAsset[a.id] = a.allocations.map(alloc => ({
+            allocationsByAsset[a.id] = a.allocations.map((alloc) => ({
               name: alloc.asset_classes.name,
               color: alloc.asset_classes.color,
               sort_order: alloc.asset_classes.sort_order,
-              percentage: parseFloat(alloc.percentage)
-            }))
+              percentage: parseFloat(alloc.percentage),
+            }));
           }
         }
 
         // Build map of account_id -> most recent effective date
-        const latestEffectiveByAccount = {}
+        const latestEffectiveByAccount = {};
         for (const update of updatesData) {
           if (update.account_id && !latestEffectiveByAccount[update.account_id]) {
-            latestEffectiveByAccount[update.account_id] = update.effective_date
+            latestEffectiveByAccount[update.account_id] = update.effective_date;
           }
         }
 
         // Build map of asset_id -> latest price
-        const latestPriceByAsset = {}
+        const latestPriceByAsset = {};
         for (const p of pricesData) {
           if (!latestPriceByAsset[p.asset_id]) {
-            latestPriceByAsset[p.asset_id] = parseFloat(p.price)
+            latestPriceByAsset[p.asset_id] = parseFloat(p.price);
           }
         }
 
         // Build map of (account_id, asset_id) -> latest holding info
-        const latestHoldingByAccountAsset = {}
+        const latestHoldingByAccountAsset = {};
         for (const h of holdingsData) {
-          const key = `${h.account_id}-${h.asset_id}`
+          const key = `${h.account_id}-${h.asset_id}`;
           if (!latestHoldingByAccountAsset[key]) {
             latestHoldingByAccountAsset[key] = {
               asset_id: h.asset_id,
               account_id: h.account_id,
-              quantity: parseFloat(h.quantity)
-            }
+              quantity: parseFloat(h.quantity),
+            };
           }
         }
 
@@ -123,47 +127,52 @@ export default {
         // We use absolute values for accountValues to get total exposure (not net value),
         // so that the 10% threshold for showing asset class tags works correctly for
         // accounts with both long and short positions.
-        const accountValues = {}
-        const holdingsByAccount = {}
+        const accountValues = {};
+        const holdingsByAccount = {};
         for (const key in latestHoldingByAccountAsset) {
-          const holding = latestHoldingByAccountAsset[key]
-          const price = latestPriceByAsset[holding.asset_id] || 0
-          const value = holding.quantity * price
+          const holding = latestHoldingByAccountAsset[key];
+          const price = latestPriceByAsset[holding.asset_id] || 0;
+          const value = holding.quantity * price;
 
-          accountValues[holding.account_id] = (accountValues[holding.account_id] || 0) + Math.abs(value)
+          accountValues[holding.account_id] =
+            (accountValues[holding.account_id] || 0) + Math.abs(value);
 
           if (holding.quantity !== 0) {
             if (!holdingsByAccount[holding.account_id]) {
-              holdingsByAccount[holding.account_id] = []
+              holdingsByAccount[holding.account_id] = [];
             }
             holdingsByAccount[holding.account_id].push({
               asset_id: holding.asset_id,
-              value: value
-            })
+              value: value,
+            });
           }
         }
 
         // Calculate asset classes per account
-        const assetClassesByAccount = {}
+        const assetClassesByAccount = {};
         for (const accountId in holdingsByAccount) {
-          const holdings = holdingsByAccount[accountId]
-          const totalValue = accountValues[accountId] || 0
+          const holdings = holdingsByAccount[accountId];
+          const totalValue = accountValues[accountId] || 0;
 
           // Aggregate value by class, track unclassified value
-          const classValues = {}
-          let unclassifiedValue = 0
+          const classValues = {};
+          let unclassifiedValue = 0;
           for (const h of holdings) {
-            const allocations = allocationsByAsset[h.asset_id] || []
+            const allocations = allocationsByAsset[h.asset_id] || [];
             if (allocations.length === 0) {
               // Asset has no allocations - fully unclassified
-              unclassifiedValue += h.value
+              unclassifiedValue += h.value;
             } else {
               for (const alloc of allocations) {
-                const classValue = h.value * alloc.percentage
+                const classValue = h.value * alloc.percentage;
                 if (!classValues[alloc.name]) {
-                  classValues[alloc.name] = { value: 0, color: alloc.color, sort_order: alloc.sort_order }
+                  classValues[alloc.name] = {
+                    value: 0,
+                    color: alloc.color,
+                    sort_order: alloc.sort_order,
+                  };
                 }
-                classValues[alloc.name].value += classValue
+                classValues[alloc.name].value += classValue;
               }
             }
           }
@@ -171,49 +180,48 @@ export default {
           // Convert to array, filter out classes <10% of account exposure, sort by sort_order
           // Use Math.abs since class values can be negative (from short positions)
           const classes = Object.entries(classValues)
-            .filter(([, data]) => totalValue > 0 && Math.abs(data.value) / totalValue >= 0.10)
+            .filter(([, data]) => totalValue > 0 && Math.abs(data.value) / totalValue >= 0.1)
             .map(([name, data]) => ({ name, color: data.color, sort_order: data.sort_order }))
-            .sort((a, b) => a.sort_order - b.sort_order)
+            .sort((a, b) => a.sort_order - b.sort_order);
 
           // Add "Unclassified" tag if >= 10% of account exposure
-          if (totalValue > 0 && Math.abs(unclassifiedValue) / totalValue >= 0.10) {
-            classes.push({ name: 'Unclassified', color: 'gray', sort_order: 9999 })
+          if (totalValue > 0 && Math.abs(unclassifiedValue) / totalValue >= 0.1) {
+            classes.push({ name: 'Unclassified', color: 'gray', sort_order: 9999 });
           }
 
-          assetClassesByAccount[accountId] = classes
+          assetClassesByAccount[accountId] = classes;
         }
 
         // Merge metadata into accounts
-        this.accounts = accountsData.map(account => ({
+        this.accounts = accountsData.map((account) => ({
           ...account,
           latestEffectiveDate: latestEffectiveByAccount[account.id] || null,
-          assetClasses: assetClassesByAccount[account.id] || []
-        }))
-
+          assetClasses: assetClassesByAccount[account.id] || [],
+        }));
       } catch (err) {
-        this.error = err.message
+        this.error = err.message;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
     async onAccountCreated() {
-      this.showAddAccountModal = false
-      await this.loadData()
+      this.showAddAccountModal = false;
+      await this.loadData();
     },
 
     async onStatementUploaded() {
-      this.showUploadStatementModal = false
-      await this.loadData()
+      this.showUploadStatementModal = false;
+      await this.loadData();
     },
 
     relativeDate,
 
     getClassColor(colorName) {
-      return getColorClasses(colorName)
-    }
-  }
-}
+      return getColorClasses(colorName);
+    },
+  },
+};
 </script>
 
 <template>
@@ -315,15 +323,14 @@ export default {
       v-on:close="showOnboardingModal = false"
     >
       <div class="space-y-4 text-muted-text">
+        <p>Now let's add your <strong>investment accounts</strong>.</p>
         <p>
-          Now let's add your <strong>investment accounts</strong>.
+          Create at least one account (for example "401k" or "Brokerage") and upload a statement to
+          import your holdings.
         </p>
         <p>
-          Create at least one account (for example "401k" or "Brokerage") and upload a statement
-          to import your holdings.
-        </p>
-        <p>
-          The statement will be automatically parsed to extract your assets and their current values.
+          The statement will be automatically parsed to extract your assets and their current
+          values.
         </p>
       </div>
     </OnboardingModal>

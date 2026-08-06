@@ -1,4 +1,4 @@
-# Stage 2: format .ts only (script scopes the glob); keep build/deps out.
+# Keep build/deps out of format checks.
 dist
 node_modules
 package-lock.json
