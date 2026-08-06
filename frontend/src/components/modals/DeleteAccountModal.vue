@@ -75,17 +75,17 @@ export default {
 
     <template v-slot:secondary>
       <button
-        v-on:click="$emit('close')"
         class="px-4 py-2 text-secondary-text hover:text-primary-text"
+        v-on:click="$emit('close')"
       >
         Cancel
       </button>
     </template>
     <template v-slot:primary>
       <button
-        v-on:click="deleteAccount"
         v-bind:disabled="!canDelete || loading"
         class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        v-on:click="deleteAccount"
       >
         {{ loading ? 'Deleting...' : 'Delete My Account' }}
       </button>

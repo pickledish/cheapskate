@@ -75,9 +75,9 @@ export default {
         </div>
 
         <button
-          v-on:click="continueToNextStep"
           v-bind:disabled="loading"
           class="mt-4 px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          v-on:click="continueToNextStep"
         >
           <span v-if="loading">Saving...</span>
           <span v-else>{{ nextStepLabel }}</span>

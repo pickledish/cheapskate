@@ -96,9 +96,9 @@ export default {
           <!-- prettier-ignore -->
           <span class="text-sm text-muted-text">{{ relativeLabel }}<template v-if="creatorName"> by {{ creatorName }}</template></span>
           <button
-            v-on:click="$emit('undo')"
             class="w-8 h-8 -my-1 flex items-center justify-center text-placeholder-text hover:text-error-text hover:bg-error rounded cursor-pointer"
             v-bind:title="config.undoTitle"
+            v-on:click="$emit('undo')"
           >
             <TrashIcon class="w-5 h-5" />
           </button>

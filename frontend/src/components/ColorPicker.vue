@@ -22,6 +22,12 @@ export default {
       return TAG_COLORS[this.modelValue]?.hex ?? TAG_COLORS.red.hex;
     },
   },
+  mounted() {
+    document.addEventListener('click', this.handleClickOutside);
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleClickOutside);
+  },
   methods: {
     select(color) {
       this.$emit('update:modelValue', color);
@@ -33,12 +39,6 @@ export default {
       }
     },
   },
-  mounted() {
-    document.addEventListener('click', this.handleClickOutside);
-  },
-  beforeUnmount() {
-    document.removeEventListener('click', this.handleClickOutside);
-  },
 };
 </script>
 
@@ -47,10 +47,10 @@ export default {
     <!-- Current color square -->
     <button
       type="button"
-      v-on:click.stop="open = !open"
       class="w-6 h-6 rounded-md border border-surface-border-strong focus:outline-none focus:ring-2 focus:ring-blue-500"
       v-bind:style="{ backgroundColor: currentHex }"
       v-bind:title="'Color: ' + modelValue"
+      v-on:click.stop="open = !open"
     />
 
     <!-- Dropdown grid -->
@@ -63,7 +63,6 @@ export default {
           v-for="color in colors"
           v-bind:key="color"
           type="button"
-          v-on:click="select(color)"
           class="w-6 h-6 rounded-sm border hover:scale-110 transition-transform"
           v-bind:class="
             color === modelValue
@@ -72,6 +71,7 @@ export default {
           "
           v-bind:style="{ backgroundColor: tagColors[color].hex }"
           v-bind:title="color"
+          v-on:click="select(color)"
         />
       </div>
     </div>

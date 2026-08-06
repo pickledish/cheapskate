@@ -312,8 +312,8 @@ export default {
                   class="px-6 py-4 whitespace-nowrap text-right text-sm bg-surface"
                   v-bind:class="{ 'rounded-br-lg': index === filteredAssets.length - 1 }"
                 >
-                  <Menu v-slot="{ open }" as="div" class="relative inline-block text-left">
-                    <div class="inline-block" v-bind:ref="(el) => setMenuAnchor(index, el)">
+                  <Menu v-slot:default="{ open }" as="div" class="relative inline-block text-left">
+                    <div v-bind:ref="(el) => setMenuAnchor(index, el)" class="inline-block">
                       <MenuButton
                         class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-surface-recessed-deep rounded cursor-pointer"
                       >
@@ -326,7 +326,7 @@ export default {
                         v-bind:style="open ? menuDropdownStyle(index) : undefined"
                         class="fixed z-50 w-36 bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
                       >
-                        <MenuItem v-slot="{ active }">
+                        <MenuItem v-slot:default="{ active }">
                           <button
                             v-bind:class="[
                               'w-full text-left px-4 py-2 text-sm cursor-pointer',
@@ -339,7 +339,7 @@ export default {
                             Edit
                           </button>
                         </MenuItem>
-                        <MenuItem v-slot="{ active }">
+                        <MenuItem v-slot:default="{ active }">
                           <button
                             v-bind:class="[
                               'w-full text-left px-4 py-2 text-sm cursor-pointer',
@@ -352,7 +352,7 @@ export default {
                             Update Price
                           </button>
                         </MenuItem>
-                        <MenuItem v-slot="{ active }">
+                        <MenuItem v-slot:default="{ active }">
                           <button
                             v-bind:class="[
                               'w-full text-left px-4 py-2 text-sm cursor-pointer',
@@ -374,8 +374,8 @@ export default {
 
         <!-- Add asset button -->
         <button
-          v-on:click="showAddAssetModal = true"
           class="mt-4 w-full bg-page border-2 border-dashed border-page-border rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors"
+          v-on:click="showAddAssetModal = true"
         >
           <span class="text-xl mr-2">+</span>
           <span class="text-sm font-medium">Add Asset</span>

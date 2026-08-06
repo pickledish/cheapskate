@@ -74,9 +74,9 @@ export default {
     <!-- Remount on navigate so the mobile menu closes -->
     <Disclosure
       v-bind:key="$route.fullPath"
+      v-slot:default="{ open }"
       as="div"
       class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-      v-slot="{ open }"
     >
       <div class="flex justify-between h-16">
         <div class="flex">

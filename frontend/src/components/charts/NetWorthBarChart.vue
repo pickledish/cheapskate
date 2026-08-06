@@ -45,33 +45,6 @@ export default {
       selectedSingle: null, // null = show all, string = show only this series
     };
   },
-  methods: {
-    onLegendSelectChanged(params) {
-      const chart = this.$refs.chart;
-      if (!chart) return;
-
-      const clickedName = params.name;
-      const allNames = this.series.map((s) => s.name);
-
-      if (this.selectedSingle === clickedName) {
-        // Clicking the same one again - show all
-        this.selectedSingle = null;
-        allNames.forEach((name) => {
-          chart.dispatchAction({ type: 'legendSelect', name });
-        });
-      } else {
-        // Show only the clicked one
-        this.selectedSingle = clickedName;
-        allNames.forEach((name) => {
-          if (name === clickedName) {
-            chart.dispatchAction({ type: 'legendSelect', name });
-          } else {
-            chart.dispatchAction({ type: 'legendUnSelect', name });
-          }
-        });
-      }
-    },
-  },
   computed: {
     isStacked() {
       return this.series.length > 1;
@@ -141,6 +114,33 @@ export default {
     },
     hasData() {
       return this.series.length > 0 && this.series.some((s) => s.data.some((v) => v !== 0));
+    },
+  },
+  methods: {
+    onLegendSelectChanged(params) {
+      const chart = this.$refs.chart;
+      if (!chart) return;
+
+      const clickedName = params.name;
+      const allNames = this.series.map((s) => s.name);
+
+      if (this.selectedSingle === clickedName) {
+        // Clicking the same one again - show all
+        this.selectedSingle = null;
+        allNames.forEach((name) => {
+          chart.dispatchAction({ type: 'legendSelect', name });
+        });
+      } else {
+        // Show only the clicked one
+        this.selectedSingle = clickedName;
+        allNames.forEach((name) => {
+          if (name === clickedName) {
+            chart.dispatchAction({ type: 'legendSelect', name });
+          } else {
+            chart.dispatchAction({ type: 'legendUnSelect', name });
+          }
+        });
+      }
     },
   },
 };

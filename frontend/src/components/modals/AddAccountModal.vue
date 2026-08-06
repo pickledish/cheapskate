@@ -107,17 +107,17 @@ export default {
 
     <template v-slot:secondary>
       <button
-        v-on:click="$emit('close')"
         class="px-4 py-2 text-secondary-text hover:text-primary-text"
+        v-on:click="$emit('close')"
       >
         Cancel
       </button>
     </template>
     <template v-slot:primary>
       <button
-        v-on:click="save"
         v-bind:disabled="loading"
         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+        v-on:click="save"
       >
         {{ loading ? 'Creating...' : 'Create Account' }}
       </button>

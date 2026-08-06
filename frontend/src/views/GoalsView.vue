@@ -53,18 +53,6 @@ export default {
       menuAnchors: {},
     };
   },
-  async mounted() {
-    // Check onboarding state
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session) {
-      this.goalsCompleted = session.user.user_metadata?.goals_completed ?? false;
-      // Show onboarding modal if goals not yet completed
-      this.showOnboardingModal = !this.goalsCompleted;
-    }
-    await this.loadData();
-  },
   computed: {
     totalGoals() {
       return this.assetClasses.reduce((sum, ac) => sum + (ac.goal || 0), 0);
@@ -78,6 +66,18 @@ export default {
     showContinueCard() {
       return this.goalsAreValid && !this.goalsCompleted;
     },
+  },
+  async mounted() {
+    // Check onboarding state
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session) {
+      this.goalsCompleted = session.user.user_metadata?.goals_completed ?? false;
+      // Show onboarding modal if goals not yet completed
+      this.showOnboardingModal = !this.goalsCompleted;
+    }
+    await this.loadData();
   },
   methods: {
     async loadData() {
@@ -191,8 +191,8 @@ export default {
       >
         <template v-slot:actions>
           <button
-            v-on:click="showAddModal = true"
             class="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+            v-on:click="showAddModal = true"
           >
             Add Asset Class
           </button>
@@ -244,7 +244,6 @@ export default {
               v-model="assetClasses"
               tag="tbody"
               handle=".drag-handle"
-              v-on:end="onReorder"
               v-bind:animation="250"
               v-bind:easing="'cubic-bezier(0.25, 0.1, 0.25, 1)'"
               v-bind:force-fallback="true"
@@ -253,6 +252,7 @@ export default {
               chosen-class="drag-chosen"
               drag-class="drag-active"
               class="divide-y divide-surface-border"
+              v-on:end="onReorder"
             >
               <tr v-for="(assetClass, index) in assetClasses" v-bind:key="assetClass.id">
                 <td
@@ -290,8 +290,8 @@ export default {
                     'rounded-br-lg': index === assetClasses.length - 1 && !hasAnyGoals,
                   }"
                 >
-                  <Menu v-slot="{ open }" as="div" class="relative inline-block text-left">
-                    <div class="inline-block" v-bind:ref="(el) => setMenuAnchor(index, el)">
+                  <Menu v-slot:default="{ open }" as="div" class="relative inline-block text-left">
+                    <div v-bind:ref="(el) => setMenuAnchor(index, el)" class="inline-block">
                       <MenuButton
                         class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-surface-recessed-deep rounded cursor-pointer"
                       >
@@ -304,7 +304,7 @@ export default {
                         v-bind:style="open ? menuDropdownStyle(index) : undefined"
                         class="fixed z-50 w-32 bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
                       >
-                        <MenuItem v-slot="{ active }">
+                        <MenuItem v-slot:default="{ active }">
                           <button
                             v-bind:class="[
                               'w-full text-left px-4 py-2 text-sm cursor-pointer',
@@ -317,7 +317,7 @@ export default {
                             Edit
                           </button>
                         </MenuItem>
-                        <MenuItem v-slot="{ active }">
+                        <MenuItem v-slot:default="{ active }">
                           <button
                             v-bind:class="[
                               'w-full text-left px-4 py-2 text-sm cursor-pointer',
@@ -385,8 +385,8 @@ export default {
           No asset classes yet. Add your first to categorize your assets.
         </p>
         <button
-          v-on:click="showAddModal = true"
           class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+          v-on:click="showAddModal = true"
         >
           Add Asset Class
         </button>

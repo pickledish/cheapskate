@@ -233,8 +233,8 @@ export default {
       >
         <template v-slot:actions>
           <button
-            v-on:click="showUploadStatementModal = true"
             class="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+            v-on:click="showUploadStatementModal = true"
           >
             Upload Statement
           </button>
@@ -283,8 +283,8 @@ export default {
 
           <!-- Add account card -->
           <button
-            v-on:click="showAddAccountModal = true"
             class="bg-page border-2 border-dashed border-page-border rounded-lg p-4 flex flex-col items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors min-h-[100px]"
+            v-on:click="showAddAccountModal = true"
           >
             <span class="text-3xl mb-2">+</span>
             <span class="text-sm font-medium">Add Account</span>

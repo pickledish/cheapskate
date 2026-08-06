@@ -459,7 +459,7 @@ export default {
               <MenuItems
                 class="absolute right-0 mt-1 w-36 bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col"
               >
-                <MenuItem v-slot="{ active }">
+                <MenuItem v-slot:default="{ active }">
                   <button
                     v-bind:class="[
                       'w-full text-left px-4 py-2 text-sm cursor-pointer',
@@ -470,7 +470,7 @@ export default {
                     Edit
                   </button>
                 </MenuItem>
-                <MenuItem v-if="!isArchived" v-slot="{ active }">
+                <MenuItem v-if="!isArchived" v-slot:default="{ active }">
                   <button
                     v-bind:class="[
                       'w-full text-left px-4 py-2 text-sm cursor-pointer',
@@ -481,7 +481,7 @@ export default {
                     Mark as Closed
                   </button>
                 </MenuItem>
-                <MenuItem v-if="isArchived" v-slot="{ active }">
+                <MenuItem v-if="isArchived" v-slot:default="{ active }">
                   <button
                     v-bind:class="[
                       'w-full text-left px-4 py-2 text-sm cursor-pointer',
@@ -492,7 +492,7 @@ export default {
                     Reopen
                   </button>
                 </MenuItem>
-                <MenuItem v-slot="{ active }">
+                <MenuItem v-slot:default="{ active }">
                   <button
                     v-bind:class="[
                       'w-full text-left px-4 py-2 text-sm cursor-pointer',
@@ -668,25 +668,25 @@ export default {
               </tr>
 
               <!-- Phantom rows for new holdings (edit mode only) -->
-              <tr v-if="editing" v-for="(row, index) in newRows" v-bind:key="'new-' + index">
+              <tr v-for="(row, index) in newRows" v-if="editing" v-bind:key="'new-' + index">
                 <td class="px-6 py-3 bg-surface max-w-48">
                   <div class="h-8 flex items-center min-w-0">
                     <Combobox
-                      v-slot="{ open }"
+                      v-slot:default="{ open }"
                       v-model="row.asset"
                       as="div"
                       class="relative w-full min-w-0"
                       v-on:update:model-value="onNewRowAssetSelected(index)"
                     >
                       <div
-                        class="relative min-w-0"
                         v-bind:ref="(el) => setComboboxAnchor(index, el)"
+                        class="relative min-w-0"
                       >
                         <ComboboxInput
                           v-bind:display-value="(a) => (a ? a.name : '')"
-                          v-on:change="row.query = $event.target.value"
                           placeholder="Search assets..."
                           class="w-full min-w-0 h-8 px-3 pr-8 text-sm border border-surface-border-strong rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          v-on:change="row.query = $event.target.value"
                         />
                         <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
                           <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
@@ -707,8 +707,8 @@ export default {
                           <ComboboxOption
                             v-for="asset in filteredAssetsForRow(index)"
                             v-bind:key="asset.id"
+                            v-slot:default="{ active, selected }"
                             v-bind:value="asset"
-                            v-slot="{ active, selected }"
                           >
                             <div
                               v-bind:class="[
@@ -777,9 +777,9 @@ export default {
         <div class="flex justify-end">
           <button
             v-if="!editing"
-            v-on:click="enterEditMode"
             class="px-4 py-2 flex items-center gap-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             title="Edit holdings"
+            v-on:click="enterEditMode"
           >
             <PencilSquareIcon class="w-4 h-4" />
             Edit Holdings
@@ -797,15 +797,15 @@ export default {
             </label>
             <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">
               <button
-                v-on:click="cancelEdit"
                 class="px-4 py-2 text-sm text-muted-text hover:text-primary-text transition-colors self-center sm:self-auto"
+                v-on:click="cancelEdit"
               >
                 Cancel
               </button>
               <button
-                v-on:click="saveEdits"
                 v-bind:disabled="saving"
                 class="w-full sm:w-auto px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                v-on:click="saveEdits"
               >
                 {{ saving ? 'Saving...' : 'Save' }}
               </button>

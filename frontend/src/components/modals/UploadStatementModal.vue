@@ -705,7 +705,7 @@ export default {
       </p>
 
       <Disclosure
-        v-slot="{ open }"
+        v-slot:default="{ open }"
         as="div"
         class="mb-5 p-4 bg-info border border-info-border rounded-lg"
       >
@@ -749,8 +749,8 @@ export default {
       <input
         type="file"
         accept=".pdf"
-        v-on:change="onFileChange"
         class="block w-full text-sm text-muted-text file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-info file:text-info-text hover:file:brightness-90"
+        v-on:change="onFileChange"
       />
     </div>
 
@@ -784,10 +784,10 @@ export default {
             <div class="relative">
               <ComboboxInput
                 v-bind:display-value="displayAccount"
-                v-on:change="accountQuery = $event.target.value"
-                v-on:focus="$refs.comboboxButton.$el.click()"
                 placeholder="Search accounts..."
                 class="w-full px-3 py-2 pr-8 text-sm border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+                v-on:change="accountQuery = $event.target.value"
+                v-on:focus="$refs.comboboxButton.$el.click()"
               />
               <ComboboxButton
                 ref="comboboxButton"
@@ -805,8 +805,8 @@ export default {
               <ComboboxOption
                 v-for="acct in sortedAccounts"
                 v-bind:key="acct.id"
+                v-slot:default="{ active, selected }"
                 v-bind:value="acct"
-                v-slot="{ active, selected }"
               >
                 <div
                   v-bind:class="[
@@ -830,10 +830,10 @@ export default {
         <!-- Create new account option -->
         <label class="flex items-start gap-3 cursor-pointer">
           <input
-            type="checkbox"
             v-model="createNewAccount"
-            v-on:change="createNewAccount ? (selectedAccount = null) : null"
+            type="checkbox"
             class="rounded border-surface-border-strong text-blue-600 mt-0.5"
+            v-on:change="createNewAccount ? (selectedAccount = null) : null"
           />
           <div class="flex-1">
             <div class="text-sm font-medium text-secondary-text">Create new account instead</div>
@@ -857,8 +857,8 @@ export default {
           <template v-if="matchingAccountIds.length === 1">
             Auto-matched to <strong>{{ resolvedAccount.name }}</strong><template v-if="resolvedAccount.last4 || parsedLast4"> (****{{ resolvedAccount.last4 || parsedLast4 }})</template>.
             <button
-              v-on:click="rejectAutoMatch"
               class="text-blue-600 hover:text-blue-800 underline"
+              v-on:click="rejectAutoMatch"
             >
               Not the right account?
             </button>
@@ -943,19 +943,18 @@ export default {
                   <!-- Unresolved: pick an existing asset, or leave blank to create + alias -->
                   <Combobox
                     v-else
-                    v-slot="{ open }"
+                    v-slot:default="{ open }"
                     v-model="holding.chosenAsset"
                     nullable
                     as="div"
                     class="relative"
                     v-on:update:model-value="onChosenAssetChange(holding)"
                   >
-                    <div class="relative" v-bind:ref="(el) => setComboboxAnchor(index, el)">
+                    <div v-bind:ref="(el) => setComboboxAnchor(index, el)" class="relative">
                       <ComboboxInput
                         v-bind:display-value="
                           (asset) => (asset ? displayAsset(asset) : holding.name)
                         "
-                        v-on:change="holding.assetQuery = $event.target.value"
                         placeholder="Search assets…"
                         v-bind:class="[
                           'w-full px-3 py-1.5 pr-8 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -963,6 +962,7 @@ export default {
                             ? 'border border-surface-border-strong bg-surface text-primary-text'
                             : 'border border-dashed border-surface-border-strong bg-surface text-muted-text',
                         ]"
+                        v-on:change="holding.assetQuery = $event.target.value"
                       />
                       <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
                         <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
@@ -974,7 +974,7 @@ export default {
                         v-bind:style="open ? comboboxDropdownStyle(index) : undefined"
                         class="fixed z-50 max-h-48 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none"
                       >
-                        <ComboboxOption v-bind:value="null" v-slot="{ active, selected }">
+                        <ComboboxOption v-slot:default="{ active, selected }" v-bind:value="null">
                           <div
                             v-bind:class="[
                               'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
@@ -995,8 +995,8 @@ export default {
                         <ComboboxOption
                           v-for="asset in filteredAssetsFor(holding)"
                           v-bind:key="asset.id"
+                          v-slot:default="{ active, selected }"
                           v-bind:value="asset"
-                          v-slot="{ active, selected }"
                         >
                           <div
                             v-bind:class="[
@@ -1024,9 +1024,9 @@ export default {
                 </td>
                 <td class="px-4 py-2 text-right whitespace-nowrap">
                   <button
-                    v-on:click="removeHolding(index)"
                     class="w-7 h-7 inline-flex items-center justify-center text-placeholder-text hover:text-error-text hover:bg-error rounded cursor-pointer"
                     title="Remove holding"
+                    v-on:click="removeHolding(index)"
                   >
                     <TrashIcon class="w-4 h-4" />
                   </button>
@@ -1062,16 +1062,16 @@ export default {
       <!-- Step 1: Upload -->
       <button
         v-if="step === 'upload'"
-        v-on:click="$emit('close')"
         class="px-4 py-2 text-secondary-text hover:text-primary-text"
+        v-on:click="$emit('close')"
       >
         Cancel
       </button>
       <!-- Step 2: Account matching / Step 3: Preview -->
       <button
         v-else
-        v-on:click="step = 'upload'"
         class="px-4 py-2 text-secondary-text hover:text-primary-text"
+        v-on:click="step = 'upload'"
       >
         Back
       </button>
@@ -1081,9 +1081,9 @@ export default {
       <!-- Step 1: Upload -->
       <div v-if="step === 'upload'" class="inline-flex rounded-md">
         <button
-          v-on:click="parseFile"
           v-bind:disabled="!file || loading"
           class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-l-md hover:bg-blue-700 disabled:opacity-50"
+          v-on:click="parseFile"
         >
           {{ parseButtonText }}
         </button>
@@ -1097,24 +1097,24 @@ export default {
           <MenuItems
             class="absolute right-0 bottom-full mb-1 w-48 bg-surface border border-surface-border rounded-md shadow-lg z-50 py-1"
           >
-            <MenuItem v-slot="{ active }">
+            <MenuItem v-slot:default="{ active }">
               <button
-                v-on:click="parseMode = 'cloud'"
                 v-bind:class="[
                   'w-full text-left px-4 py-2 text-sm',
                   active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text',
                 ]"
+                v-on:click="parseMode = 'cloud'"
               >
                 Parse with Cloud AI
               </button>
             </MenuItem>
-            <MenuItem v-slot="{ active }">
+            <MenuItem v-slot:default="{ active }">
               <button
-                v-on:click="parseMode = 'local'"
                 v-bind:class="[
                   'w-full text-left px-4 py-2 text-sm',
                   active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text',
                 ]"
+                v-on:click="parseMode = 'local'"
               >
                 Parse with Local LLM
               </button>
@@ -1125,18 +1125,18 @@ export default {
       <!-- Step 2: Account matching -->
       <button
         v-else-if="step === 'match'"
-        v-on:click="confirmAccountSelection"
         v-bind:disabled="loading || (!selectedAccount && !createNewAccount)"
         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+        v-on:click="confirmAccountSelection"
       >
         {{ loading ? 'Loading...' : 'Continue' }}
       </button>
       <!-- Step 3: Preview -->
       <button
         v-else-if="step === 'preview'"
-        v-on:click="saveStatement"
         v-bind:disabled="!canSave"
         class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+        v-on:click="saveStatement"
       >
         Save Statement
       </button>

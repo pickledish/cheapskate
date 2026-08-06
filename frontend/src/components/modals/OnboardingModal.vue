@@ -48,8 +48,8 @@ export default {
             </h2>
           </div>
           <button
-            v-on:click="$emit('close')"
             class="text-placeholder-text hover:text-muted-text text-2xl leading-none"
+            v-on:click="$emit('close')"
           >
             &times;
           </button>

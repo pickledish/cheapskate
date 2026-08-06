@@ -209,9 +209,9 @@ export default {
                   <ListboxOption
                     v-for="c in assetClasses"
                     v-bind:key="c.id"
+                    v-slot:default="{ active, selected, disabled }"
                     v-bind:value="c.id"
                     v-bind:disabled="isClassUsed(c.id, alloc)"
-                    v-slot="{ active, selected, disabled }"
                   >
                     <div
                       v-bind:class="[
@@ -240,9 +240,9 @@ export default {
               <span class="ml-1 text-sm text-muted-text">%</span>
             </div>
             <button
-              v-on:click="removeAllocation(index)"
               class="w-6 h-6 flex items-center justify-center text-placeholder-text hover:text-muted-text rounded"
               title="Remove allocation"
+              v-on:click="removeAllocation(index)"
             >
               <TrashIcon class="w-4 h-4" />
             </button>
@@ -251,9 +251,9 @@ export default {
 
         <div class="mt-2 flex items-center justify-between">
           <button
-            v-on:click="addAllocation"
             v-bind:disabled="availableClasses.length === 0"
             class="text-sm text-blue-600 hover:text-blue-800 disabled:text-placeholder-text"
+            v-on:click="addAllocation"
           >
             + Add more
           </button>
@@ -270,17 +270,17 @@ export default {
 
     <template v-slot:secondary>
       <button
-        v-on:click="$emit('close')"
         class="px-4 py-2 text-secondary-text hover:text-primary-text"
+        v-on:click="$emit('close')"
       >
         Cancel
       </button>
     </template>
     <template v-slot:primary>
       <button
-        v-on:click="save"
         v-bind:disabled="loading"
         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+        v-on:click="save"
       >
         {{ loading ? 'Saving...' : 'Save Changes' }}
       </button>

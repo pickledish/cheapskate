@@ -71,9 +71,9 @@ export default {
       </h1>
 
       <button
-        v-on:click="signInWithGoogle"
         type="button"
         class="w-full py-2 px-4 bg-surface border border-surface-border-strong rounded-md hover:bg-surface-recessed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2 text-secondary-text font-medium"
+        v-on:click="signInWithGoogle"
       >
         <svg class="w-5 h-5" viewBox="0 0 24 24">
           <path
@@ -105,7 +105,7 @@ export default {
         </div>
       </div>
 
-      <form v-on:submit.prevent="submit" class="space-y-4">
+      <form class="space-y-4" v-on:submit.prevent="submit">
         <div>
           <label for="email" class="block text-sm font-medium text-secondary-text mb-1">
             Email
@@ -158,7 +158,7 @@ export default {
 
       <p class="mt-4 text-center text-sm text-muted-text">
         {{ isSignup ? 'Already have an account?' : "Don't have an account?" }}
-        <button v-on:click="toggleMode" class="ml-1 text-blue-600 hover:text-blue-800 font-medium">
+        <button class="ml-1 text-blue-600 hover:text-blue-800 font-medium" v-on:click="toggleMode">
           {{ isSignup ? 'Sign In' : 'Sign Up' }}
         </button>
       </p>

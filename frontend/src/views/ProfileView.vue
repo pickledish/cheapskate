@@ -279,9 +279,9 @@ export default {
         </section>
         <div v-if="hasProfileChanges" class="flex justify-end">
           <button
-            v-on:click="saveProfile"
             v-bind:disabled="saving"
             class="px-4 py-2 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 hover:border-blue-700 disabled:opacity-50 transition-colors"
+            v-on:click="saveProfile"
           >
             {{ saving ? 'Saving...' : 'Save' }}
           </button>
@@ -330,8 +330,8 @@ export default {
                     <ListboxOption
                       v-for="option in localLlmOptions"
                       v-bind:key="option.id"
+                      v-slot:default="{ active, selected }"
                       v-bind:value="option.id"
-                      v-slot="{ active, selected }"
                     >
                       <div
                         v-bind:class="[
@@ -379,16 +379,16 @@ export default {
         </section>
         <div v-if="hasLlmChanges" class="flex justify-end gap-2">
           <button
-            v-on:click="testLlmConnection"
             v-bind:disabled="testing || localLlmProvider === 'disabled'"
             class="px-4 py-2 border border-surface-border-strong text-secondary-text rounded-md hover:bg-surface-recessed text-sm font-medium disabled:opacity-50 transition-colors"
+            v-on:click="testLlmConnection"
           >
             {{ testing ? 'Testing...' : 'Test' }}
           </button>
           <button
-            v-on:click="saveLlmSettings"
             v-bind:disabled="saving"
             class="px-4 py-2 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 hover:border-blue-700 disabled:opacity-50 transition-colors"
+            v-on:click="saveLlmSettings"
           >
             {{ saving ? 'Saving...' : 'Save' }}
           </button>
@@ -414,16 +414,16 @@ export default {
                 <!-- Click to reveal overlay -->
                 <div
                   v-if="!familyIdRevealed"
-                  v-on:click="toggleFamilyIdReveal"
                   class="absolute inset-0 bg-surface-recessed-deep border border-surface-border-strong rounded-md flex items-center justify-center cursor-pointer hover:brightness-95 transition"
+                  v-on:click="toggleFamilyIdReveal"
                 >
                   <span class="text-sm text-muted-text font-medium">Click to reveal</span>
                 </div>
                 <!-- Copy button inside textarea -->
                 <button
                   v-if="familyIdRevealed"
-                  v-on:click="copyFamilyId"
                   class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 px-2 py-1 text-xs text-muted-text hover:text-primary-text bg-surface border border-surface-border-strong rounded hover:bg-surface-recessed"
+                  v-on:click="copyFamilyId"
                 >
                   <ClipboardIcon class="w-3.5 h-3.5" />
                   {{ copyFeedback ? 'Copied!' : 'Copy' }}
@@ -464,8 +464,8 @@ export default {
                 </p>
               </div>
               <button
-                v-on:click="openChangeFamilyModal"
                 class="w-full sm:w-auto px-4 py-2 border border-surface-border-strong text-secondary-text rounded-md hover:bg-surface-recessed text-sm font-medium sm:shrink-0 sm:ml-4"
+                v-on:click="openChangeFamilyModal"
               >
                 Leave Family
               </button>
@@ -486,8 +486,8 @@ export default {
                 <p class="text-sm text-muted-text">Sign out of your account on this device</p>
               </div>
               <button
-                v-on:click="signOut"
                 class="w-full sm:w-auto px-4 py-2 border border-surface-border-strong text-secondary-text rounded-md hover:bg-surface-recessed text-sm font-medium sm:shrink-0 sm:ml-4"
+                v-on:click="signOut"
               >
                 Sign Out
               </button>
@@ -502,8 +502,8 @@ export default {
                 <p class="text-sm text-muted-text">Permanently delete your account and data</p>
               </div>
               <button
-                v-on:click="openDeleteAccountModal"
                 class="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium sm:shrink-0 sm:ml-4"
+                v-on:click="openDeleteAccountModal"
               >
                 Delete Account
               </button>

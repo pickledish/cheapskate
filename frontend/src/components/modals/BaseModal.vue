@@ -36,8 +36,8 @@ export default {
             {{ title }}
           </h2>
           <button
-            v-on:click="$emit('close')"
             class="text-placeholder-text hover:text-muted-text text-2xl leading-none"
+            v-on:click="$emit('close')"
           >
             &times;
           </button>

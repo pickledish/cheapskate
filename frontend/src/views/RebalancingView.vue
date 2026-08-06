@@ -278,7 +278,7 @@ export default {
                 comparisonAllocations.length > 0 && comparisonAllocations.some((a) => a.current > 0)
               "
               v-bind:allocations="comparisonAllocations"
-              v-bind:totalValue="currentTotalValue"
+              v-bind:total-value="currentTotalValue"
             />
             <div v-else class="text-center text-muted-text py-7">
               No allocation history to display.

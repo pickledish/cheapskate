@@ -337,7 +337,7 @@ export default {
                   <MenuItem
                     v-for="option in groupByOptions"
                     v-bind:key="option.value"
-                    v-slot="{ active }"
+                    v-slot:default="{ active }"
                   >
                     <button
                       type="button"

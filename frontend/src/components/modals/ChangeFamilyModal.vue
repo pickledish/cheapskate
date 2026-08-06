@@ -101,8 +101,8 @@ export default {
       >
         <div class="flex items-center">
           <input
-            type="radio"
             v-model="mode"
+            type="radio"
             value="create"
             class="h-4 w-4 text-blue-600 focus:ring-blue-500"
           />
@@ -124,8 +124,8 @@ export default {
       >
         <div class="flex items-center">
           <input
-            type="radio"
             v-model="mode"
+            type="radio"
             value="join"
             class="h-4 w-4 text-blue-600 focus:ring-blue-500"
           />
@@ -146,17 +146,17 @@ export default {
 
     <template v-slot:secondary>
       <button
-        v-on:click="$emit('close')"
         class="px-4 py-2 text-secondary-text hover:text-primary-text"
+        v-on:click="$emit('close')"
       >
         Cancel
       </button>
     </template>
     <template v-slot:primary>
       <button
-        v-on:click="executeChange"
         v-bind:disabled="!canSubmit || loading"
         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+        v-on:click="executeChange"
       >
         {{ loading ? 'Processing...' : 'Change Family' }}
       </button>
