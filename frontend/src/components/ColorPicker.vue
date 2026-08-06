@@ -1,11 +1,12 @@
-<script>
-import { TAG_COLORS, COLOR_NAMES } from '@/lib/tagColors';
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
+import { TAG_COLORS, COLOR_NAMES, type TagColorName } from '@/lib/tagColors';
 
-export default {
+export default defineComponent({
   name: 'ColorPicker',
   props: {
     modelValue: {
-      type: String,
+      type: String as PropType<TagColorName>,
       default: 'red',
     },
   },
@@ -15,31 +16,35 @@ export default {
       open: false,
       colors: COLOR_NAMES,
       tagColors: TAG_COLORS,
+      onClickOutside: null as ((e: MouseEvent) => void) | null,
     };
   },
   computed: {
     currentHex() {
-      return TAG_COLORS[this.modelValue]?.hex ?? TAG_COLORS.red.hex;
+      return TAG_COLORS[this.modelValue].hex;
     },
   },
   mounted() {
-    document.addEventListener('click', this.handleClickOutside);
+    this.onClickOutside = (e: MouseEvent) => {
+      const picker = this.$refs.picker as HTMLElement | undefined;
+      if (picker && e.target instanceof Node && !picker.contains(e.target)) {
+        this.open = false;
+      }
+    };
+    document.addEventListener('click', this.onClickOutside);
   },
   beforeUnmount() {
-    document.removeEventListener('click', this.handleClickOutside);
+    if (this.onClickOutside) {
+      document.removeEventListener('click', this.onClickOutside);
+    }
   },
   methods: {
-    select(color) {
+    select(color: TagColorName) {
       this.$emit('update:modelValue', color);
       this.open = false;
     },
-    handleClickOutside(e) {
-      if (this.$refs.picker && !this.$refs.picker.contains(e.target)) {
-        this.open = false;
-      }
-    },
   },
-};
+});
 </script>
 
 <template>

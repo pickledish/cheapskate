@@ -1,10 +1,11 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import { supabase } from '@/lib/supabase';
 import { UserCircleIcon } from '@heroicons/vue/24/solid';
 import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue';
 
-export default {
+export default defineComponent({
   name: 'AppNav',
   components: {
     UserCircleIcon,
@@ -16,7 +17,7 @@ export default {
   },
   data() {
     return {
-      userEmail: null,
+      userEmail: null as string | null | undefined,
       goalsCompleted: false,
       accountsCompleted: false,
       assetsCompleted: false,
@@ -47,7 +48,7 @@ export default {
     }
   },
   methods: {
-    navClass(path, enabled) {
+    navClass(path: string, enabled: boolean) {
       const isActive = this.$route.path.startsWith(path);
       if (!enabled) {
         return 'border-transparent text-placeholder-text cursor-not-allowed pointer-events-none';
@@ -56,7 +57,7 @@ export default {
         ? 'border-blue-500 text-primary-text'
         : 'border-transparent text-muted-text hover:text-secondary-text hover:border-surface-border-strong';
     },
-    mobileNavClass(path, enabled) {
+    mobileNavClass(path: string, enabled: boolean) {
       const isActive = this.$route.path.startsWith(path);
       if (!enabled) {
         return 'border-transparent text-placeholder-text cursor-not-allowed pointer-events-none';
@@ -66,7 +67,7 @@ export default {
         : 'border-transparent text-muted-text hover:bg-surface-recessed hover:text-secondary-text';
     },
   },
-};
+});
 </script>
 
 <template>

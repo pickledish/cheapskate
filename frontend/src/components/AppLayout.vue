@@ -1,11 +1,12 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import AppNav from './AppNav.vue';
 import AppFooter from './AppFooter.vue';
 
-export default {
+export default defineComponent({
   name: 'AppLayout',
   components: { AppNav, AppFooter },
-};
+});
 </script>
 
 <template>

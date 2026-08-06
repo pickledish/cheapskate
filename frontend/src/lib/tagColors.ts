@@ -1,6 +1,6 @@
 // Color palette keyed by color name for easy lookup
 // Hex values are Tailwind's 500 shade (charts + color picker; fine in both schemes)
-export const TAG_COLORS: Record<string, { bg: string; text: string; hex: string }> = {
+export const TAG_COLORS = {
   gray: {
     bg: 'bg-gray-100 dark:bg-gray-800',
     text: 'text-gray-800 dark:text-gray-200',
@@ -93,8 +93,14 @@ export const TAG_COLORS: Record<string, { bg: string; text: string; hex: string 
   },
 };
 
+export type TagColorName = keyof typeof TAG_COLORS;
+
 // List of color names for the color picker
-export const COLOR_NAMES = Object.keys(TAG_COLORS);
+export const COLOR_NAMES = Object.keys(TAG_COLORS) as TagColorName[];
+
+function lookupColor(colorName: string) {
+  return colorName in TAG_COLORS ? TAG_COLORS[colorName as TagColorName] : TAG_COLORS.red;
+}
 
 // Get Tailwind classes and hex for a color name
 export function getColorClasses(colorName: string): {
@@ -102,10 +108,10 @@ export function getColorClasses(colorName: string): {
   text: string;
   hex: string;
 } {
-  return TAG_COLORS[colorName] ?? TAG_COLORS.red!;
+  return lookupColor(colorName);
 }
 
 // Get hex color for a color name (for charts)
 export function getHexForColor(colorName: string): string {
-  return TAG_COLORS[colorName]?.hex ?? TAG_COLORS.red!.hex;
+  return lookupColor(colorName).hex;
 }

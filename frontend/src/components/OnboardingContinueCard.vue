@@ -1,17 +1,18 @@
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
 import { supabase } from '@/lib/supabase';
 import { CheckCircleIcon } from '@heroicons/vue/24/solid';
 
-export default {
+export default defineComponent({
   name: 'OnboardingContinueCard',
   components: {
     CheckCircleIcon,
   },
   props: {
     step: {
-      type: String,
+      type: String as PropType<'goals' | 'accounts' | 'assets'>,
       required: true,
-      validator: (v) => ['goals', 'accounts', 'assets'].includes(v),
+      validator: (v: string) => ['goals', 'accounts', 'assets'].includes(v),
     },
     message: {
       type: String,
@@ -29,7 +30,7 @@ export default {
   data() {
     return {
       loading: false,
-      error: null,
+      error: null as string | null,
     };
   },
   methods: {
@@ -52,14 +53,14 @@ export default {
         await supabase.auth.refreshSession();
 
         // Navigate to next step
-        this.$router.push(this.nextRoute);
+        await this.$router.push(this.nextRoute);
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
         this.loading = false;
       }
     },
   },
-};
+});
 </script>
 
 <template>

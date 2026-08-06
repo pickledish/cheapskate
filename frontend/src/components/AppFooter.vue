@@ -1,5 +1,7 @@
-<script>
-export default {
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
   name: 'AppFooter',
   data() {
     return {
@@ -8,7 +10,7 @@ export default {
       env: import.meta.env.DEV ? 'Development' : 'Production',
     };
   },
-};
+});
 </script>
 
 <template>

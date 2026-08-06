@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue';
 import { relativeDate } from '@/lib/format';
 import {
   DocumentTextIcon,
@@ -39,17 +40,19 @@ const EVENT_TYPES = {
   },
 };
 
-export default {
+type EventType = keyof typeof EVENT_TYPES;
+
+export default defineComponent({
   name: 'HistoryEventCard',
   components: { TrashIcon },
   props: {
     type: {
-      type: String,
+      type: String as PropType<EventType>,
       required: true,
-      validator: (value) => Object.keys(EVENT_TYPES).includes(value),
+      validator: (value: string) => Object.keys(EVENT_TYPES).includes(value),
     },
     accountName: {
-      type: String,
+      type: String as PropType<string | null>,
       default: null,
     },
     createdAt: {
@@ -57,7 +60,7 @@ export default {
       required: true,
     },
     creatorName: {
-      type: String,
+      type: String as PropType<string | null>,
       default: null,
     },
   },
@@ -70,7 +73,7 @@ export default {
       return relativeDate(this.createdAt);
     },
   },
-};
+});
 </script>
 
 <template>
