@@ -1,7 +1,8 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import { supabase } from '@/lib/supabase';
 
-export default {
+export default defineComponent({
   name: 'LoginView',
   data() {
     return {
@@ -9,11 +10,11 @@ export default {
       password: '',
       isSignup: false,
       loading: false,
-      error: null,
+      error: null as string | null,
     };
   },
   computed: {
-    buttonText() {
+    buttonText(): string {
       if (this.loading) return 'Loading...';
       return this.isSignup ? 'Sign Up' : 'Log In';
     },
@@ -47,10 +48,10 @@ export default {
             password: this.password,
           });
           if (error) throw error;
-          this.$router.push('/accounts');
+          await this.$router.push('/accounts');
         }
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
@@ -60,7 +61,7 @@ export default {
       this.error = null;
     },
   },
-};
+});
 </script>
 
 <template>
