@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+import { defineComponent, type ComponentPublicInstance } from 'vue';
 import AppLayout from '@/components/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import AddAssetModal from '@/components/modals/AddAssetModal.vue';
@@ -12,13 +13,15 @@ import {
   listPriceUpdatesWithContext,
   listAssetClasses,
   deleteAsset,
+  type AssetWithAllocations,
+  type AssetClass,
 } from '@/lib/data';
 import { getColorClasses } from '@/lib/tagColors';
 import { formatCurrency, relativeDate } from '@/lib/format';
 import { Bars3Icon } from '@heroicons/vue/24/solid';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 
-export default {
+export default defineComponent({
   name: 'AssetsView',
   components: {
     AppLayout,
@@ -34,10 +37,25 @@ export default {
     MenuItems,
     MenuItem,
   },
-  data() {
+  data(): {
+    assets: AssetWithAllocations[];
+    assetClasses: AssetClass[];
+    latestPrices: Record<number, { price: number; effectiveDate: string }>;
+    loading: boolean;
+    error: string | null;
+    searchQuery: string;
+    menuAnchors: Record<number, HTMLElement>;
+    showAddAssetModal: boolean;
+    showEditAssetModal: boolean;
+    showUpdatePriceModal: boolean;
+    selectedAsset: AssetWithAllocations | null;
+    showOnboardingModal: boolean;
+    assetsCompleted: boolean;
+  } {
     return {
       assets: [],
       assetClasses: [],
+      latestPrices: {},
       loading: true,
       error: null,
       searchQuery: '',
@@ -55,7 +73,7 @@ export default {
     };
   },
   computed: {
-    filteredAssets() {
+    filteredAssets(): AssetWithAllocations[] {
       const query = this.searchQuery.toLowerCase().trim();
       if (!query) return this.assets;
 
@@ -69,11 +87,11 @@ export default {
         return false;
       });
     },
-    allAssetsCategorized() {
+    allAssetsCategorized(): boolean {
       // All assets must have at least one allocation
       return this.assets.length > 0 && this.assets.every((a) => a.allocations.length > 0);
     },
-    showContinueCard() {
+    showContinueCard(): boolean {
       return this.allAssetsCategorized && !this.assetsCompleted;
     },
   },
@@ -105,41 +123,32 @@ export default {
         this.assetClasses = [...classesData].sort((a, b) => a.name.localeCompare(b.name));
 
         // Build map of asset_id -> { price, effectiveDate }
-        const latestPriceByAsset = {};
+        const latestPrices: Record<number, { price: number; effectiveDate: string }> = {};
         for (const p of pricesData) {
-          if (!latestPriceByAsset[p.asset_id]) {
-            latestPriceByAsset[p.asset_id] = {
+          if (!latestPrices[p.asset_id]) {
+            latestPrices[p.asset_id] = {
               price: p.price,
               effectiveDate: p.effective_date,
             };
           }
         }
+        this.latestPrices = latestPrices;
 
-        // Merge metadata into assets
-        this.assets = assetsData.map((asset) => {
-          // Sort allocations by sort_order for display
-          const sortedAllocs = [...asset.allocations].sort(
+        // Sort allocations by sort_order for display
+        this.assets = assetsData.map((asset) => ({
+          ...asset,
+          allocations: [...asset.allocations].sort(
             (a, b) => a.asset_classes.sort_order - b.asset_classes.sort_order,
-          );
-
-          return {
-            ...asset,
-            latestPrice: latestPriceByAsset[asset.id]?.price || null,
-            latestEffectiveDate: latestPriceByAsset[asset.id]?.effectiveDate || null,
-            assetClasses: sortedAllocs.map((a) => ({
-              name: a.asset_classes.name,
-              color: a.asset_classes.color,
-            })),
-          };
-        });
+          ),
+        }));
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
 
-    openEditModal(asset) {
+    openEditModal(asset: AssetWithAllocations) {
       this.selectedAsset = asset;
       this.showEditAssetModal = true;
     },
@@ -149,7 +158,7 @@ export default {
       this.selectedAsset = null;
     },
 
-    openUpdatePriceModal(asset) {
+    openUpdatePriceModal(asset: AssetWithAllocations) {
       this.selectedAsset = asset;
       this.showUpdatePriceModal = true;
     },
@@ -173,19 +182,27 @@ export default {
     formatPrice: formatCurrency,
     relativeDate,
 
-    getClassColor(colorName) {
+    latestPrice(assetId: number): number | null {
+      return this.latestPrices[assetId]?.price ?? null;
+    },
+
+    latestEffectiveDate(assetId: number): string | null {
+      return this.latestPrices[assetId]?.effectiveDate ?? null;
+    },
+
+    getClassColor(colorName: string) {
       return getColorClasses(colorName);
     },
 
-    setMenuAnchor(index, el) {
-      if (el) {
+    setMenuAnchor(index: number, el: Element | ComponentPublicInstance | null) {
+      if (el instanceof HTMLElement) {
         this.menuAnchors[index] = el;
       } else {
         delete this.menuAnchors[index];
       }
     },
 
-    menuDropdownStyle(index) {
+    menuDropdownStyle(index: number): Record<string, string> {
       const el = this.menuAnchors[index];
       if (!el) return {};
       const rect = el.getBoundingClientRect();
@@ -195,7 +212,7 @@ export default {
       };
     },
 
-    async doDeleteAsset(asset) {
+    async doDeleteAsset(asset: AssetWithAllocations) {
       if (
         !confirm(
           `Delete "${asset.name}"? This will also delete all price history and holdings for this asset.`,
@@ -208,11 +225,11 @@ export default {
         await deleteAsset(asset.id);
         await this.loadData();
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       }
     },
   },
-};
+});
 </script>
 
 <template>
@@ -284,22 +301,27 @@ export default {
                   <div class="text-sm text-muted-text">{{ asset.ticker || '-' }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap bg-surface">
-                  <div v-if="asset.assetClasses.length" class="flex flex-nowrap gap-1">
+                  <div v-if="asset.allocations.length" class="flex flex-nowrap gap-1">
                     <span
-                      v-for="ac in asset.assetClasses"
-                      v-bind:key="ac.name"
+                      v-for="alloc in asset.allocations"
+                      v-bind:key="alloc.asset_class_id"
                       class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
-                      v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
+                      v-bind:class="[
+                        getClassColor(alloc.asset_classes.color).bg,
+                        getClassColor(alloc.asset_classes.color).text,
+                      ]"
                     >
-                      {{ ac.name }}
+                      {{ alloc.asset_classes.name }}
                     </span>
                   </div>
                   <span v-else class="text-sm text-placeholder-text">-</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap bg-surface">
-                  <div class="text-sm text-primary-text">{{ formatPrice(asset.latestPrice) }}</div>
-                  <div v-if="asset.latestEffectiveDate" class="text-xs text-placeholder-text">
-                    {{ relativeDate(asset.latestEffectiveDate) }}
+                  <div class="text-sm text-primary-text">
+                    {{ formatPrice(latestPrice(asset.id)) }}
+                  </div>
+                  <div v-if="latestEffectiveDate(asset.id)" class="text-xs text-placeholder-text">
+                    {{ relativeDate(latestEffectiveDate(asset.id)) }}
                   </div>
                 </td>
                 <td
@@ -399,7 +421,7 @@ export default {
     />
 
     <EditAssetModal
-      v-if="showEditAssetModal"
+      v-if="showEditAssetModal && selectedAsset"
       v-bind:asset="selectedAsset"
       v-bind:asset-classes="assetClasses"
       v-on:close="closeEditModal"
@@ -407,7 +429,7 @@ export default {
     />
 
     <UpdatePriceModal
-      v-if="showUpdatePriceModal"
+      v-if="showUpdatePriceModal && selectedAsset"
       v-bind:asset="selectedAsset"
       v-on:close="closeUpdatePriceModal"
       v-on:updated="onAssetUpdated"
