@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+import { defineComponent, type ComponentPublicInstance } from 'vue';
 import AppLayout from '@/components/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import AddAssetClassModal from '@/components/modals/AddAssetClassModal.vue';
@@ -13,12 +14,13 @@ import {
   listAssetAllocations,
   updateSortOrder,
   deleteAssetClass,
+  type AssetClass,
 } from '@/lib/data';
 import { getColorClasses } from '@/lib/tagColors';
 import { Bars3Icon } from '@heroicons/vue/24/solid';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 
-export default {
+export default defineComponent({
   name: 'GoalsView',
   components: {
     AppLayout,
@@ -35,7 +37,18 @@ export default {
     MenuItems,
     MenuItem,
   },
-  data() {
+  data(): {
+    assetClasses: AssetClass[];
+    assetCountByClass: Record<number, number>;
+    loading: boolean;
+    error: string | null;
+    showAddModal: boolean;
+    showEditModal: boolean;
+    selectedAssetClass: AssetClass | null;
+    showOnboardingModal: boolean;
+    goalsCompleted: boolean;
+    menuAnchors: Record<number, HTMLElement>;
+  } {
     return {
       assetClasses: [],
       assetCountByClass: {},
@@ -54,16 +67,16 @@ export default {
     };
   },
   computed: {
-    totalGoals() {
+    totalGoals(): number {
       return this.assetClasses.reduce((sum, ac) => sum + (ac.goal || 0), 0);
     },
-    hasAnyGoals() {
+    hasAnyGoals(): boolean {
       return this.assetClasses.some((ac) => ac.goal > 0);
     },
-    goalsAreValid() {
+    goalsAreValid(): boolean {
       return Math.abs(this.totalGoals - 1) < 0.001;
     },
-    showContinueCard() {
+    showContinueCard(): boolean {
       return this.goalsAreValid && !this.goalsCompleted;
     },
   },
@@ -92,26 +105,31 @@ export default {
         this.assetClasses = classes;
 
         // Count unique assets per class
-        const countByClass = {};
+        const countByClass: Record<number, Set<number>> = {};
         for (const alloc of allocations) {
-          if (!countByClass[alloc.asset_class_id]) {
-            countByClass[alloc.asset_class_id] = new Set();
+          let assets = countByClass[alloc.asset_class_id];
+          if (!assets) {
+            assets = new Set();
+            countByClass[alloc.asset_class_id] = assets;
           }
-          countByClass[alloc.asset_class_id].add(alloc.asset_id);
+          assets.add(alloc.asset_id);
         }
         // Convert Sets to counts
         this.assetCountByClass = {};
         for (const classId in countByClass) {
-          this.assetCountByClass[classId] = countByClass[classId].size;
+          const assets = countByClass[classId];
+          if (assets) {
+            this.assetCountByClass[classId] = assets.size;
+          }
         }
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
     },
 
-    openEditModal(assetClass) {
+    openEditModal(assetClass: AssetClass) {
       this.selectedAssetClass = assetClass;
       this.showEditModal = true;
     },
@@ -121,7 +139,7 @@ export default {
       this.selectedAssetClass = null;
     },
 
-    async doDeleteAssetClass(assetClass) {
+    async doDeleteAssetClass(assetClass: AssetClass) {
       if (!confirm(`Delete "${assetClass.name}"? This may affect assets using this class.`)) {
         return;
       }
@@ -130,7 +148,7 @@ export default {
         await deleteAssetClass(assetClass.id);
         await this.loadData();
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       }
     },
 
@@ -144,19 +162,19 @@ export default {
       await this.loadData();
     },
 
-    getClassColor(colorName) {
+    getClassColor(colorName: string) {
       return getColorClasses(colorName);
     },
 
-    setMenuAnchor(index, el) {
-      if (el) {
+    setMenuAnchor(index: number, el: Element | ComponentPublicInstance | null) {
+      if (el instanceof HTMLElement) {
         this.menuAnchors[index] = el;
       } else {
         delete this.menuAnchors[index];
       }
     },
 
-    menuDropdownStyle(index) {
+    menuDropdownStyle(index: number): Record<string, string> {
       const el = this.menuAnchors[index];
       if (!el) return {};
       const rect = el.getBoundingClientRect();
@@ -170,16 +188,18 @@ export default {
       // Update sort_order for all items based on new array positions
       try {
         for (let index = 0; index < this.assetClasses.length; index++) {
-          await updateSortOrder(this.assetClasses[index].id, index);
+          const assetClass = this.assetClasses[index];
+          if (!assetClass) continue;
+          await updateSortOrder(assetClass.id, index);
         }
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
         // Reload to restore correct order on error
         await this.loadData();
       }
     },
   },
-};
+});
 </script>
 
 <template>
@@ -405,7 +425,7 @@ export default {
     />
 
     <EditAssetClassModal
-      v-if="showEditModal"
+      v-if="showEditModal && selectedAssetClass"
       v-bind:asset-class="selectedAssetClass"
       v-on:close="closeEditModal"
       v-on:updated="onUpdated"
