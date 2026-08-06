@@ -134,7 +134,7 @@ export default {
         setTimeout(() => {
           this.copyFeedback = false;
         }, 2000);
-      } catch (err) {
+      } catch {
         // Fallback: select the text
         this.error = 'Failed to copy. Please select and copy manually.';
       }

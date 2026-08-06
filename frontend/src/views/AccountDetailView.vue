@@ -26,7 +26,7 @@ import {
   ComboboxButton,
   ComboboxOptions,
   ComboboxOption,
-  Menu,
+  Menu as HeadlessMenu,
   MenuButton,
   MenuItems,
   MenuItem,
@@ -47,7 +47,7 @@ export default {
     ComboboxButton,
     ComboboxOptions,
     ComboboxOption,
-    Menu,
+    HeadlessMenu,
     MenuButton,
     MenuItems,
     MenuItem,
@@ -450,7 +450,7 @@ export default {
       <template v-if="!loading && account">
         <PageHeader v-bind:title="account.name" v-bind:description="isArchived ? 'CLOSED' : null">
           <template v-slot:actions>
-            <Menu as="div" class="relative inline-block text-left shrink-0">
+            <HeadlessMenu as="div" class="relative inline-block text-left shrink-0">
               <MenuButton
                 class="inline-flex items-center rounded-md border border-page-border bg-surface px-4 py-2 text-sm font-medium text-secondary-text hover:bg-surface-recessed transition-colors"
               >
@@ -504,7 +504,7 @@ export default {
                   </button>
                 </MenuItem>
               </MenuItems>
-            </Menu>
+            </HeadlessMenu>
           </template>
         </PageHeader>
 
@@ -668,107 +668,109 @@ export default {
               </tr>
 
               <!-- Phantom rows for new holdings (edit mode only) -->
-              <tr v-for="(row, index) in newRows" v-if="editing" v-bind:key="'new-' + index">
-                <td class="px-6 py-3 bg-surface max-w-48">
-                  <div class="h-8 flex items-center min-w-0">
-                    <Combobox
-                      v-slot:default="{ open }"
-                      v-model="row.asset"
-                      as="div"
-                      class="relative w-full min-w-0"
-                      v-on:update:model-value="onNewRowAssetSelected(index)"
-                    >
-                      <div
-                        v-bind:ref="(el) => setComboboxAnchor(index, el)"
-                        class="relative min-w-0"
+              <template v-if="editing">
+                <tr v-for="(row, index) in newRows" v-bind:key="'new-' + index">
+                  <td class="px-6 py-3 bg-surface max-w-48">
+                    <div class="h-8 flex items-center min-w-0">
+                      <Combobox
+                        v-slot:default="{ open }"
+                        v-model="row.asset"
+                        as="div"
+                        class="relative w-full min-w-0"
+                        v-on:update:model-value="onNewRowAssetSelected(index)"
                       >
-                        <ComboboxInput
-                          v-bind:display-value="(a) => (a ? a.name : '')"
-                          placeholder="Search assets..."
-                          class="w-full min-w-0 h-8 px-3 pr-8 text-sm border border-surface-border-strong rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          v-on:change="row.query = $event.target.value"
-                        />
-                        <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
-                          <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
-                        </ComboboxButton>
-                      </div>
-                      <!-- Portal out of the table: overflow-x-auto clips absolute dropdowns -->
-                      <Teleport to="body">
-                        <ComboboxOptions
-                          v-bind:style="open ? comboboxDropdownStyle(index) : undefined"
-                          class="fixed z-50 max-h-60 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none"
+                        <div
+                          v-bind:ref="(el) => setComboboxAnchor(index, el)"
+                          class="relative min-w-0"
                         >
-                          <div
-                            v-if="filteredAssetsForRow(index).length === 0"
-                            class="px-3 py-2 text-sm text-muted-text"
-                          >
-                            No assets found
-                          </div>
-                          <ComboboxOption
-                            v-for="asset in filteredAssetsForRow(index)"
-                            v-bind:key="asset.id"
-                            v-slot:default="{ active, selected }"
-                            v-bind:value="asset"
+                          <ComboboxInput
+                            v-bind:display-value="(a) => (a ? a.name : '')"
+                            placeholder="Search assets..."
+                            class="w-full min-w-0 h-8 px-3 pr-8 text-sm border border-surface-border-strong rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            v-on:change="row.query = $event.target.value"
+                          />
+                          <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
+                            <ChevronUpDownIcon class="w-4 h-4 text-placeholder-text" />
+                          </ComboboxButton>
+                        </div>
+                        <!-- Portal out of the table: overflow-x-auto clips absolute dropdowns -->
+                        <Teleport to="body">
+                          <ComboboxOptions
+                            v-bind:style="open ? comboboxDropdownStyle(index) : undefined"
+                            class="fixed z-50 max-h-60 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none"
                           >
                             <div
-                              v-bind:class="[
-                                'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
-                                active ? 'bg-surface-recessed-deep' : '',
-                                selected ? 'text-blue-600 font-medium' : 'text-secondary-text',
-                              ]"
+                              v-if="filteredAssetsForRow(index).length === 0"
+                              class="px-3 py-2 text-sm text-muted-text"
                             >
-                              <!-- prettier-ignore -->
-                              <span>
+                              No assets found
+                            </div>
+                            <ComboboxOption
+                              v-for="asset in filteredAssetsForRow(index)"
+                              v-bind:key="asset.id"
+                              v-slot:default="{ active, selected }"
+                              v-bind:value="asset"
+                            >
+                              <div
+                                v-bind:class="[
+                                  'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
+                                  active ? 'bg-surface-recessed-deep' : '',
+                                  selected ? 'text-blue-600 font-medium' : 'text-secondary-text',
+                                ]"
+                              >
+                                <!-- prettier-ignore -->
+                                <span>
                                 {{ asset.ticker ? `${asset.ticker} - ${asset.name}` : asset.name }}
                               </span>
-                              <CheckIcon v-if="selected" class="w-4 h-4" />
-                            </div>
-                          </ComboboxOption>
-                        </ComboboxOptions>
-                      </Teleport>
-                    </Combobox>
-                  </div>
-                </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-surface">
-                  <div class="h-8 flex items-center text-sm text-muted-text">
-                    {{ row.asset?.ticker || '-' }}
-                  </div>
-                </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-surface">
-                  <div class="h-8 flex items-center">
-                    <div
-                      v-if="row.asset && getNewRowClasses(row.asset.id).length"
-                      class="flex flex-nowrap gap-1"
-                    >
-                      <span
-                        v-for="ac in getNewRowClasses(row.asset.id)"
-                        v-bind:key="ac.name"
-                        class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
-                        v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
-                      >
-                        {{ ac.name }}
-                      </span>
+                                <CheckIcon v-if="selected" class="w-4 h-4" />
+                              </div>
+                            </ComboboxOption>
+                          </ComboboxOptions>
+                        </Teleport>
+                      </Combobox>
                     </div>
-                    <span v-else class="text-sm text-placeholder-text">-</span>
-                  </div>
-                </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-surface text-right">
-                  <div class="h-8 flex items-center justify-end">
-                    <input
-                      v-model="row.quantity"
-                      type="text"
-                      inputmode="decimal"
-                      placeholder="0"
-                      class="w-28 h-8 px-2 text-sm text-right border border-surface-border-strong rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </td>
-                <td class="px-6 py-3 whitespace-nowrap bg-surface text-right">
-                  <div class="h-8 flex items-center justify-end text-sm text-placeholder-text">
-                    -
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                  <td class="px-6 py-3 whitespace-nowrap bg-surface">
+                    <div class="h-8 flex items-center text-sm text-muted-text">
+                      {{ row.asset?.ticker || '-' }}
+                    </div>
+                  </td>
+                  <td class="px-6 py-3 whitespace-nowrap bg-surface">
+                    <div class="h-8 flex items-center">
+                      <div
+                        v-if="row.asset && getNewRowClasses(row.asset.id).length"
+                        class="flex flex-nowrap gap-1"
+                      >
+                        <span
+                          v-for="ac in getNewRowClasses(row.asset.id)"
+                          v-bind:key="ac.name"
+                          class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
+                          v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
+                        >
+                          {{ ac.name }}
+                        </span>
+                      </div>
+                      <span v-else class="text-sm text-placeholder-text">-</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-3 whitespace-nowrap bg-surface text-right">
+                    <div class="h-8 flex items-center justify-end">
+                      <input
+                        v-model="row.quantity"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="0"
+                        class="w-28 h-8 px-2 text-sm text-right border border-surface-border-strong rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </td>
+                  <td class="px-6 py-3 whitespace-nowrap bg-surface text-right">
+                    <div class="h-8 flex items-center justify-end text-sm text-placeholder-text">
+                      -
+                    </div>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>

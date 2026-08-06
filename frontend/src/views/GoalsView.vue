@@ -16,7 +16,7 @@ import {
 } from '@/lib/data';
 import { getColorClasses } from '@/lib/tagColors';
 import { Bars3Icon } from '@heroicons/vue/24/solid';
-import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
+import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 
 export default {
   name: 'GoalsView',
@@ -30,7 +30,7 @@ export default {
     GoalAllocationChart,
     VueDraggable,
     Bars3Icon,
-    Menu,
+    HeadlessMenu,
     MenuButton,
     MenuItems,
     MenuItem,
@@ -290,7 +290,11 @@ export default {
                     'rounded-br-lg': index === assetClasses.length - 1 && !hasAnyGoals,
                   }"
                 >
-                  <Menu v-slot:default="{ open }" as="div" class="relative inline-block text-left">
+                  <HeadlessMenu
+                    v-slot:default="{ open }"
+                    as="div"
+                    class="relative inline-block text-left"
+                  >
                     <div v-bind:ref="(el) => setMenuAnchor(index, el)" class="inline-block">
                       <MenuButton
                         class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-surface-recessed-deep rounded cursor-pointer"
@@ -330,7 +334,7 @@ export default {
                         </MenuItem>
                       </MenuItems>
                     </Teleport>
-                  </Menu>
+                  </HeadlessMenu>
                 </td>
               </tr>
             </VueDraggable>

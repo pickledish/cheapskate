@@ -36,7 +36,7 @@ import {
   ComboboxButton,
   ComboboxOptions,
   ComboboxOption,
-  Menu,
+  Menu as HeadlessMenu,
   MenuButton,
   MenuItems,
   MenuItem,
@@ -76,7 +76,7 @@ export default {
     ComboboxButton,
     ComboboxOptions,
     ComboboxOption,
-    Menu,
+    HeadlessMenu,
     MenuButton,
     MenuItems,
     MenuItem,
@@ -614,7 +614,7 @@ export default {
       this.loading = true;
       this.error = null;
 
-      let update = null;
+      let update;
 
       try {
         const {
@@ -1087,7 +1087,7 @@ export default {
         >
           {{ parseButtonText }}
         </button>
-        <Menu as="div" class="relative flex">
+        <HeadlessMenu as="div" class="relative flex">
           <MenuButton
             v-bind:disabled="!file || loading"
             class="px-2 bg-blue-600 text-white border-l border-blue-500 rounded-r-md hover:bg-blue-700 disabled:opacity-50 flex items-center"
@@ -1120,7 +1120,7 @@ export default {
               </button>
             </MenuItem>
           </MenuItems>
-        </Menu>
+        </HeadlessMenu>
       </div>
       <!-- Step 2: Account matching -->
       <button

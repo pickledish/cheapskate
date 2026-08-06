@@ -11,7 +11,7 @@ import {
   listAssetClasses,
 } from '@/lib/data';
 import { formatMonth } from '@/lib/format';
-import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
+import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 
 export default {
@@ -20,7 +20,7 @@ export default {
     AppLayout,
     PageHeader,
     NetWorthBarChart,
-    Menu,
+    HeadlessMenu,
     MenuButton,
     MenuItems,
     MenuItem,
@@ -211,10 +211,6 @@ export default {
     computeGroupedByOwner(months) {
       // Map profile id -> name
       const profileMap = Object.fromEntries(this.profilesData.map((p) => [p.id, p.name]));
-      // Map account id -> owner id
-      const accountOwnerMap = Object.fromEntries(
-        this.accountsData.map((a) => [a.id, a.created_by]),
-      );
       // Get unique owner ids
       const ownerIds = [...new Set(this.accountsData.map((a) => a.created_by))];
 
@@ -315,7 +311,7 @@ export default {
         description="Track your total net worth over time. Group by account, owner, asset, or asset class."
       >
         <template v-slot:actions>
-          <Menu as="div" class="relative shrink-0">
+          <HeadlessMenu as="div" class="relative shrink-0">
             <MenuButton
               class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-secondary-text bg-surface border border-page-border rounded-md hover:bg-surface-recessed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
             >
@@ -357,7 +353,7 @@ export default {
                 </div>
               </MenuItems>
             </transition>
-          </Menu>
+          </HeadlessMenu>
         </template>
       </PageHeader>
 
