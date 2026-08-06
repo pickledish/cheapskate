@@ -1,17 +1,25 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import AppLayout from '@/components/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import ChangeFamilyModal from '@/components/modals/ChangeFamilyModal.vue';
 import DeleteAccountModal from '@/components/modals/DeleteAccountModal.vue';
 import { supabase } from '@/lib/supabase';
-import { getProfile, listProfilesByFamily, updateProfile, updatePreferences } from '@/lib/data';
+import {
+  getProfile,
+  listProfilesByFamily,
+  updateProfile,
+  updatePreferences,
+  type Profile,
+  type LocalLlmConfig,
+} from '@/lib/data';
 import { testConnection } from '@/lib/local-llm';
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue';
 import { ClipboardIcon } from '@heroicons/vue/24/outline';
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import dayjs from 'dayjs';
 
-export default {
+export default defineComponent({
   name: 'ProfileView',
   components: {
     AppLayout,
@@ -26,7 +34,27 @@ export default {
     ChevronUpDownIcon,
     CheckIcon,
   },
-  data() {
+  data(): {
+    userId: string | null;
+    userEmail: string | null | undefined;
+    userName: string;
+    familyId: string | null;
+    familyMembers: Profile[];
+    originalName: string;
+    originalLlmProvider: LocalLlmConfig['api'];
+    originalLlmPort: string;
+    loading: boolean;
+    saving: boolean;
+    error: string | null;
+    familyIdRevealed: boolean;
+    copyFeedback: boolean;
+    showChangeFamilyModal: boolean;
+    showDeleteAccountModal: boolean;
+    testing: boolean;
+    localLlmOptions: { id: LocalLlmConfig['api']; name: string }[];
+    localLlmProvider: LocalLlmConfig['api'];
+    localLlmPort: string;
+  } {
     return {
       // User data
       userId: null,
@@ -65,13 +93,13 @@ export default {
     };
   },
   computed: {
-    selectedLlmOption() {
+    selectedLlmOption(): { id: LocalLlmConfig['api']; name: string } | undefined {
       return this.localLlmOptions.find((o) => o.id === this.localLlmProvider);
     },
-    hasProfileChanges() {
+    hasProfileChanges(): boolean {
       return this.userName !== this.originalName;
     },
-    hasLlmChanges() {
+    hasLlmChanges(): boolean {
       return (
         this.localLlmProvider !== this.originalLlmProvider ||
         this.localLlmPort !== this.originalLlmPort
@@ -95,7 +123,8 @@ export default {
 
         this.userId = user.id;
         this.userEmail = user.email;
-        this.familyId = user.user_metadata?.family_id;
+        this.familyId = (user.user_metadata?.family_id as string | undefined) ?? null;
+        if (!this.familyId) throw new Error('No family associated with account');
 
         // Load profile and family members in parallel
         const [profile, members] = await Promise.all([
@@ -117,7 +146,7 @@ export default {
         this.originalLlmProvider = this.localLlmProvider;
         this.originalLlmPort = this.localLlmPort;
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
@@ -128,6 +157,7 @@ export default {
     },
 
     async copyFamilyId() {
+      if (!this.familyId) return;
       try {
         await navigator.clipboard.writeText(this.familyId);
         this.copyFeedback = true;
@@ -142,11 +172,11 @@ export default {
 
     async signOut() {
       await supabase.auth.signOut();
-      this.$router.push('/login');
+      await this.$router.push('/login');
     },
 
     async saveProfile() {
-      if (!this.hasProfileChanges) return;
+      if (!this.hasProfileChanges || !this.userId) return;
 
       this.saving = true;
       this.error = null;
@@ -155,14 +185,14 @@ export default {
         await updateProfile(this.userId, { name: this.userName });
         this.originalName = this.userName;
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.saving = false;
       }
     },
 
     async saveLlmSettings() {
-      if (!this.hasLlmChanges) return;
+      if (!this.hasLlmChanges || !this.userId) return;
 
       this.saving = true;
       this.error = null;
@@ -177,7 +207,7 @@ export default {
         this.originalLlmProvider = this.localLlmProvider;
         this.originalLlmPort = this.localLlmPort;
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.saving = false;
       }
@@ -217,11 +247,11 @@ export default {
       this.showDeleteAccountModal = false;
     },
 
-    formatJoinDate(dateStr) {
+    formatJoinDate(dateStr: string) {
       return dayjs(dateStr).format('MMM YYYY');
     },
   },
-};
+});
 </script>
 
 <template>
