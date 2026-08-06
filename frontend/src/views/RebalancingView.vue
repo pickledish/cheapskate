@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import AppLayout from '@/components/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import AllocationHistoryChart from '@/components/charts/AllocationHistoryChart.vue';
@@ -9,13 +10,30 @@ import {
   listAccounts,
   listAssetClasses,
   listAssetAllocations,
+  type HoldingUpdateWithContext,
+  type PriceUpdateWithContext,
+  type Account,
+  type AssetClass,
+  type AssetAllocation,
 } from '@/lib/data';
 import { formatMonth } from '@/lib/format';
 
-export default {
+export default defineComponent({
   name: 'RebalancingView',
   components: { AppLayout, PageHeader, AllocationHistoryChart, AllocationComparisonGrid },
-  data() {
+  data(): {
+    loading: boolean;
+    error: string | null;
+    monthLabels: string[];
+    chartSeries: { name: string; color: string; data: number[] }[];
+    comparisonAllocations: { name: string; color: string; current: number; goal: number }[];
+    currentTotalValue: number;
+    holdingsData: HoldingUpdateWithContext[];
+    pricesData: PriceUpdateWithContext[];
+    accountsData: Account[];
+    assetClassesData: AssetClass[];
+    allocationsData: AssetAllocation[];
+  } {
     return {
       loading: true,
       error: null,
@@ -23,7 +41,6 @@ export default {
       chartSeries: [],
       comparisonAllocations: [],
       currentTotalValue: 0,
-      // Raw data from database
       holdingsData: [],
       pricesData: [],
       accountsData: [],
@@ -56,7 +73,7 @@ export default {
 
         this.computeChartData();
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
@@ -71,14 +88,16 @@ export default {
       );
 
       // Build allocation lookup: asset_id -> [{classId, percentage}, ...]
-      const allocationsByAsset = {};
+      const allocationsByAsset: Record<number, { classId: number; percentage: number }[]> = {};
       for (const alloc of this.allocationsData) {
-        if (!allocationsByAsset[alloc.asset_id]) {
-          allocationsByAsset[alloc.asset_id] = [];
+        let assetAllocations = allocationsByAsset[alloc.asset_id];
+        if (!assetAllocations) {
+          assetAllocations = [];
+          allocationsByAsset[alloc.asset_id] = assetAllocations;
         }
-        allocationsByAsset[alloc.asset_id].push({
+        assetAllocations.push({
           classId: alloc.asset_class_id,
-          percentage: parseFloat(alloc.percentage),
+          percentage: parseFloat(String(alloc.percentage)),
         });
       }
 
@@ -151,8 +170,11 @@ export default {
         .filter((s) => s.goal > 0 || s.data.some((v) => v > 0));
 
       // Compute unclassified portion for each month (assets with no/incomplete allocations)
-      const unclassifiedData = monthsWithData.map((month, monthIndex) => {
-        const classifiedTotal = normalizedSeries.reduce((sum, s) => sum + s.data[monthIndex], 0);
+      const unclassifiedData = monthsWithData.map((_month, monthIndex) => {
+        const classifiedTotal = normalizedSeries.reduce(
+          (sum, s) => sum + (s.data[monthIndex] ?? 0),
+          0,
+        );
         return Math.max(0, 1 - classifiedTotal);
       });
 
@@ -161,6 +183,7 @@ export default {
         normalizedSeries.push({
           name: 'Unclassified',
           color: 'gray',
+          goal: 0,
           data: unclassifiedData,
         });
       }
@@ -169,12 +192,12 @@ export default {
 
       // Compute current vs goal comparison for the grid
       // Use the most recent holdings (today) for current allocation
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0]!;
       const currentHoldings = this.getLatestHoldings(today, rebalancingAccountIds);
       const currentPrices = this.getLatestPrices(today);
 
       // Calculate current value by class
-      const currentValueByClass = {};
+      const currentValueByClass: Record<number, number> = {};
       let currentTotal = 0;
       for (const h of currentHoldings) {
         const assetValue = h.quantity * (currentPrices[h.asset_id] || 0);
@@ -202,8 +225,8 @@ export default {
         .filter((ac) => ac.goal > 0 || ac.current > 0);
     },
 
-    getLast12Months() {
-      const months = [];
+    getLast12Months(): string[] {
+      const months: string[] = [];
       const now = new Date();
       // Start from 12 months ago, end at previous month (exclude current month)
       for (let i = 12; i >= 1; i--) {
@@ -213,41 +236,49 @@ export default {
       return months;
     },
 
-    getMonthEnd(monthStr) {
-      const [year, month] = monthStr.split('-').map(Number);
+    getMonthEnd(monthStr: string): string {
+      const [yearStr, monthPart] = monthStr.split('-');
+      const year = Number(yearStr);
+      const month = Number(monthPart);
       const nextMonth = new Date(year, month, 1);
       nextMonth.setDate(nextMonth.getDate() - 1);
-      return nextMonth.toISOString().split('T')[0];
+      return nextMonth.toISOString().split('T')[0]!;
     },
 
     formatMonth,
 
-    getLatestHoldings(effectiveDate, accountIds) {
-      const latestHoldings = {};
+    getLatestHoldings(
+      effectiveDate: string,
+      accountIds: Set<number>,
+    ): { asset_id: number; account_id: number; quantity: number }[] {
+      const latestHoldings: Record<
+        string,
+        { asset_id: number; account_id: number; quantity: number }
+      > = {};
       for (const h of this.holdingsData) {
         if (h.effective_date <= effectiveDate && accountIds.has(h.account_id)) {
           const key = `${h.asset_id}-${h.account_id}`;
           latestHoldings[key] = {
             asset_id: h.asset_id,
             account_id: h.account_id,
-            quantity: parseFloat(h.quantity),
+            quantity: parseFloat(String(h.quantity)),
           };
         }
       }
       return Object.values(latestHoldings);
     },
 
-    getLatestPrices(effectiveDate) {
-      const latestPrices = {};
+    getLatestPrices(effectiveDate: string): Record<number, number> {
+      const latestPrices: Record<number, number> = {};
       for (const p of this.pricesData) {
         if (p.effective_date <= effectiveDate) {
-          latestPrices[p.asset_id] = parseFloat(p.price);
+          latestPrices[p.asset_id] = parseFloat(String(p.price));
         }
       }
       return latestPrices;
     },
   },
-};
+});
 </script>
 
 <template>
