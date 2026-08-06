@@ -50,7 +50,18 @@ export async function listPriceUpdatesWithContext(
 
   if (error) throw error;
 
-  return (data || []).map((row: any) => ({
+  type PriceUpdateRow = {
+    asset_id: number;
+    price: number;
+    update_id: number;
+    updates: {
+      effective_date: string;
+      created_by: string;
+      created_at: string;
+    };
+  };
+
+  return ((data || []) as PriceUpdateRow[]).map((row) => ({
     asset_id: row.asset_id,
     effective_date: row.updates.effective_date,
     price: row.price,

@@ -1,7 +1,13 @@
-// Stage 1: tooling only — no rules applied yet.
-export default [
+import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
+import tseslint from 'typescript-eslint';
+
+export default defineConfig(
   {
-    files: ["eslint.config.js"],
-    rules: {},
+    ignores: ['dist/**', 'node_modules/**'],
   },
-];
+  {
+    files: ['**/*.ts'],
+    extends: [js.configs.recommended, tseslint.configs.recommended],
+  },
+);

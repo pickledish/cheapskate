@@ -16,6 +16,30 @@ export interface HoldingUpdateWithContext {
   created_at: string;
 }
 
+type HoldingUpdateRow = {
+  asset_id: number;
+  quantity: number;
+  update_id: number;
+  updates: {
+    account_id: number;
+    effective_date: string;
+    created_by: string;
+    created_at: string;
+  };
+};
+
+function mapHoldingUpdateRow(row: HoldingUpdateRow): HoldingUpdateWithContext {
+  return {
+    asset_id: row.asset_id,
+    account_id: row.updates.account_id,
+    effective_date: row.updates.effective_date,
+    quantity: row.quantity,
+    update_id: row.update_id,
+    created_by: row.updates.created_by,
+    created_at: row.updates.created_at,
+  };
+}
+
 export async function insertHoldingUpdate(holding: {
   update_id: number;
   asset_id: number;
@@ -52,15 +76,7 @@ export async function listHoldingUpdatesWithContext(
 
   if (error) throw error;
 
-  return (data || []).map((row: any) => ({
-    asset_id: row.asset_id,
-    account_id: row.updates.account_id,
-    effective_date: row.updates.effective_date,
-    quantity: row.quantity,
-    update_id: row.update_id,
-    created_by: row.updates.created_by,
-    created_at: row.updates.created_at,
-  }));
+  return ((data || []) as HoldingUpdateRow[]).map(mapHoldingUpdateRow);
 }
 
 export async function listHoldingUpdatesByAccount(
@@ -87,13 +103,5 @@ export async function listHoldingUpdatesByAccount(
 
   if (error) throw error;
 
-  return (data || []).map((row: any) => ({
-    asset_id: row.asset_id,
-    account_id: row.updates.account_id,
-    effective_date: row.updates.effective_date,
-    quantity: row.quantity,
-    update_id: row.update_id,
-    created_by: row.updates.created_by,
-    created_at: row.updates.created_at,
-  }));
+  return ((data || []) as HoldingUpdateRow[]).map(mapHoldingUpdateRow);
 }

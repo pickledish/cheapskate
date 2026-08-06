@@ -43,7 +43,11 @@ export async function listAssetsWithAllocations(): Promise<AssetWithAllocations[
 
   if (error) throw error;
 
-  return (data || []).map((row: any) => ({
+  type AssetRow = Asset & {
+    asset_allocations: AssetAllocationInfo[] | null;
+  };
+
+  return ((data || []) as AssetRow[]).map((row) => ({
     id: row.id,
     ticker: row.ticker,
     name: row.name,

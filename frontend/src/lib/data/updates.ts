@@ -53,7 +53,12 @@ export async function listUpdatesWithDetails(
 
   if (error) throw error;
 
-  return (data || []).map((row: any) => ({
+  type UpdateRow = Update & {
+    price_updates: PriceUpdate[] | null;
+    holding_updates: HoldingUpdate[] | null;
+  };
+
+  return ((data || []) as UpdateRow[]).map((row) => ({
     id: row.id,
     family_id: row.family_id,
     account_id: row.account_id,

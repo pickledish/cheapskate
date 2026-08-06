@@ -214,6 +214,7 @@ function parseAndValidateResponse(content: string, model: string): ParsePdfRespo
   } catch (validationError) {
     throw new Error(
       `Model "${model}" returned unexpected format: ${validationError instanceof Error ? validationError.message : 'Unknown error'}`,
+      { cause: validationError },
     );
   }
 }
