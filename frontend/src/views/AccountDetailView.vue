@@ -38,15 +38,6 @@ import {
 
 type ClassTag = Pick<AssetClass, 'name' | 'color' | 'sort_order'>;
 
-interface HoldingRow {
-  asset_id: number;
-  name: string;
-  ticker: string | null;
-  assetClasses: Pick<AssetClass, 'name' | 'color'>[];
-  quantity: number;
-  value: number;
-}
-
 export default defineComponent({
   name: 'AccountDetailView',
   components: {
@@ -71,7 +62,9 @@ export default defineComponent({
     account: Account | null;
     ownerName: string | null;
     assets: AssetWithAllocations[];
-    holdings: HoldingRow[];
+    heldAssetIdsInSortedOrder: number[];
+    quantityByAsset: Record<number, number>;
+    valueByAsset: Record<number, number>;
     totalValue: number | null;
     assetClasses: ClassTag[];
     allocationsByAsset: Record<number, (ClassTag & { percentage: number })[]>;
@@ -91,7 +84,9 @@ export default defineComponent({
       account: null,
       ownerName: null,
       assets: [],
-      holdings: [],
+      heldAssetIdsInSortedOrder: [],
+      quantityByAsset: {},
+      valueByAsset: {},
       totalValue: null,
       assetClasses: [],
       allocationsByAsset: {},
@@ -138,8 +133,15 @@ export default defineComponent({
         ? dayjs(this.latestEffectiveDate).format('MMM D, YYYY')
         : 'Upload a statement or add holdings manually';
     },
+    assetsById(): Record<number, AssetWithAllocations> {
+      const byId: Record<number, AssetWithAllocations> = {};
+      for (const a of this.assets) {
+        byId[a.id] = a;
+      }
+      return byId;
+    },
     availableAssets(): AssetWithAllocations[] {
-      const usedIds = new Set(this.holdings.map((h) => h.asset_id));
+      const usedIds = new Set(this.heldAssetIdsInSortedOrder);
       const newRowIds = new Set(this.newRows.flatMap((r) => (r.asset ? [r.asset.id] : [])));
       return this.assets.filter((a) => !usedIds.has(a.id) && !newRowIds.has(a.id));
     },
@@ -176,11 +178,6 @@ export default defineComponent({
 
         this.assets = assetsData;
 
-        const assetMap: Record<number, { ticker: string | null; name: string }> = {};
-        for (const a of assetsData) {
-          assetMap[a.id] = { ticker: a.ticker, name: a.name };
-        }
-
         const allocationsByAsset: Record<number, (ClassTag & { percentage: number })[]> = {};
         for (const a of assetsData) {
           if (a.allocations.length > 0) {
@@ -211,36 +208,33 @@ export default defineComponent({
         }
 
         let total = 0;
-        const holdingsDisplay: HoldingRow[] = [];
+        const quantityByAsset: Record<number, number> = {};
+        const valueByAsset: Record<number, number> = {};
         for (const h of Object.values(latestByAsset)) {
           const quantity = parseFloat(String(h.quantity));
           if (quantity <= 0) continue;
-          const asset = assetMap[h.asset_id];
           const price = latestPriceByAsset[h.asset_id] || 0;
           const value = quantity * price;
           total += value;
-          holdingsDisplay.push({
-            asset_id: h.asset_id,
-            name: asset?.name || 'Unknown',
-            ticker: asset?.ticker || null,
-            assetClasses: (allocationsByAsset[h.asset_id] || []).map((c) => ({
-              name: c.name,
-              color: c.color,
-            })),
-            quantity,
-            value,
-          });
+          quantityByAsset[h.asset_id] = quantity;
+          valueByAsset[h.asset_id] = value;
         }
-        this.holdings = holdingsDisplay.sort((a, b) => b.value - a.value);
+        const heldAssetIdsInSortedOrder = Object.keys(valueByAsset)
+          .map(Number)
+          .sort((a, b) => (valueByAsset[b] ?? 0) - (valueByAsset[a] ?? 0));
+        this.quantityByAsset = quantityByAsset;
+        this.valueByAsset = valueByAsset;
+        this.heldAssetIdsInSortedOrder = heldAssetIdsInSortedOrder;
         this.totalValue = total !== 0 ? total : null;
 
         const classValues: Record<string, { value: number; color: string; sort_order: number }> =
           {};
         let unclassifiedValue = 0;
-        for (const h of holdingsDisplay) {
-          const allocations = allocationsByAsset[h.asset_id] || [];
+        for (const assetId of heldAssetIdsInSortedOrder) {
+          const assetValue = valueByAsset[assetId] ?? 0;
+          const allocations = allocationsByAsset[assetId] || [];
           if (allocations.length === 0) {
-            unclassifiedValue += h.value;
+            unclassifiedValue += assetValue;
           } else {
             for (const alloc of allocations) {
               let classData = classValues[alloc.name];
@@ -252,7 +246,7 @@ export default defineComponent({
                 };
                 classValues[alloc.name] = classData;
               }
-              classData.value += h.value * alloc.percentage;
+              classData.value += assetValue * alloc.percentage;
             }
           }
         }
@@ -281,12 +275,35 @@ export default defineComponent({
       return getColorClasses(colorName);
     },
 
+    assetName(assetId: number): string {
+      return this.assetsById[assetId]?.name || 'Unknown';
+    },
+
+    assetTicker(assetId: number): string | null {
+      return this.assetsById[assetId]?.ticker ?? null;
+    },
+
+    classesForAsset(assetId: number): Pick<AssetClass, 'name' | 'color'>[] {
+      return (this.allocationsByAsset[assetId] || []).map((c) => ({
+        name: c.name,
+        color: c.color,
+      }));
+    },
+
+    quantityFor(assetId: number): number {
+      return this.quantityByAsset[assetId] ?? 0;
+    },
+
+    valueFor(assetId: number): number {
+      return this.valueByAsset[assetId] ?? 0;
+    },
+
     // Inline editing
     enterEditMode() {
       this.effectiveDate = new Date().toISOString().split('T')[0]!;
       this.editQuantities = {};
-      for (const h of this.holdings) {
-        this.editQuantities[h.asset_id] = this.formatQuantity(h.quantity);
+      for (const assetId of this.heldAssetIdsInSortedOrder) {
+        this.editQuantities[assetId] = this.formatQuantity(this.quantityFor(assetId));
       }
       this.newRows = [{ asset: null, query: '', quantity: '' }];
       this.editing = true;
@@ -350,13 +367,6 @@ export default defineComponent({
       };
     },
 
-    getNewRowClasses(assetId: number): Pick<AssetClass, 'name' | 'color'>[] {
-      return (this.allocationsByAsset[assetId] || []).map((c) => ({
-        name: c.name,
-        color: c.color,
-      }));
-    },
-
     async saveEdits() {
       if (!this.effectiveDate) {
         this.error = 'Please select a date';
@@ -377,12 +387,12 @@ export default defineComponent({
         const holdingsToSave: { asset_id: number; quantity: number }[] = [];
 
         // Existing holdings with changed quantities
-        for (const h of this.holdings) {
-          const newQty = parseFloat(this.editQuantities[h.asset_id] ?? '');
+        for (const assetId of this.heldAssetIdsInSortedOrder) {
+          const newQty = parseFloat(this.editQuantities[assetId] ?? '');
           if (isNaN(newQty) || newQty < 0) continue;
-          if (newQty !== h.quantity) {
+          if (newQty !== this.quantityFor(assetId)) {
             holdingsToSave.push({
-              asset_id: h.asset_id,
+              asset_id: assetId,
               quantity: newQty,
             });
           }
@@ -621,7 +631,7 @@ export default defineComponent({
 
         <!-- Holdings table -->
         <div
-          v-if="holdings.length > 0 || editing"
+          v-if="heldAssetIdsInSortedOrder.length > 0 || editing"
           class="bg-surface shadow rounded-lg overflow-x-auto"
         >
           <table class="min-w-full divide-y divide-surface-border">
@@ -656,22 +666,22 @@ export default defineComponent({
             </thead>
             <tbody class="divide-y divide-surface-border">
               <!-- Existing holdings -->
-              <tr v-for="holding in holdings" v-bind:key="holding.asset_id">
+              <tr v-for="assetId in heldAssetIdsInSortedOrder" v-bind:key="assetId">
                 <td class="px-6 py-3 whitespace-nowrap bg-surface max-w-48">
                   <div class="h-8 flex items-center text-sm font-medium text-primary-text truncate">
-                    {{ holding.name }}
+                    {{ assetName(assetId) }}
                   </div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-surface">
                   <div class="h-8 flex items-center text-sm text-muted-text">
-                    {{ holding.ticker || '-' }}
+                    {{ assetTicker(assetId) || '-' }}
                   </div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-surface">
                   <div class="h-8 flex items-center">
-                    <div v-if="holding.assetClasses.length" class="flex flex-nowrap gap-1">
+                    <div v-if="classesForAsset(assetId).length" class="flex flex-nowrap gap-1">
                       <span
-                        v-for="ac in holding.assetClasses"
+                        v-for="ac in classesForAsset(assetId)"
                         v-bind:key="ac.name"
                         class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                         v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
@@ -686,20 +696,20 @@ export default defineComponent({
                   <div class="h-8 flex items-center justify-end">
                     <input
                       v-if="editing"
-                      v-model="editQuantities[holding.asset_id]"
+                      v-model="editQuantities[assetId]"
                       type="text"
                       inputmode="decimal"
                       class="w-28 h-8 px-2 text-sm text-right border border-surface-border-strong rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <!-- prettier-ignore -->
                     <span v-else class="text-sm text-primary-text">
-                      {{ formatQuantity(holding.quantity) }}
+                      {{ formatQuantity(quantityFor(assetId)) }}
                     </span>
                   </div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap bg-surface text-right">
                   <div class="h-8 flex items-center justify-end text-sm text-primary-text">
-                    {{ formatCurrency(holding.value) }}
+                    {{ formatCurrency(valueFor(assetId)) }}
                   </div>
                 </td>
               </tr>
@@ -777,11 +787,11 @@ export default defineComponent({
                   <td class="px-6 py-3 whitespace-nowrap bg-surface">
                     <div class="h-8 flex items-center">
                       <div
-                        v-if="row.asset && getNewRowClasses(row.asset.id).length"
+                        v-if="row.asset && classesForAsset(row.asset.id).length"
                         class="flex flex-nowrap gap-1"
                       >
                         <span
-                          v-for="ac in getNewRowClasses(row.asset.id)"
+                          v-for="ac in classesForAsset(row.asset.id)"
                           v-bind:key="ac.name"
                           class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                           v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
@@ -855,7 +865,10 @@ export default defineComponent({
         </div>
 
         <!-- Empty state (only when not editing) -->
-        <div v-if="holdings.length === 0 && !editing" class="text-center py-12 text-muted-text">
+        <div
+          v-if="heldAssetIdsInSortedOrder.length === 0 && !editing"
+          class="text-center py-12 text-muted-text"
+        >
           <p class="text-lg">No holdings yet</p>
           <p class="mt-1 text-sm">Click the edit button to add holdings manually.</p>
         </div>
@@ -872,7 +885,7 @@ export default defineComponent({
     <CloseAccountModal
       v-if="showCloseAccountModal && account"
       v-bind:account="account"
-      v-bind:held-assets="holdings.map((h) => h.asset_id)"
+      v-bind:held-assets="heldAssetIdsInSortedOrder"
       v-on:close="showCloseAccountModal = false"
       v-on:closed="onAccountClosed"
     />
