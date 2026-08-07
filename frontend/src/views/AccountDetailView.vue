@@ -36,6 +36,7 @@ import {
   MenuItem,
 } from '@headlessui/vue';
 
+// todo, this should just be AssetClass
 type ClassTag = Pick<AssetClass, 'name' | 'color' | 'sort_order'>;
 
 export default defineComponent({
@@ -67,6 +68,7 @@ export default defineComponent({
     valueByAsset: Record<number, number>;
     totalValue: number | null;
     assetClasses: ClassTag[];
+    // todo, this should just be AssetClass
     allocationsByAsset: Record<number, (ClassTag & { percentage: number })[]>;
     latestEffectiveDate: string | null;
     loading: boolean;
@@ -283,6 +285,7 @@ export default defineComponent({
       return this.assetsById[assetId]?.ticker ?? null;
     },
 
+    // todo, this should just be AssetClass
     classesForAsset(assetId: number): Pick<AssetClass, 'name' | 'color'>[] {
       return (this.allocationsByAsset[assetId] || []).map((c) => ({
         name: c.name,
