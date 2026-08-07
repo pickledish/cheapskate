@@ -15,7 +15,9 @@ import {
   deleteAsset,
   type AssetWithAllocations,
   type AssetClass,
+  type PriceUpdateWithContext,
 } from '@/lib/data';
+import { getLatestPrices } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
 import { formatCurrency, relativeDate } from '@/lib/format';
 import { Bars3Icon } from '@heroicons/vue/24/solid';
@@ -40,7 +42,7 @@ export default defineComponent({
   data(): {
     assets: AssetWithAllocations[];
     assetClasses: AssetClass[];
-    latestPrices: Record<number, { price: number; effectiveDate: string }>;
+    latestPrices: Record<number, PriceUpdateWithContext>;
     loading: boolean;
     error: string | null;
     searchQuery: string;
@@ -122,17 +124,7 @@ export default defineComponent({
         // Sort by name for dropdown display (original behavior)
         this.assetClasses = [...classesData].sort((a, b) => a.name.localeCompare(b.name));
 
-        // Build map of asset_id -> { price, effectiveDate }
-        const latestPrices: Record<number, { price: number; effectiveDate: string }> = {};
-        for (const p of pricesData) {
-          if (!latestPrices[p.asset_id]) {
-            latestPrices[p.asset_id] = {
-              price: p.price,
-              effectiveDate: p.effective_date,
-            };
-          }
-        }
-        this.latestPrices = latestPrices;
+        this.latestPrices = getLatestPrices(pricesData);
 
         // Sort allocations by sort_order for display
         this.assets = assetsData.map((asset) => ({
@@ -187,7 +179,7 @@ export default defineComponent({
     },
 
     latestEffectiveDate(assetId: number): string | null {
-      return this.latestPrices[assetId]?.effectiveDate ?? null;
+      return this.latestPrices[assetId]?.effective_date ?? null;
     },
 
     getClassColor(colorName: string) {

@@ -64,7 +64,8 @@ export async function listPriceUpdatesWithContext(
   return ((data || []) as unknown as PriceUpdateRow[]).map((row) => ({
     asset_id: row.asset_id,
     effective_date: row.updates.effective_date,
-    price: row.price,
+    // PostgREST returns Postgres numeric as a string; coerce once here.
+    price: parseFloat(String(row.price)),
     update_id: row.update_id,
     created_by: row.updates.created_by,
     created_at: row.updates.created_at,

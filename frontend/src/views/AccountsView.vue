@@ -15,6 +15,7 @@ import {
   listAssetsWithAllocations,
   type Account,
 } from '@/lib/data';
+import { getLatestPrices } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
 import { relativeDate } from '@/lib/format';
 
@@ -120,13 +121,7 @@ export default defineComponent({
           }
         }
 
-        // Build map of asset_id -> latest price
-        const latestPriceByAsset: Record<number, number> = {};
-        for (const p of pricesData) {
-          if (!latestPriceByAsset[p.asset_id]) {
-            latestPriceByAsset[p.asset_id] = parseFloat(String(p.price));
-          }
-        }
+        const latestPriceByAsset = getLatestPrices(pricesData);
 
         // Build map of (account_id, asset_id) -> latest holding info
         const latestHoldingByAccountAsset: Record<
@@ -153,7 +148,7 @@ export default defineComponent({
         for (const key in latestHoldingByAccountAsset) {
           const holding = latestHoldingByAccountAsset[key];
           if (!holding) continue;
-          const price = latestPriceByAsset[holding.asset_id] || 0;
+          const price = latestPriceByAsset[holding.asset_id]?.price ?? 0;
           const value = holding.quantity * price;
 
           accountValues[holding.account_id] =

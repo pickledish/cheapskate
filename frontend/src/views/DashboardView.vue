@@ -18,6 +18,7 @@ import {
   type AssetClass,
   type AssetAllocation,
 } from '@/lib/data';
+import { getLatestPrices } from '@/lib/derived/derived';
 import { formatMonth } from '@/lib/format';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
@@ -188,19 +189,9 @@ export default defineComponent({
       return Object.values(latestHoldings);
     },
 
-    getLatestPrices(effectiveDate: string): Record<number, number> {
-      const latestPrices: Record<number, number> = {};
-      for (const p of this.pricesData) {
-        if (p.effective_date <= effectiveDate) {
-          latestPrices[p.asset_id] = parseFloat(String(p.price));
-        }
-      }
-      return latestPrices;
-    },
-
     computeNetWorthAt(effectiveDate: string): number {
       const holdings = this.getLatestHoldings(effectiveDate);
-      const prices = this.getLatestPrices(effectiveDate);
+      const prices = getLatestPrices(this.pricesData, effectiveDate);
 
       const quantityByAsset: Record<number, number> = {};
       for (const h of holdings) {
@@ -209,7 +200,8 @@ export default defineComponent({
 
       let total = 0;
       for (const assetId in quantityByAsset) {
-        total += (quantityByAsset[assetId] || 0) * (prices[Number(assetId)] || 0);
+        total +=
+          (quantityByAsset[assetId] || 0) * (prices[Number(assetId)]?.price ?? 0);
       }
       return total;
     },
@@ -225,11 +217,11 @@ export default defineComponent({
             const holdings = this.getLatestHoldings(monthEnd).filter(
               (h) => h.account_id === accountId,
             );
-            const prices = this.getLatestPrices(monthEnd);
+            const prices = getLatestPrices(this.pricesData, monthEnd);
 
             let total = 0;
             for (const h of holdings) {
-              total += h.quantity * (prices[h.asset_id] || 0);
+              total += h.quantity * (prices[h.asset_id]?.price ?? 0);
             }
             return total;
           });
@@ -256,11 +248,11 @@ export default defineComponent({
             const holdings = this.getLatestHoldings(monthEnd).filter((h) =>
               ownerAccountIds.includes(h.account_id),
             );
-            const prices = this.getLatestPrices(monthEnd);
+            const prices = getLatestPrices(this.pricesData, monthEnd);
 
             let total = 0;
             for (const h of holdings) {
-              total += h.quantity * (prices[h.asset_id] || 0);
+              total += h.quantity * (prices[h.asset_id]?.price ?? 0);
             }
             return total;
           });
@@ -278,11 +270,11 @@ export default defineComponent({
           const data = months.map((month) => {
             const monthEnd = this.getMonthEnd(month);
             const holdings = this.getLatestHoldings(monthEnd).filter((h) => h.asset_id === assetId);
-            const prices = this.getLatestPrices(monthEnd);
+            const prices = getLatestPrices(this.pricesData, monthEnd);
 
             let total = 0;
             for (const h of holdings) {
-              total += h.quantity * (prices[h.asset_id] || 0);
+              total += h.quantity * (prices[h.asset_id]?.price ?? 0);
             }
             return total;
           });
@@ -314,11 +306,11 @@ export default defineComponent({
           const data = months.map((month) => {
             const monthEnd = this.getMonthEnd(month);
             const holdings = this.getLatestHoldings(monthEnd);
-            const prices = this.getLatestPrices(monthEnd);
+            const prices = getLatestPrices(this.pricesData, monthEnd);
 
             let total = 0;
             for (const h of holdings) {
-              const assetValue = h.quantity * (prices[h.asset_id] || 0);
+              const assetValue = h.quantity * (prices[h.asset_id]?.price ?? 0);
               const allocations = allocationsByAsset[h.asset_id] || [];
               const classAlloc = allocations.find((a) => a.classId === classId);
               if (classAlloc) {
