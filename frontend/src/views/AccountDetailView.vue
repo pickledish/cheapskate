@@ -10,6 +10,7 @@ import {
   listHoldingUpdatesByAccount,
   listPriceUpdatesWithContext,
   listAssetsWithAllocations,
+  listAssetClasses,
   listUpdatesByAccount,
   insertUpdate,
   insertHoldingUpdate,
@@ -36,9 +37,6 @@ import {
   MenuItem,
 } from '@headlessui/vue';
 
-// todo, this should just be AssetClass
-type ClassTag = Pick<AssetClass, 'name' | 'color' | 'sort_order'>;
-
 export default defineComponent({
   name: 'AccountDetailView',
   components: {
@@ -63,13 +61,14 @@ export default defineComponent({
     account: Account | null;
     ownerName: string | null;
     assets: AssetWithAllocations[];
+    assetClassesData: AssetClass[];
     heldAssetIdsInSortedOrder: number[];
     quantityByAsset: Record<number, number>;
     valueByAsset: Record<number, number>;
     totalValue: number | null;
-    assetClasses: ClassTag[];
-    // todo, this should just be AssetClass
-    allocationsByAsset: Record<number, (ClassTag & { percentage: number })[]>;
+    heldAssetClassesInSortedOrder: AssetClass[];
+    hasUnclassified: boolean;
+    allocationsByAsset: Record<number, { classId: number; percentage: number }[]>;
     latestEffectiveDate: string | null;
     loading: boolean;
     error: string | null;
@@ -86,11 +85,13 @@ export default defineComponent({
       account: null,
       ownerName: null,
       assets: [],
+      assetClassesData: [],
       heldAssetIdsInSortedOrder: [],
       quantityByAsset: {},
       valueByAsset: {},
       totalValue: null,
-      assetClasses: [],
+      heldAssetClassesInSortedOrder: [],
+      hasUnclassified: false,
       allocationsByAsset: {},
       latestEffectiveDate: null,
       loading: true,
@@ -142,10 +143,16 @@ export default defineComponent({
       }
       return byId;
     },
+    assetClassById(): Record<number, AssetClass> {
+      return Object.fromEntries(this.assetClassesData.map((c) => [c.id, c]));
+    },
     availableAssets(): AssetWithAllocations[] {
       const usedIds = new Set(this.heldAssetIdsInSortedOrder);
       const newRowIds = new Set(this.newRows.flatMap((r) => (r.asset ? [r.asset.id] : [])));
       return this.assets.filter((a) => !usedIds.has(a.id) && !newRowIds.has(a.id));
+    },
+    showAssetClassTags(): boolean {
+      return this.heldAssetClassesInSortedOrder.length > 0 || this.hasUnclassified;
     },
   },
   async mounted() {
@@ -166,31 +173,28 @@ export default defineComponent({
         }
         this.account = accountData;
 
-        const [holdingsData, pricesData, assetsData, updatesData, ownerProfile] = await Promise.all(
-          [
+        const [holdingsData, pricesData, assetsData, assetClasses, updatesData, ownerProfile] =
+          await Promise.all([
             listHoldingUpdatesByAccount(accountId, 'desc'),
             listPriceUpdatesWithContext('desc'),
             listAssetsWithAllocations(),
+            listAssetClasses(),
             listUpdatesByAccount(accountId),
             accountData.created_by ? getProfile(accountData.created_by) : Promise.resolve(null),
-          ],
-        );
+          ]);
 
         this.ownerName = ownerProfile?.name || null;
-
         this.assets = assetsData;
+        this.assetClassesData = assetClasses;
 
-        const allocationsByAsset: Record<number, (ClassTag & { percentage: number })[]> = {};
+        // asset_id -> [{ classId, percentage }, ...]
+        const allocationsByAsset: Record<number, { classId: number; percentage: number }[]> = {};
         for (const a of assetsData) {
           if (a.allocations.length > 0) {
-            allocationsByAsset[a.id] = a.allocations
-              .map((alloc) => ({
-                name: alloc.asset_classes.name,
-                color: alloc.asset_classes.color,
-                sort_order: alloc.asset_classes.sort_order,
-                percentage: parseFloat(String(alloc.percentage)),
-              }))
-              .sort((x, y) => x.sort_order - y.sort_order);
+            allocationsByAsset[a.id] = a.allocations.map((alloc) => ({
+              classId: alloc.asset_class_id,
+              percentage: parseFloat(String(alloc.percentage)),
+            }));
           }
         }
         this.allocationsByAsset = allocationsByAsset;
@@ -229,8 +233,7 @@ export default defineComponent({
         this.heldAssetIdsInSortedOrder = heldAssetIdsInSortedOrder;
         this.totalValue = total !== 0 ? total : null;
 
-        const classValues: Record<string, { value: number; color: string; sort_order: number }> =
-          {};
+        const valueByClassId: Record<number, number> = {};
         let unclassifiedValue = 0;
         for (const assetId of heldAssetIdsInSortedOrder) {
           const assetValue = valueByAsset[assetId] ?? 0;
@@ -239,27 +242,15 @@ export default defineComponent({
             unclassifiedValue += assetValue;
           } else {
             for (const alloc of allocations) {
-              let classData = classValues[alloc.name];
-              if (!classData) {
-                classData = {
-                  value: 0,
-                  color: alloc.color,
-                  sort_order: alloc.sort_order,
-                };
-                classValues[alloc.name] = classData;
-              }
-              classData.value += assetValue * alloc.percentage;
+              valueByClassId[alloc.classId] =
+                (valueByClassId[alloc.classId] || 0) + assetValue * alloc.percentage;
             }
           }
         }
-        const classes: ClassTag[] = Object.entries(classValues)
-          .filter(([, data]) => data.value > 0)
-          .map(([name, data]) => ({ name, color: data.color, sort_order: data.sort_order }))
+        this.heldAssetClassesInSortedOrder = assetClasses
+          .filter((ac) => (valueByClassId[ac.id] || 0) > 0)
           .sort((a, b) => a.sort_order - b.sort_order);
-        if (unclassifiedValue > 0) {
-          classes.push({ name: 'Unclassified', color: 'gray', sort_order: 9999 });
-        }
-        this.assetClasses = classes;
+        this.hasUnclassified = unclassifiedValue > 0;
 
         this.latestEffectiveDate = updatesData[0]?.effective_date ?? null;
       } catch (err) {
@@ -285,12 +276,11 @@ export default defineComponent({
       return this.assetsById[assetId]?.ticker ?? null;
     },
 
-    // todo, this should just be AssetClass
-    classesForAsset(assetId: number): Pick<AssetClass, 'name' | 'color'>[] {
-      return (this.allocationsByAsset[assetId] || []).map((c) => ({
-        name: c.name,
-        color: c.color,
-      }));
+    classesForAsset(assetId: number): AssetClass[] {
+      return (this.allocationsByAsset[assetId] || [])
+        .map((a) => this.assetClassById[a.classId])
+        .filter((c): c is AssetClass => !!c)
+        .sort((a, b) => a.sort_order - b.sort_order);
     },
 
     quantityFor(assetId: number): number {
@@ -570,16 +560,23 @@ export default defineComponent({
                     {{ displayTotalHoldings }}
                   </div>
                   <div
-                    v-if="assetClasses.length"
+                    v-if="showAssetClassTags"
                     class="mt-2 flex flex-nowrap gap-1.5 overflow-x-auto"
                   >
                     <span
-                      v-for="ac in assetClasses"
-                      v-bind:key="ac.name"
+                      v-for="ac in heldAssetClassesInSortedOrder"
+                      v-bind:key="ac.id"
                       class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                       v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
                     >
                       {{ ac.name }}
+                    </span>
+                    <span
+                      v-if="hasUnclassified"
+                      class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
+                      v-bind:class="[getClassColor('gray').bg, getClassColor('gray').text]"
+                    >
+                      Unclassified
                     </span>
                   </div>
                 </div>
@@ -685,7 +682,7 @@ export default defineComponent({
                     <div v-if="classesForAsset(assetId).length" class="flex flex-nowrap gap-1">
                       <span
                         v-for="ac in classesForAsset(assetId)"
-                        v-bind:key="ac.name"
+                        v-bind:key="ac.id"
                         class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                         v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
                       >
@@ -795,7 +792,7 @@ export default defineComponent({
                       >
                         <span
                           v-for="ac in classesForAsset(row.asset.id)"
-                          v-bind:key="ac.name"
+                          v-bind:key="ac.id"
                           class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                           v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
                         >
