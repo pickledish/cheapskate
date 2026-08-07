@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+import { defineComponent, type ComponentPublicInstance } from 'vue';
 import AppLayout from '@/components/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import EditAccountModal from '@/components/modals/EditAccountModal.vue';
@@ -14,6 +15,9 @@ import {
   insertHoldingUpdate,
   updateAccount,
   deleteAccount,
+  type Account,
+  type AssetClass,
+  type AssetWithAllocations,
 } from '@/lib/data';
 import { supabase } from '@/lib/supabase';
 import { getColorClasses } from '@/lib/tagColors';
@@ -32,7 +36,18 @@ import {
   MenuItem,
 } from '@headlessui/vue';
 
-export default {
+type ClassTag = Pick<AssetClass, 'name' | 'color' | 'sort_order'>;
+
+interface HoldingRow {
+  asset_id: number;
+  name: string;
+  ticker: string | null;
+  assetClasses: Pick<AssetClass, 'name' | 'color'>[];
+  quantity: number;
+  value: number;
+}
+
+export default defineComponent({
   name: 'AccountDetailView',
   components: {
     AppLayout,
@@ -52,7 +67,26 @@ export default {
     MenuItems,
     MenuItem,
   },
-  data() {
+  data(): {
+    account: Account | null;
+    ownerName: string | null;
+    assets: AssetWithAllocations[];
+    holdings: HoldingRow[];
+    totalValue: number | null;
+    assetClasses: ClassTag[];
+    allocationsByAsset: Record<number, (ClassTag & { percentage: number })[]>;
+    latestEffectiveDate: string | null;
+    loading: boolean;
+    error: string | null;
+    showEditAccountModal: boolean;
+    showCloseAccountModal: boolean;
+    editing: boolean;
+    effectiveDate: string;
+    editQuantities: Record<number, string>;
+    newRows: { asset: AssetWithAllocations | null; query: string; quantity: string }[];
+    saving: boolean;
+    comboboxAnchors: Record<number, HTMLElement>;
+  } {
     return {
       account: null,
       ownerName: null,
@@ -78,38 +112,35 @@ export default {
     };
   },
   computed: {
-    isArchived() {
+    isArchived(): boolean {
       return !!this.account?.archived_at;
     },
-    displayAccountLast4() {
+    displayAccountLast4(): string | null {
       return this.account?.last4 || null;
     },
-    displayLiquid() {
-      if (typeof this.account?.is_liquid === 'boolean') {
-        return this.account.is_liquid ? 'Liquid' : 'Not Liquid';
-      }
+    displayLiquid(): string {
       if (typeof this.account?.rebalancing === 'boolean') {
         return this.account.rebalancing ? 'Liquid' : 'Not Liquid';
       }
       return 'Liquid';
     },
-    displayTaxType() {
+    displayTaxType(): string {
       return 'Retirement';
     },
-    displayTotalHoldings() {
+    displayTotalHoldings(): string {
       return this.formatCurrency(this.totalValue || 0);
     },
-    displayEffectiveRelative() {
+    displayEffectiveRelative(): string | null {
       return this.latestEffectiveDate ? this.relativeDate(this.latestEffectiveDate) : 'No data yet';
     },
-    displayEffectiveDate() {
+    displayEffectiveDate(): string {
       return this.latestEffectiveDate
         ? dayjs(this.latestEffectiveDate).format('MMM D, YYYY')
         : 'Upload a statement or add holdings manually';
     },
-    availableAssets() {
+    availableAssets(): AssetWithAllocations[] {
       const usedIds = new Set(this.holdings.map((h) => h.asset_id));
-      const newRowIds = new Set(this.newRows.filter((r) => r.asset).map((r) => r.asset.id));
+      const newRowIds = new Set(this.newRows.flatMap((r) => (r.asset ? [r.asset.id] : [])));
       return this.assets.filter((a) => !usedIds.has(a.id) && !newRowIds.has(a.id));
     },
   },
@@ -145,12 +176,12 @@ export default {
 
         this.assets = assetsData;
 
-        const assetMap = {};
+        const assetMap: Record<number, { ticker: string | null; name: string }> = {};
         for (const a of assetsData) {
           assetMap[a.id] = { ticker: a.ticker, name: a.name };
         }
 
-        const allocationsByAsset = {};
+        const allocationsByAsset: Record<number, (ClassTag & { percentage: number })[]> = {};
         for (const a of assetsData) {
           if (a.allocations.length > 0) {
             allocationsByAsset[a.id] = a.allocations
@@ -158,21 +189,21 @@ export default {
                 name: alloc.asset_classes.name,
                 color: alloc.asset_classes.color,
                 sort_order: alloc.asset_classes.sort_order,
-                percentage: parseFloat(alloc.percentage),
+                percentage: parseFloat(String(alloc.percentage)),
               }))
               .sort((x, y) => x.sort_order - y.sort_order);
           }
         }
         this.allocationsByAsset = allocationsByAsset;
 
-        const latestPriceByAsset = {};
+        const latestPriceByAsset: Record<number, number> = {};
         for (const p of pricesData) {
           if (!latestPriceByAsset[p.asset_id]) {
-            latestPriceByAsset[p.asset_id] = parseFloat(p.price);
+            latestPriceByAsset[p.asset_id] = parseFloat(String(p.price));
           }
         }
 
-        const latestByAsset = {};
+        const latestByAsset: Record<number, (typeof holdingsData)[number]> = {};
         for (const h of holdingsData) {
           if (!latestByAsset[h.asset_id]) {
             latestByAsset[h.asset_id] = h;
@@ -180,19 +211,18 @@ export default {
         }
 
         let total = 0;
-        const holdingsDisplay = [];
-        for (const assetId in latestByAsset) {
-          const h = latestByAsset[assetId];
-          const quantity = parseFloat(h.quantity);
+        const holdingsDisplay: HoldingRow[] = [];
+        for (const h of Object.values(latestByAsset)) {
+          const quantity = parseFloat(String(h.quantity));
           if (quantity <= 0) continue;
-          const asset = assetMap[h.asset_id] || {};
+          const asset = assetMap[h.asset_id];
           const price = latestPriceByAsset[h.asset_id] || 0;
           const value = quantity * price;
           total += value;
           holdingsDisplay.push({
             asset_id: h.asset_id,
-            name: asset.name || 'Unknown',
-            ticker: asset.ticker || null,
+            name: asset?.name || 'Unknown',
+            ticker: asset?.ticker || null,
             assetClasses: (allocationsByAsset[h.asset_id] || []).map((c) => ({
               name: c.name,
               color: c.color,
@@ -204,7 +234,8 @@ export default {
         this.holdings = holdingsDisplay.sort((a, b) => b.value - a.value);
         this.totalValue = total !== 0 ? total : null;
 
-        const classValues = {};
+        const classValues: Record<string, { value: number; color: string; sort_order: number }> =
+          {};
         let unclassifiedValue = 0;
         for (const h of holdingsDisplay) {
           const allocations = allocationsByAsset[h.asset_id] || [];
@@ -212,18 +243,20 @@ export default {
             unclassifiedValue += h.value;
           } else {
             for (const alloc of allocations) {
-              if (!classValues[alloc.name]) {
-                classValues[alloc.name] = {
+              let classData = classValues[alloc.name];
+              if (!classData) {
+                classData = {
                   value: 0,
                   color: alloc.color,
                   sort_order: alloc.sort_order,
                 };
+                classValues[alloc.name] = classData;
               }
-              classValues[alloc.name].value += h.value * alloc.percentage;
+              classData.value += h.value * alloc.percentage;
             }
           }
         }
-        const classes = Object.entries(classValues)
+        const classes: ClassTag[] = Object.entries(classValues)
           .filter(([, data]) => data.value > 0)
           .map(([name, data]) => ({ name, color: data.color, sort_order: data.sort_order }))
           .sort((a, b) => a.sort_order - b.sort_order);
@@ -232,9 +265,9 @@ export default {
         }
         this.assetClasses = classes;
 
-        this.latestEffectiveDate = updatesData.length > 0 ? updatesData[0].effective_date : null;
+        this.latestEffectiveDate = updatesData[0]?.effective_date ?? null;
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.loading = false;
       }
@@ -244,13 +277,13 @@ export default {
     formatQuantity,
     relativeDate,
 
-    getClassColor(colorName) {
+    getClassColor(colorName: string) {
       return getColorClasses(colorName);
     },
 
     // Inline editing
     enterEditMode() {
-      this.effectiveDate = new Date().toISOString().split('T')[0];
+      this.effectiveDate = new Date().toISOString().split('T')[0]!;
       this.editQuantities = {};
       for (const h of this.holdings) {
         this.editQuantities[h.asset_id] = this.formatQuantity(h.quantity);
@@ -266,9 +299,9 @@ export default {
       this.newRows = [];
     },
 
-    onNewRowAssetSelected(index) {
+    onNewRowAssetSelected(index: number) {
       const row = this.newRows[index];
-      if (row.asset) {
+      if (row?.asset) {
         // Add a new phantom row if this is the last one
         if (index === this.newRows.length - 1) {
           this.newRows.push({ asset: null, query: '', quantity: '' });
@@ -276,12 +309,12 @@ export default {
       }
     },
 
-    filteredAssetsForRow(index) {
-      const query = this.newRows[index].query.toLowerCase().trim();
+    filteredAssetsForRow(index: number): AssetWithAllocations[] {
+      const query = (this.newRows[index]?.query ?? '').toLowerCase().trim();
       let pool = this.availableAssets;
       // Also exclude assets picked in other new rows (except this one)
       const otherPickedIds = new Set(
-        this.newRows.filter((r, i) => i !== index && r.asset).map((r) => r.asset.id),
+        this.newRows.flatMap((r, i) => (i !== index && r.asset ? [r.asset.id] : [])),
       );
       pool = pool.filter((a) => !otherPickedIds.has(a.id));
       if (!query) return pool;
@@ -292,21 +325,21 @@ export default {
       );
     },
 
-    displayAsset(asset) {
+    displayAsset(asset: AssetWithAllocations | null): string {
       if (!asset) return '';
       if (!asset.ticker) return asset.name;
       return `${asset.ticker} - ${asset.name}`;
     },
 
-    setComboboxAnchor(index, el) {
-      if (el) {
+    setComboboxAnchor(index: number, el: Element | ComponentPublicInstance | null) {
+      if (el instanceof HTMLElement) {
         this.comboboxAnchors[index] = el;
       } else {
         delete this.comboboxAnchors[index];
       }
     },
 
-    comboboxDropdownStyle(index) {
+    comboboxDropdownStyle(index: number): Record<string, string> {
       const el = this.comboboxAnchors[index];
       if (!el) return {};
       const rect = el.getBoundingClientRect();
@@ -317,7 +350,7 @@ export default {
       };
     },
 
-    getNewRowClasses(assetId) {
+    getNewRowClasses(assetId: number): Pick<AssetClass, 'name' | 'color'>[] {
       return (this.allocationsByAsset[assetId] || []).map((c) => ({
         name: c.name,
         color: c.color,
@@ -329,6 +362,8 @@ export default {
         this.error = 'Please select a date';
         return;
       }
+      const account = this.account;
+      if (!account) return;
 
       this.saving = true;
       this.error = null;
@@ -339,11 +374,11 @@ export default {
         } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        const holdingsToSave = [];
+        const holdingsToSave: { asset_id: number; quantity: number }[] = [];
 
         // Existing holdings with changed quantities
         for (const h of this.holdings) {
-          const newQty = parseFloat(this.editQuantities[h.asset_id]);
+          const newQty = parseFloat(this.editQuantities[h.asset_id] ?? '');
           if (isNaN(newQty) || newQty < 0) continue;
           if (newQty !== h.quantity) {
             holdingsToSave.push({
@@ -367,7 +402,7 @@ export default {
         if (holdingsToSave.length > 0) {
           const update = await insertUpdate({
             family_id: user.user_metadata.family_id,
-            account_id: this.account.id,
+            account_id: account.id,
             update_type: 'manual_holdings',
             effective_date: this.effectiveDate,
             created_by: user.id,
@@ -387,7 +422,7 @@ export default {
         this.newRows = [];
         await this.loadData();
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       } finally {
         this.saving = false;
       }
@@ -399,32 +434,34 @@ export default {
     },
 
     async reopenAccount() {
-      if (!confirm(`Reopen "${this.account.name}"? It will appear in your accounts list again.`)) {
+      const account = this.account;
+      if (!account) return;
+      if (!confirm(`Reopen "${account.name}"? It will appear in your accounts list again.`)) {
         return;
       }
 
       try {
-        await updateAccount(this.account.id, { archived_at: null });
+        await updateAccount(account.id, { archived_at: null });
         await this.loadData();
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       }
     },
 
     async doDeleteAccount() {
+      const account = this.account;
+      if (!account) return;
       if (
-        !confirm(
-          `Delete "${this.account.name}"? This will also delete all statements for this account.`,
-        )
+        !confirm(`Delete "${account.name}"? This will also delete all statements for this account.`)
       ) {
         return;
       }
 
       try {
-        await deleteAccount(this.account.id);
-        this.$router.push('/accounts');
+        await deleteAccount(account.id);
+        await this.$router.push('/accounts');
       } catch (err) {
-        this.error = err.message;
+        this.error = err instanceof Error ? err.message : String(err);
       }
     },
 
@@ -433,7 +470,7 @@ export default {
       await this.loadData();
     },
   },
-};
+});
 </script>
 
 <template>
@@ -684,7 +721,9 @@ export default {
                           class="relative min-w-0"
                         >
                           <ComboboxInput
-                            v-bind:display-value="(a) => (a ? a.name : '')"
+                            v-bind:display-value="
+                              (a) => (a ? (a as AssetWithAllocations).name : '')
+                            "
                             placeholder="Search assets..."
                             class="w-full min-w-0 h-8 px-3 pr-8 text-sm border border-surface-border-strong rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
                             v-on:change="row.query = $event.target.value"
@@ -825,13 +864,13 @@ export default {
 
     <!-- Modals -->
     <EditAccountModal
-      v-if="showEditAccountModal"
+      v-if="showEditAccountModal && account"
       v-bind:account="account"
       v-on:close="showEditAccountModal = false"
       v-on:updated="onAccountUpdated"
     />
     <CloseAccountModal
-      v-if="showCloseAccountModal"
+      v-if="showCloseAccountModal && account"
       v-bind:account="account"
       v-bind:held-assets="holdings.map((h) => h.asset_id)"
       v-on:close="showCloseAccountModal = false"
