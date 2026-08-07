@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 import AppLayout from '@/components/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import NetWorthBarChart from '@/components/charts/NetWorthBarChart.vue';
@@ -9,12 +10,21 @@ import {
   listProfiles,
   listAssetsWithAllocations,
   listAssetClasses,
+  type HoldingUpdateWithContext,
+  type PriceUpdateWithContext,
+  type Account,
+  type Profile,
+  type AssetWithAllocations,
+  type AssetClass,
+  type AssetAllocation,
 } from '@/lib/data';
 import { formatMonth } from '@/lib/format';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 
-export default {
+type GroupBy = 'none' | 'account' | 'owner' | 'asset' | 'assetClass';
+
+export default defineComponent({
   name: 'DashboardView',
   components: {
     AppLayout,
@@ -27,7 +37,20 @@ export default {
     ChevronDownIcon,
     CheckIcon,
   },
-  data() {
+  data(): {
+    monthLabels: string[];
+    chartSeries: { name: string; data: number[] }[];
+    loading: boolean;
+    groupBy: GroupBy;
+    groupByOptions: { value: GroupBy; label: string }[];
+    holdingsData: HoldingUpdateWithContext[];
+    pricesData: PriceUpdateWithContext[];
+    accountsData: Account[];
+    profilesData: Profile[];
+    assetsData: AssetWithAllocations[];
+    assetClassesData: AssetClass[];
+    allocationsData: AssetAllocation[];
+  } {
     return {
       monthLabels: [],
       chartSeries: [],
@@ -51,7 +74,7 @@ export default {
     };
   },
   computed: {
-    selectedGroupByLabel() {
+    selectedGroupByLabel(): string {
       const opt = this.groupByOptions.find((o) => o.value === this.groupBy);
       return opt ? opt.label : 'None';
     },
@@ -86,7 +109,7 @@ export default {
       this.assetClassesData = assetClasses;
 
       // Transform allocations from nested structure to flat array for computeGroupedByAssetClass
-      const allocations = [];
+      const allocations: AssetAllocation[] = [];
       for (const asset of assetsWithAllocs) {
         for (const alloc of asset.allocations) {
           allocations.push({
@@ -123,8 +146,8 @@ export default {
       }
     },
 
-    getLast12Months() {
-      const months = [];
+    getLast12Months(): string[] {
+      const months: string[] = [];
       const now = new Date();
       // Start from 12 months ago, end at previous month (exclude current month)
       for (let i = 12; i >= 1; i--) {
@@ -134,57 +157,64 @@ export default {
       return months;
     },
 
-    getMonthEnd(monthStr) {
-      const [year, month] = monthStr.split('-').map(Number);
+    getMonthEnd(monthStr: string): string {
+      const [yearStr, monthPart] = monthStr.split('-');
+      const year = Number(yearStr);
+      const month = Number(monthPart);
       const nextMonth = new Date(year, month, 1);
       nextMonth.setDate(nextMonth.getDate() - 1);
-      return nextMonth.toISOString().split('T')[0];
+      return nextMonth.toISOString().split('T')[0]!;
     },
 
     formatMonth,
 
-    getLatestHoldings(effectiveDate) {
-      const latestHoldings = {};
+    getLatestHoldings(
+      effectiveDate: string,
+    ): { asset_id: number; account_id: number; quantity: number }[] {
+      const latestHoldings: Record<
+        string,
+        { asset_id: number; account_id: number; quantity: number }
+      > = {};
       for (const h of this.holdingsData) {
         if (h.effective_date <= effectiveDate) {
           const key = `${h.asset_id}-${h.account_id}`;
           latestHoldings[key] = {
             asset_id: h.asset_id,
             account_id: h.account_id,
-            quantity: parseFloat(h.quantity),
+            quantity: parseFloat(String(h.quantity)),
           };
         }
       }
       return Object.values(latestHoldings);
     },
 
-    getLatestPrices(effectiveDate) {
-      const latestPrices = {};
+    getLatestPrices(effectiveDate: string): Record<number, number> {
+      const latestPrices: Record<number, number> = {};
       for (const p of this.pricesData) {
         if (p.effective_date <= effectiveDate) {
-          latestPrices[p.asset_id] = parseFloat(p.price);
+          latestPrices[p.asset_id] = parseFloat(String(p.price));
         }
       }
       return latestPrices;
     },
 
-    computeNetWorthAt(effectiveDate) {
+    computeNetWorthAt(effectiveDate: string): number {
       const holdings = this.getLatestHoldings(effectiveDate);
       const prices = this.getLatestPrices(effectiveDate);
 
-      const quantityByAsset = {};
+      const quantityByAsset: Record<number, number> = {};
       for (const h of holdings) {
         quantityByAsset[h.asset_id] = (quantityByAsset[h.asset_id] || 0) + h.quantity;
       }
 
       let total = 0;
       for (const assetId in quantityByAsset) {
-        total += quantityByAsset[assetId] * (prices[assetId] || 0);
+        total += (quantityByAsset[assetId] || 0) * (prices[Number(assetId)] || 0);
       }
       return total;
     },
 
-    computeGroupedByAccount(months) {
+    computeGroupedByAccount(months: string[]): { name: string; data: number[] }[] {
       const accountMap = Object.fromEntries(this.accountsData.map((a) => [a.id, a.name]));
       const accountIds = this.accountsData.map((a) => a.id);
 
@@ -208,7 +238,7 @@ export default {
         .filter((s) => s.data.some((v) => v !== 0));
     },
 
-    computeGroupedByOwner(months) {
+    computeGroupedByOwner(months: string[]): { name: string; data: number[] }[] {
       // Map profile id -> name
       const profileMap = Object.fromEntries(this.profilesData.map((p) => [p.id, p.name]));
       // Get unique owner ids
@@ -239,7 +269,7 @@ export default {
         .filter((s) => s.data.some((v) => v !== 0));
     },
 
-    computeGroupedByAsset(months) {
+    computeGroupedByAsset(months: string[]): { name: string; data: number[] }[] {
       const assetMap = Object.fromEntries(this.assetsData.map((a) => [a.id, a.ticker || a.name]));
       const assetIds = this.assetsData.map((a) => a.id);
 
@@ -261,19 +291,21 @@ export default {
         .filter((s) => s.data.some((v) => v !== 0));
     },
 
-    computeGroupedByAssetClass(months) {
+    computeGroupedByAssetClass(months: string[]): { name: string; data: number[] }[] {
       const classMap = Object.fromEntries(this.assetClassesData.map((c) => [c.id, c.name]));
       const classIds = this.assetClassesData.map((c) => c.id);
 
       // Build allocation lookup: asset_id -> [{class_id, percentage}, ...]
-      const allocationsByAsset = {};
+      const allocationsByAsset: Record<number, { classId: number; percentage: number }[]> = {};
       for (const alloc of this.allocationsData) {
-        if (!allocationsByAsset[alloc.asset_id]) {
-          allocationsByAsset[alloc.asset_id] = [];
+        let assetAllocations = allocationsByAsset[alloc.asset_id];
+        if (!assetAllocations) {
+          assetAllocations = [];
+          allocationsByAsset[alloc.asset_id] = assetAllocations;
         }
-        allocationsByAsset[alloc.asset_id].push({
+        assetAllocations.push({
           classId: alloc.asset_class_id,
-          percentage: parseFloat(alloc.percentage),
+          percentage: parseFloat(String(alloc.percentage)),
         });
       }
 
@@ -300,7 +332,7 @@ export default {
         .filter((s) => s.data.some((v) => v !== 0));
     },
   },
-};
+});
 </script>
 
 <template>
