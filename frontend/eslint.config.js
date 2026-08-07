@@ -6,8 +6,8 @@ import { withVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 
 export default withVueTs(
   {
-    // Vue SFCs in this project use plain <script>, not lang="ts".
-    scriptLangs: ['ts', 'js'],
+    // Require <script lang="ts"> in all Vue SFCs (vue/block-lang).
+    scriptLangs: ['ts'],
     rootDir: import.meta.dirname,
   },
   {
