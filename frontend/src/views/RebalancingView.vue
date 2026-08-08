@@ -89,7 +89,7 @@ export default defineComponent({
         this.accountsData.filter((a) => a.rebalancing).map((a) => a.id),
       );
 
-      // Build allocation lookup: asset_id -> [{classId, percentage}, ...]
+      // Build allocation lookup: asset_id -> AssetAllocation[]
       const allocationsByAsset: Map<AssetId, AssetAllocation[]> = new Map();
       for (const alloc of this.allocationsData) {
         let assetAllocations = allocationsByAsset.get(alloc.asset_id);
@@ -97,11 +97,7 @@ export default defineComponent({
           assetAllocations = [];
           allocationsByAsset.set(alloc.asset_id, assetAllocations);
         }
-        assetAllocations.push({
-          asset_id: alloc.asset_id,
-          asset_class_id: alloc.asset_class_id,
-          percentage: parseFloat(String(alloc.percentage)),
-        });
+        assetAllocations.push(alloc);
       }
 
       // First pass: find which months have data
@@ -120,13 +116,7 @@ export default defineComponent({
 
       this.monthLabels = monthsWithData.map((m) => this.formatMonth(m));
 
-      // Build class map for names, colors, and goals
-      const classMap = Object.fromEntries(
-        this.assetClassesData.map((c) => [
-          c.id,
-          { name: c.name, color: c.color, goal: c.goal || 0 },
-        ]),
-      );
+      const classMap = Object.fromEntries(this.assetClassesData.map((c) => [c.id, c]));
       const classIds = this.assetClassesData.map((c) => c.id);
 
       // Compute values by class for each month (only months with data)
@@ -148,19 +138,19 @@ export default defineComponent({
             const allocations = allocationsByAsset.get(h.asset_id) || [];
             const classAlloc = allocations.find((a) => a.asset_class_id === classId);
             if (classAlloc) {
-              classValue += assetValue * classAlloc.percentage;
+              classValue += assetValue * parseFloat(String(classAlloc.percentage));
             }
           }
 
           // Return percentage (will be normalized after)
           return { classValue, totalValue };
         });
-        const classInfo = classMap[classId] || { name: `Class ${classId}`, color: 'red', goal: 0 };
+        const classInfo = classMap[classId];
         return {
           classId,
-          name: classInfo.name,
-          color: classInfo.color,
-          goal: classInfo.goal,
+          name: classInfo?.name ?? `Class ${classId}`,
+          color: classInfo?.color ?? 'red',
+          goal: classInfo?.goal || 0,
           data,
         };
       });
@@ -215,7 +205,8 @@ export default defineComponent({
         const allocations = allocationsByAsset.get(h.asset_id) || [];
         for (const alloc of allocations) {
           currentValueByClass[alloc.asset_class_id] =
-            (currentValueByClass[alloc.asset_class_id] || 0) + assetValue * alloc.percentage;
+            (currentValueByClass[alloc.asset_class_id] || 0) +
+            assetValue * parseFloat(String(alloc.percentage));
         }
       }
 

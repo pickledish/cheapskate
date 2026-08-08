@@ -16,13 +16,12 @@ import {
   type Profile,
   type AssetWithAllocations,
   type AssetClass,
-  type AssetAllocation,
 } from '@/lib/data';
 import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
 import { formatMonth } from '@/lib/format';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
-import { assetIdToString, type AssetId } from '@/lib/data/assets';
+import { assetIdToString, type AssetAllocationInfo, type AssetId } from '@/lib/data/assets';
 
 type GroupBy = 'none' | 'account' | 'owner' | 'asset' | 'assetClass';
 
@@ -51,7 +50,6 @@ export default defineComponent({
     profilesData: Profile[];
     assetsData: AssetWithAllocations[];
     assetClassesData: AssetClass[];
-    allocationsData: AssetAllocation[];
   } {
     return {
       monthLabels: [],
@@ -72,7 +70,6 @@ export default defineComponent({
       profilesData: [],
       assetsData: [],
       assetClassesData: [],
-      allocationsData: [],
     };
   },
   computed: {
@@ -109,19 +106,6 @@ export default defineComponent({
       this.profilesData = profiles;
       this.assetsData = assetsWithAllocs;
       this.assetClassesData = assetClasses;
-
-      // Transform allocations from nested structure to flat array for computeGroupedByAssetClass
-      const allocations: AssetAllocation[] = [];
-      for (const asset of assetsWithAllocs) {
-        for (const alloc of asset.allocations) {
-          allocations.push({
-            asset_id: asset.id,
-            asset_class_id: alloc.asset_class_id,
-            percentage: parseFloat(String(alloc.percentage)),
-          });
-        }
-      }
-      this.allocationsData = allocations;
 
       this.computeChartData();
       this.loading = false;
@@ -269,14 +253,11 @@ export default defineComponent({
       const classMap = Object.fromEntries(this.assetClassesData.map((c) => [c.id, c.name]));
       const classIds = this.assetClassesData.map((c) => c.id);
 
-      const allocationsByAsset: Map<AssetId, AssetAllocation[]> = new Map();
-      for (const alloc of this.allocationsData) {
-        let assetAllocations = allocationsByAsset.get(alloc.asset_id);
-        if (!assetAllocations) {
-          assetAllocations = [];
-          allocationsByAsset.set(alloc.asset_id, assetAllocations);
+      const allocationsByAsset: Map<AssetId, AssetAllocationInfo[]> = new Map();
+      for (const asset of this.assetsData) {
+        if (asset.allocations.length > 0) {
+          allocationsByAsset.set(asset.id, asset.allocations);
         }
-        assetAllocations.push(alloc);
       }
 
       return classIds
@@ -292,7 +273,7 @@ export default defineComponent({
               const allocations = allocationsByAsset.get(h.asset_id) || [];
               const classAlloc = allocations.find((a) => a.asset_class_id === classId);
               if (classAlloc) {
-                total += assetValue * classAlloc.percentage;
+                total += assetValue * parseFloat(String(classAlloc.percentage));
               }
             }
             return total;
