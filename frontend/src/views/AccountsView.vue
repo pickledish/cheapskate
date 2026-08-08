@@ -13,13 +13,15 @@ import {
   listHoldingUpdatesWithContext,
   listPriceUpdatesWithContext,
   listAssetsWithAllocations,
+  listAssetClasses,
   type Account,
+  type AssetClass,
 } from '@/lib/data';
 import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
 import { relativeDate } from '@/lib/format';
 import { accountIdToString, type AccountId } from '@/lib/data/accounts';
-import type { AssetId } from '@/lib/data/assets';
+import type { AssetAllocationInfo, AssetId } from '@/lib/data/assets';
 
 export default defineComponent({
   name: 'AccountsView',
@@ -34,7 +36,8 @@ export default defineComponent({
   data(): {
     accounts: Account[];
     latestEffectiveByAccount: Map<AccountId, string>;
-    assetClassesByAccount: Map<AccountId, { name: string; color: string; sort_order: number }[]>;
+    assetClassesByAccount: Map<AccountId, AssetClass[]>;
+    unclassifiedByAccount: Set<AccountId>;
     hasAnyStatements: boolean;
     loading: boolean;
     error: string | null;
@@ -47,6 +50,7 @@ export default defineComponent({
       accounts: [],
       latestEffectiveByAccount: new Map(),
       assetClassesByAccount: new Map(),
+      unclassifiedByAccount: new Set(),
       hasAnyStatements: false,
       loading: true,
       error: null,
@@ -86,35 +90,23 @@ export default defineComponent({
       this.error = null;
       try {
         // Load all data in parallel
-        const [accountsData, updatesData, holdingsData, pricesData, assetsData] = await Promise.all(
-          [
+        const [accountsData, updatesData, holdingsData, pricesData, assetsData, assetClasses] =
+          await Promise.all([
             listAccounts(),
             listUpdates(),
             listHoldingUpdatesWithContext('desc'),
             listPriceUpdatesWithContext('desc'),
             listAssetsWithAllocations(),
-          ],
-        );
+            listAssetClasses(),
+          ]);
 
         // Track if any updates exist (for onboarding continue card)
         this.hasAnyStatements = updatesData.length > 0;
 
-        // Build map of asset_id -> allocations (class info)
-        const allocationsByAsset: Map<
-          AssetId,
-          { name: string; color: string; sort_order: number; percentage: number }[]
-        > = new Map();
+        const allocationsByAsset: Map<AssetId, AssetAllocationInfo[]> = new Map();
         for (const a of assetsData) {
           if (a.allocations.length > 0) {
-            allocationsByAsset.set(
-              a.id,
-              a.allocations.map((alloc) => ({
-                name: alloc.asset_classes.name,
-                color: alloc.asset_classes.color,
-                sort_order: alloc.asset_classes.sort_order,
-                percentage: parseFloat(String(alloc.percentage)),
-              })),
-            );
+            allocationsByAsset.set(a.id, a.allocations);
           }
         }
 
@@ -160,16 +152,13 @@ export default defineComponent({
         }
 
         // Calculate asset classes per account
-        const assetClassesByAccount: Map<
-          AccountId,
-          { name: string; color: string; sort_order: number }[]
-        > = new Map();
+        const assetClassesByAccount: Map<AccountId, AssetClass[]> = new Map();
+        const unclassifiedByAccount: Set<AccountId> = new Set();
         for (const [accountId, holdings] of holdingsByAccount) {
           const totalValue = accountValues.get(accountId) || 0;
 
           // Aggregate value by class, track unclassified value
-          const classValues: Record<string, { value: number; color: string; sort_order: number }> =
-            {};
+          const valueByClassId: Record<number, number> = {};
           let unclassifiedValue = 0;
           for (const h of holdings) {
             const allocations = allocationsByAsset.get(h.asset_id) || [];
@@ -178,39 +167,33 @@ export default defineComponent({
               unclassifiedValue += h.value;
             } else {
               for (const alloc of allocations) {
-                const classValue = h.value * alloc.percentage;
-                let classData = classValues[alloc.name];
-                if (!classData) {
-                  classData = {
-                    value: 0,
-                    color: alloc.color,
-                    sort_order: alloc.sort_order,
-                  };
-                  classValues[alloc.name] = classData;
-                }
-                classData.value += classValue;
+                valueByClassId[alloc.asset_class_id] =
+                  (valueByClassId[alloc.asset_class_id] || 0) +
+                  h.value * parseFloat(String(alloc.percentage));
               }
             }
           }
 
-          // Convert to array, filter out classes <10% of account exposure, sort by sort_order
+          // Filter out classes <10% of account exposure, sort by sort_order
           // Use Math.abs since class values can be negative (from short positions)
-          const classes = Object.entries(classValues)
-            .filter(([, data]) => totalValue > 0 && Math.abs(data.value) / totalValue >= 0.1)
-            .map(([name, data]) => ({ name, color: data.color, sort_order: data.sort_order }))
+          const classes = assetClasses
+            .filter(
+              (ac) => totalValue > 0 && Math.abs(valueByClassId[ac.id] || 0) / totalValue >= 0.1,
+            )
             .sort((a, b) => a.sort_order - b.sort_order);
 
-          // Add "Unclassified" tag if >= 10% of account exposure
-          if (totalValue > 0 && Math.abs(unclassifiedValue) / totalValue >= 0.1) {
-            classes.push({ name: 'Unclassified', color: 'gray', sort_order: 9999 });
-          }
-
           assetClassesByAccount.set(accountId, classes);
+
+          // Mark unclassified if >= 10% of account exposure
+          if (totalValue > 0 && Math.abs(unclassifiedValue) / totalValue >= 0.1) {
+            unclassifiedByAccount.add(accountId);
+          }
         }
 
         this.accounts = accountsData;
         this.latestEffectiveByAccount = latestEffectiveByAccount;
         this.assetClassesByAccount = assetClassesByAccount;
+        this.unclassifiedByAccount = unclassifiedByAccount;
       } catch (err) {
         this.error = err instanceof Error ? err.message : String(err);
       } finally {
@@ -235,8 +218,12 @@ export default defineComponent({
       return this.latestEffectiveByAccount.get(accountId) ?? null;
     },
 
-    accountAssetClasses(accountId: AccountId): { name: string; color: string; sort_order: number }[] {
+    accountAssetClasses(accountId: AccountId): AssetClass[] {
       return this.assetClassesByAccount.get(accountId) || [];
+    },
+
+    accountHasUnclassified(accountId: AccountId): boolean {
+      return this.unclassifiedByAccount.has(accountId);
     },
 
     getClassColor(colorName: string) {
@@ -284,14 +271,24 @@ export default defineComponent({
           >
             <h3 class="font-semibold text-primary-text">{{ account.name }}</h3>
             <!-- Asset class tags -->
-            <div v-if="accountAssetClasses(account.id).length" class="flex flex-wrap gap-1 mt-3">
+            <div
+              v-if="accountAssetClasses(account.id).length || accountHasUnclassified(account.id)"
+              class="flex flex-wrap gap-1 mt-3"
+            >
               <span
                 v-for="ac in accountAssetClasses(account.id)"
-                v-bind:key="ac.name"
+                v-bind:key="ac.id"
                 class="inline-block px-2 py-0.5 text-xs font-medium rounded"
                 v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
               >
                 {{ ac.name }}
+              </span>
+              <span
+                v-if="accountHasUnclassified(account.id)"
+                class="inline-block px-2 py-0.5 text-xs font-medium rounded"
+                v-bind:class="[getClassColor('gray').bg, getClassColor('gray').text]"
+              >
+                Unclassified
               </span>
             </div>
             <!-- As of date -->
