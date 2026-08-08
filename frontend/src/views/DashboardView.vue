@@ -18,7 +18,7 @@ import {
   type AssetClass,
   type AssetAllocation,
 } from '@/lib/data';
-import { getLatestPrices } from '@/lib/derived/derived';
+import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
 import { formatMonth } from '@/lib/format';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
@@ -169,28 +169,8 @@ export default defineComponent({
 
     formatMonth,
 
-    getLatestHoldings(
-      effectiveDate: string,
-    ): { asset_id: number; account_id: number; quantity: number }[] {
-      const latestHoldings: Record<
-        string,
-        { asset_id: number; account_id: number; quantity: number }
-      > = {};
-      for (const h of this.holdingsData) {
-        if (h.effective_date <= effectiveDate) {
-          const key = `${h.asset_id}-${h.account_id}`;
-          latestHoldings[key] = {
-            asset_id: h.asset_id,
-            account_id: h.account_id,
-            quantity: parseFloat(String(h.quantity)),
-          };
-        }
-      }
-      return Object.values(latestHoldings);
-    },
-
     computeNetWorthAt(effectiveDate: string): number {
-      const holdings = this.getLatestHoldings(effectiveDate);
+      const holdings = Object.values(getLatestHoldings(this.holdingsData, effectiveDate));
       const prices = getLatestPrices(this.pricesData, effectiveDate);
 
       const quantityByAsset: Record<number, number> = {};
@@ -200,8 +180,7 @@ export default defineComponent({
 
       let total = 0;
       for (const assetId in quantityByAsset) {
-        total +=
-          (quantityByAsset[assetId] || 0) * (prices[Number(assetId)]?.price ?? 0);
+        total += (quantityByAsset[assetId] || 0) * (prices[Number(assetId)]?.price ?? 0);
       }
       return total;
     },
@@ -214,7 +193,7 @@ export default defineComponent({
         .map((accountId) => {
           const data = months.map((month) => {
             const monthEnd = this.getMonthEnd(month);
-            const holdings = this.getLatestHoldings(monthEnd).filter(
+            const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd)).filter(
               (h) => h.account_id === accountId,
             );
             const prices = getLatestPrices(this.pricesData, monthEnd);
@@ -245,8 +224,8 @@ export default defineComponent({
 
           const data = months.map((month) => {
             const monthEnd = this.getMonthEnd(month);
-            const holdings = this.getLatestHoldings(monthEnd).filter((h) =>
-              ownerAccountIds.includes(h.account_id),
+            const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd)).filter(
+              (h) => ownerAccountIds.includes(h.account_id),
             );
             const prices = getLatestPrices(this.pricesData, monthEnd);
 
@@ -269,7 +248,9 @@ export default defineComponent({
         .map((assetId) => {
           const data = months.map((month) => {
             const monthEnd = this.getMonthEnd(month);
-            const holdings = this.getLatestHoldings(monthEnd).filter((h) => h.asset_id === assetId);
+            const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd)).filter(
+              (h) => h.asset_id === assetId,
+            );
             const prices = getLatestPrices(this.pricesData, monthEnd);
 
             let total = 0;
@@ -305,7 +286,7 @@ export default defineComponent({
         .map((classId) => {
           const data = months.map((month) => {
             const monthEnd = this.getMonthEnd(month);
-            const holdings = this.getLatestHoldings(monthEnd);
+            const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd));
             const prices = getLatestPrices(this.pricesData, monthEnd);
 
             let total = 0;

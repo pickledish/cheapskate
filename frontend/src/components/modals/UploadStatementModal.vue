@@ -37,6 +37,7 @@ import {
   type Account,
   type Asset,
 } from '@/lib/data';
+import { getLatestHoldings } from '@/lib/derived/derived';
 import { parseWithLocalLlm } from '@/lib/local-llm';
 import { pdfToQuantizedTsv } from '@/lib/pdf';
 import { formatCurrency, formatNumber } from '@/lib/format';
@@ -456,15 +457,10 @@ export default defineComponent({
         }
 
         // Get latest holding per asset
-        const latestByAsset: Record<number, (typeof holdingsData)[number]> = {};
-        for (const h of holdingsData) {
-          if (!latestByAsset[h.asset_id]) {
-            latestByAsset[h.asset_id] = h;
-          }
-        }
+        const latestByAsset = getLatestHoldings(holdingsData);
 
         this.existingHoldings = Object.values(latestByAsset)
-          .filter((h) => Number(h.quantity) > 0)
+          .filter((h) => h.quantity > 0)
           .map((h) => ({
             asset_id: h.asset_id,
             ticker: assetsById[h.asset_id]?.ticker ?? null,

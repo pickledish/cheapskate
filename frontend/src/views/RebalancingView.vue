@@ -16,7 +16,7 @@ import {
   type AssetClass,
   type AssetAllocation,
 } from '@/lib/data';
-import { getLatestPrices } from '@/lib/derived/derived';
+import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
 import { formatMonth } from '@/lib/format';
 
 export default defineComponent({
@@ -105,7 +105,9 @@ export default defineComponent({
       // First pass: find which months have data
       const monthsWithData = allMonths.filter((month) => {
         const monthEnd = this.getMonthEnd(month);
-        const holdings = this.getLatestHoldings(monthEnd, rebalancingAccountIds);
+        const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd)).filter((h) =>
+          rebalancingAccountIds.has(h.account_id),
+        );
         const prices = getLatestPrices(this.pricesData, monthEnd);
         let totalValue = 0;
         for (const h of holdings) {
@@ -129,7 +131,9 @@ export default defineComponent({
       const seriesData = classIds.map((classId) => {
         const data = monthsWithData.map((month) => {
           const monthEnd = this.getMonthEnd(month);
-          const holdings = this.getLatestHoldings(monthEnd, rebalancingAccountIds);
+          const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd)).filter(
+            (h) => rebalancingAccountIds.has(h.account_id),
+          );
           const prices = getLatestPrices(this.pricesData, monthEnd);
 
           let classValue = 0;
@@ -194,7 +198,9 @@ export default defineComponent({
       // Compute current vs goal comparison for the grid
       // Use the most recent holdings (today) for current allocation
       const today = new Date().toISOString().split('T')[0]!;
-      const currentHoldings = this.getLatestHoldings(today, rebalancingAccountIds);
+      const currentHoldings = Object.values(getLatestHoldings(this.holdingsData, today)).filter(
+        (h) => rebalancingAccountIds.has(h.account_id),
+      );
       const currentPrices = getLatestPrices(this.pricesData, today);
 
       // Calculate current value by class
@@ -247,27 +253,6 @@ export default defineComponent({
     },
 
     formatMonth,
-
-    getLatestHoldings(
-      effectiveDate: string,
-      accountIds: Set<number>,
-    ): { asset_id: number; account_id: number; quantity: number }[] {
-      const latestHoldings: Record<
-        string,
-        { asset_id: number; account_id: number; quantity: number }
-      > = {};
-      for (const h of this.holdingsData) {
-        if (h.effective_date <= effectiveDate && accountIds.has(h.account_id)) {
-          const key = `${h.asset_id}-${h.account_id}`;
-          latestHoldings[key] = {
-            asset_id: h.asset_id,
-            account_id: h.account_id,
-            quantity: parseFloat(String(h.quantity)),
-          };
-        }
-      }
-      return Object.values(latestHoldings);
-    },
   },
 });
 </script>

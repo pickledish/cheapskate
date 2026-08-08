@@ -33,7 +33,8 @@ function mapHoldingUpdateRow(row: HoldingUpdateRow): HoldingUpdateWithContext {
     asset_id: row.asset_id,
     account_id: row.updates.account_id,
     effective_date: row.updates.effective_date,
-    quantity: row.quantity,
+    // PostgREST returns Postgres numeric as a string; coerce once here.
+    quantity: parseFloat(String(row.quantity)),
     update_id: row.update_id,
     created_by: row.updates.created_by,
     created_at: row.updates.created_at,

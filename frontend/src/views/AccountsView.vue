@@ -15,7 +15,7 @@ import {
   listAssetsWithAllocations,
   type Account,
 } from '@/lib/data';
-import { getLatestPrices } from '@/lib/derived/derived';
+import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
 import { relativeDate } from '@/lib/format';
 
@@ -122,22 +122,7 @@ export default defineComponent({
         }
 
         const latestPriceByAsset = getLatestPrices(pricesData);
-
-        // Build map of (account_id, asset_id) -> latest holding info
-        const latestHoldingByAccountAsset: Record<
-          string,
-          { asset_id: number; account_id: number; quantity: number }
-        > = {};
-        for (const h of holdingsData) {
-          const key = `${h.account_id}-${h.asset_id}`;
-          if (!latestHoldingByAccountAsset[key]) {
-            latestHoldingByAccountAsset[key] = {
-              asset_id: h.asset_id,
-              account_id: h.account_id,
-              quantity: parseFloat(String(h.quantity)),
-            };
-          }
-        }
+        const latestHoldingByAccountAsset = getLatestHoldings(holdingsData);
 
         // Calculate total value per account and build holdingsByAccount
         // We use absolute values for accountValues to get total exposure (not net value),

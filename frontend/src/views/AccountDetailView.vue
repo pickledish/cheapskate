@@ -20,7 +20,7 @@ import {
   type AssetClass,
   type AssetWithAllocations,
 } from '@/lib/data';
-import { getLatestPrices } from '@/lib/derived/derived';
+import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
 import { supabase } from '@/lib/supabase';
 import { getColorClasses } from '@/lib/tagColors';
 import { formatCurrency, formatQuantity, relativeDate } from '@/lib/format';
@@ -201,19 +201,13 @@ export default defineComponent({
         this.allocationsByAsset = allocationsByAsset;
 
         const latestPriceByAsset = getLatestPrices(pricesData);
-
-        const latestByAsset: Record<number, (typeof holdingsData)[number]> = {};
-        for (const h of holdingsData) {
-          if (!latestByAsset[h.asset_id]) {
-            latestByAsset[h.asset_id] = h;
-          }
-        }
+        const latestByAsset = getLatestHoldings(holdingsData);
 
         let total = 0;
         const quantityByAsset: Record<number, number> = {};
         const valueByAsset: Record<number, number> = {};
         for (const h of Object.values(latestByAsset)) {
-          const quantity = parseFloat(String(h.quantity));
+          const quantity = h.quantity;
           if (quantity <= 0) continue;
           const price = latestPriceByAsset[h.asset_id]?.price ?? 0;
           const value = quantity * price;
