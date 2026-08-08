@@ -1,7 +1,15 @@
 import { supabase } from '../supabase';
 
+// opaque type for AssetId, though underneath it's just a number
+declare const __brand: unique symbol;
+export type AssetId = { readonly [__brand]: 'AssetId' };
+
+export function assetIdToString(assetId: AssetId): string {
+  return `${assetId as unknown as number}`;
+}
+
 export interface Asset {
-  id: number;
+  id: AssetId;
   ticker: string | null;
   name: string;
   created_by: string;
@@ -58,7 +66,7 @@ export async function listAssetsWithAllocations(): Promise<AssetWithAllocations[
   }));
 }
 
-export async function getAsset(id: number): Promise<Asset | null> {
+export async function getAsset(id: AssetId): Promise<Asset | null> {
   const { data, error } = await supabase.from('assets').select('*').eq('id', id).single();
 
   if (error) {
@@ -90,7 +98,7 @@ export async function insertAsset(asset: {
 }
 
 export async function updateAsset(
-  id: number,
+  id: AssetId,
   updates: {
     ticker?: string | null;
     name?: string;
@@ -101,7 +109,7 @@ export async function updateAsset(
   if (error) throw error;
 }
 
-export async function deleteAsset(id: number): Promise<void> {
+export async function deleteAsset(id: AssetId): Promise<void> {
   const { error } = await supabase.from('assets').delete().eq('id', id);
 
   if (error) throw error;

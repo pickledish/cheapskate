@@ -37,6 +37,7 @@ import {
   MenuItems,
   MenuItem,
 } from '@headlessui/vue';
+import { assetIdToString, type AssetAllocationInfo, type AssetId } from '@/lib/data/assets';
 
 export default defineComponent({
   name: 'AccountDetailView',
@@ -63,13 +64,13 @@ export default defineComponent({
     ownerName: string | null;
     assets: AssetWithAllocations[];
     assetClassesData: AssetClass[];
-    heldAssetIdsInSortedOrder: number[];
-    quantityByAsset: Record<number, number>;
-    valueByAsset: Record<number, number>;
+    heldAssetIdsInSortedOrder: AssetId[];
+    quantityByAsset: Map<AssetId, number>;
+    valueByAsset: Map<AssetId, number>;
     totalValue: number | null;
     heldAssetClassesInSortedOrder: AssetClass[];
     hasUnclassified: boolean;
-    allocationsByAsset: Record<number, { classId: number; percentage: number }[]>;
+    allocationsByAsset: Map<AssetId, AssetAllocationInfo[]>;
     latestEffectiveDate: string | null;
     loading: boolean;
     error: string | null;
@@ -77,7 +78,7 @@ export default defineComponent({
     showCloseAccountModal: boolean;
     editing: boolean;
     effectiveDate: string;
-    editQuantities: Record<number, string>;
+    editQuantities: Map<AssetId, string>;
     newRows: { asset: AssetWithAllocations | null; query: string; quantity: string }[];
     saving: boolean;
     comboboxAnchors: Record<number, HTMLElement>;
@@ -88,12 +89,12 @@ export default defineComponent({
       assets: [],
       assetClassesData: [],
       heldAssetIdsInSortedOrder: [],
-      quantityByAsset: {},
-      valueByAsset: {},
+      quantityByAsset: new Map(),
+      valueByAsset: new Map(),
       totalValue: null,
       heldAssetClassesInSortedOrder: [],
       hasUnclassified: false,
-      allocationsByAsset: {},
+      allocationsByAsset: new Map(),
       latestEffectiveDate: null,
       loading: true,
       error: null,
@@ -104,7 +105,7 @@ export default defineComponent({
       // Inline editing state
       editing: false,
       effectiveDate: '',
-      editQuantities: {},
+      editQuantities: new Map(),
       newRows: [],
       saving: false,
       comboboxAnchors: {},
@@ -137,10 +138,10 @@ export default defineComponent({
         ? dayjs(this.latestEffectiveDate).format('MMM D, YYYY')
         : 'Upload a statement or add holdings manually';
     },
-    assetsById(): Record<number, AssetWithAllocations> {
-      const byId: Record<number, AssetWithAllocations> = {};
+    assetsById(): Map<AssetId, AssetWithAllocations> {
+      const byId: Map<AssetId, AssetWithAllocations> = new Map();
       for (const a of this.assets) {
-        byId[a.id] = a;
+        byId.set(a.id, a);
       }
       return byId;
     },
@@ -188,14 +189,10 @@ export default defineComponent({
         this.assets = assetsData;
         this.assetClassesData = assetClasses;
 
-        // asset_id -> [{ classId, percentage }, ...]
-        const allocationsByAsset: Record<number, { classId: number; percentage: number }[]> = {};
+        const allocationsByAsset: Map<AssetId, AssetAllocationInfo[]> = new Map();
         for (const a of assetsData) {
           if (a.allocations.length > 0) {
-            allocationsByAsset[a.id] = a.allocations.map((alloc) => ({
-              classId: alloc.asset_class_id,
-              percentage: parseFloat(String(alloc.percentage)),
-            }));
+            allocationsByAsset.set(a.id, a.allocations);
           }
         }
         this.allocationsByAsset = allocationsByAsset;
@@ -204,20 +201,20 @@ export default defineComponent({
         const latestByAsset = getLatestHoldings(holdingsData);
 
         let total = 0;
-        const quantityByAsset: Record<number, number> = {};
-        const valueByAsset: Record<number, number> = {};
+        const quantityByAsset: Map<AssetId, number> = new Map();
+        const valueByAsset: Map<AssetId, number> = new Map();
         for (const h of Object.values(latestByAsset)) {
           const quantity = h.quantity;
           if (quantity <= 0) continue;
-          const price = latestPriceByAsset[h.asset_id]?.price ?? 0;
+          const price = latestPriceByAsset.get(h.asset_id)?.price ?? 0;
           const value = quantity * price;
           total += value;
-          quantityByAsset[h.asset_id] = quantity;
-          valueByAsset[h.asset_id] = value;
+          quantityByAsset.set(h.asset_id, quantity);
+          valueByAsset.set(h.asset_id, value);
         }
-        const heldAssetIdsInSortedOrder = Object.keys(valueByAsset)
-          .map(Number)
-          .sort((a, b) => (valueByAsset[b] ?? 0) - (valueByAsset[a] ?? 0));
+        const heldAssetIdsInSortedOrder = Array.from(valueByAsset.keys()).sort(
+          (a, b) => (valueByAsset.get(b) ?? 0) - (valueByAsset.get(a) ?? 0),
+        );
         this.quantityByAsset = quantityByAsset;
         this.valueByAsset = valueByAsset;
         this.heldAssetIdsInSortedOrder = heldAssetIdsInSortedOrder;
@@ -226,14 +223,15 @@ export default defineComponent({
         const valueByClassId: Record<number, number> = {};
         let unclassifiedValue = 0;
         for (const assetId of heldAssetIdsInSortedOrder) {
-          const assetValue = valueByAsset[assetId] ?? 0;
-          const allocations = allocationsByAsset[assetId] || [];
+          const assetValue = valueByAsset.get(assetId) ?? 0;
+          const allocations = allocationsByAsset.get(assetId) || [];
           if (allocations.length === 0) {
             unclassifiedValue += assetValue;
           } else {
             for (const alloc of allocations) {
-              valueByClassId[alloc.classId] =
-                (valueByClassId[alloc.classId] || 0) + assetValue * alloc.percentage;
+              valueByClassId[alloc.asset_class_id] =
+                (valueByClassId[alloc.asset_class_id] || 0) +
+                assetValue * parseFloat(String(alloc.percentage));
             }
           }
         }
@@ -253,40 +251,41 @@ export default defineComponent({
     formatCurrency,
     formatQuantity,
     relativeDate,
+    assetIdToString,
 
     getClassColor(colorName: string) {
       return getColorClasses(colorName);
     },
 
-    assetName(assetId: number): string {
-      return this.assetsById[assetId]?.name || 'Unknown';
+    assetName(assetId: AssetId): string {
+      return this.assetsById.get(assetId)?.name || 'Unknown';
     },
 
-    assetTicker(assetId: number): string | null {
-      return this.assetsById[assetId]?.ticker ?? null;
+    assetTicker(assetId: AssetId): string | null {
+      return this.assetsById.get(assetId)?.ticker ?? null;
     },
 
-    classesForAsset(assetId: number): AssetClass[] {
-      return (this.allocationsByAsset[assetId] || [])
-        .map((a) => this.assetClassById[a.classId])
+    classesForAsset(assetId: AssetId): AssetClass[] {
+      return (this.allocationsByAsset.get(assetId) || [])
+        .map((a) => this.assetClassById[a.asset_class_id])
         .filter((c): c is AssetClass => !!c)
         .sort((a, b) => a.sort_order - b.sort_order);
     },
 
-    quantityFor(assetId: number): number {
-      return this.quantityByAsset[assetId] ?? 0;
+    quantityFor(assetId: AssetId): number {
+      return this.quantityByAsset.get(assetId) ?? 0;
     },
 
-    valueFor(assetId: number): number {
-      return this.valueByAsset[assetId] ?? 0;
+    valueFor(assetId: AssetId): number {
+      return this.valueByAsset.get(assetId) ?? 0;
     },
 
     // Inline editing
     enterEditMode() {
       this.effectiveDate = new Date().toISOString().split('T')[0]!;
-      this.editQuantities = {};
+      this.editQuantities = new Map();
       for (const assetId of this.heldAssetIdsInSortedOrder) {
-        this.editQuantities[assetId] = this.formatQuantity(this.quantityFor(assetId));
+        this.editQuantities.set(assetId, this.formatQuantity(this.quantityFor(assetId)));
       }
       this.newRows = [{ asset: null, query: '', quantity: '' }];
       this.editing = true;
@@ -295,7 +294,7 @@ export default defineComponent({
     cancelEdit() {
       this.editing = false;
       this.effectiveDate = '';
-      this.editQuantities = {};
+      this.editQuantities = new Map();
       this.newRows = [];
     },
 
@@ -367,11 +366,11 @@ export default defineComponent({
         } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        const holdingsToSave: { asset_id: number; quantity: number }[] = [];
+        const holdingsToSave: { asset_id: AssetId; quantity: number }[] = [];
 
         // Existing holdings with changed quantities
         for (const assetId of this.heldAssetIdsInSortedOrder) {
-          const newQty = parseFloat(this.editQuantities[assetId] ?? '');
+          const newQty = parseFloat(this.editQuantities.get(assetId) ?? '');
           if (isNaN(newQty) || newQty < 0) continue;
           if (newQty !== this.quantityFor(assetId)) {
             holdingsToSave.push({
@@ -411,7 +410,7 @@ export default defineComponent({
         }
 
         this.editing = false;
-        this.editQuantities = {};
+        this.editQuantities = new Map();
         this.newRows = [];
         await this.loadData();
       } catch (err) {
@@ -656,7 +655,10 @@ export default defineComponent({
             </thead>
             <tbody class="divide-y divide-surface-border">
               <!-- Existing holdings -->
-              <tr v-for="assetId in heldAssetIdsInSortedOrder" v-bind:key="assetId">
+              <tr
+                v-for="assetId in heldAssetIdsInSortedOrder"
+                v-bind:key="assetIdToString(assetId)"
+              >
                 <td class="px-6 py-3 whitespace-nowrap bg-surface max-w-48">
                   <div class="h-8 flex items-center text-sm font-medium text-primary-text truncate">
                     {{ assetName(assetId) }}
@@ -686,10 +688,13 @@ export default defineComponent({
                   <div class="h-8 flex items-center justify-end">
                     <input
                       v-if="editing"
-                      v-model="editQuantities[assetId]"
+                      v-bind:value="editQuantities.get(assetId)"
                       type="text"
                       inputmode="decimal"
                       class="w-28 h-8 px-2 text-sm text-right border border-surface-border-strong rounded bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      v-on:input="
+                        editQuantities.set(assetId, ($event.target as HTMLInputElement).value)
+                      "
                     />
                     <!-- prettier-ignore -->
                     <span v-else class="text-sm text-primary-text">
@@ -746,7 +751,7 @@ export default defineComponent({
                             </div>
                             <ComboboxOption
                               v-for="asset in filteredAssetsForRow(index)"
-                              v-bind:key="asset.id"
+                              v-bind:key="assetIdToString(asset.id)"
                               v-slot:default="{ active, selected }"
                               v-bind:value="asset"
                             >

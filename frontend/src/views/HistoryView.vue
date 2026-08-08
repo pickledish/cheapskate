@@ -16,6 +16,7 @@ import {
 import dayjs from 'dayjs';
 import { formatCurrency, formatNumber } from '@/lib/format';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline';
+import { assetIdToString, type AssetId } from '@/lib/data/assets';
 
 export default defineComponent({
   name: 'HistoryView',
@@ -29,7 +30,7 @@ export default defineComponent({
   data(): {
     events: UpdateWithDetails[];
     accountNames: Record<number, string>;
-    assetLabels: Record<number, string>;
+    assetLabels: Map<AssetId, string>;
     profileNames: Record<string, string>;
     loading: boolean;
     error: string | null;
@@ -40,7 +41,7 @@ export default defineComponent({
     return {
       events: [],
       accountNames: {},
-      assetLabels: {},
+      assetLabels: new Map(),
       profileNames: {},
       loading: true,
       error: null,
@@ -91,9 +92,7 @@ export default defineComponent({
         ]);
 
         this.accountNames = Object.fromEntries(accounts.map((a) => [a.id, a.name]));
-        this.assetLabels = Object.fromEntries(
-          assets.map((a) => [a.id, a.ticker || a.name || 'Unknown']),
-        );
+        this.assetLabels = new Map(assets.map((a) => [a.id, a.ticker || a.name || 'Unknown']));
         this.profileNames = Object.fromEntries(profiles.map((p) => [p.id, p.name]));
         this.events = updates;
       } catch (err) {
@@ -112,8 +111,8 @@ export default defineComponent({
       return this.profileNames[event.created_by] ?? null;
     },
 
-    assetLabel(assetId: number): string {
-      return this.assetLabels[assetId] || 'Unknown';
+    assetLabel(assetId: AssetId): string {
+      return this.assetLabels.get(assetId) || 'Unknown';
     },
 
     formatEffectiveDate(dateStr: string) {
@@ -122,8 +121,9 @@ export default defineComponent({
 
     formatCurrency,
     formatNumber,
+    assetIdToString,
 
-    getPriceForAsset(event: UpdateWithDetails, assetId: number): number | null {
+    getPriceForAsset(event: UpdateWithDetails, assetId: AssetId): number | null {
       const priceUpdate = event.prices.find((p) => p.asset_id === assetId);
       return priceUpdate ? priceUpdate.price : null;
     },
@@ -223,7 +223,7 @@ export default defineComponent({
             <ul class="list-disc list-inside space-y-0.5 text-muted-text ml-2">
               <template v-if="event.update_type === 'statement'">
                 <!-- prettier-ignore -->
-                <li v-for="holding in event.holdings" v-bind:key="holding.asset_id">
+                <li v-for="holding in event.holdings" v-bind:key="assetIdToString(holding.asset_id)">
                   {{ assetLabel(holding.asset_id) }} is now {{ formatNumber(holding.quantity) }} shares<template v-if="getPriceForAsset(event, holding.asset_id)"> at {{ formatCurrency(getPriceForAsset(event, holding.asset_id)) }}<span class="hidden sm:inline"> per share</span></template>
                 </li>
                 <li
@@ -238,13 +238,16 @@ export default defineComponent({
                 <li>All holdings set to zero</li>
               </template>
               <template v-else-if="event.update_type === 'manual_price'">
-                <li v-for="price in event.prices" v-bind:key="price.asset_id">
+                <li v-for="price in event.prices" v-bind:key="assetIdToString(price.asset_id)">
                   {{ assetLabel(price.asset_id) }} is now {{ formatCurrency(price.price)
                   }}<span class="hidden sm:inline"> per share</span>
                 </li>
               </template>
               <template v-else-if="event.update_type === 'manual_holdings'">
-                <li v-for="holding in event.holdings" v-bind:key="holding.asset_id">
+                <li
+                  v-for="holding in event.holdings"
+                  v-bind:key="assetIdToString(holding.asset_id)"
+                >
                   {{ assetLabel(holding.asset_id) }} is now
                   {{ formatNumber(holding.quantity) }} shares
                 </li>

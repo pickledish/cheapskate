@@ -19,6 +19,7 @@ import {
 import { getColorClasses } from '@/lib/tagColors';
 import { Bars3Icon } from '@heroicons/vue/24/solid';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
+import type { AssetId } from '@/lib/data/assets';
 
 export default defineComponent({
   name: 'GoalsView',
@@ -105,7 +106,7 @@ export default defineComponent({
         this.assetClasses = classes;
 
         // Count unique assets per class
-        const countByClass: Record<number, Set<number>> = {};
+        const countByClass: Record<number, Set<AssetId>> = {};
         for (const alloc of allocations) {
           let assets = countByClass[alloc.asset_class_id];
           if (!assets) {

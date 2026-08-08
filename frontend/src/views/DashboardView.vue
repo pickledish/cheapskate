@@ -22,6 +22,7 @@ import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
 import { formatMonth } from '@/lib/format';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
+import { assetIdToString, type AssetId } from '@/lib/data/assets';
 
 type GroupBy = 'none' | 'account' | 'owner' | 'asset' | 'assetClass';
 
@@ -116,7 +117,7 @@ export default defineComponent({
           allocations.push({
             asset_id: asset.id,
             asset_class_id: alloc.asset_class_id,
-            percentage: alloc.percentage,
+            percentage: parseFloat(String(alloc.percentage)),
           });
         }
       }
@@ -173,14 +174,14 @@ export default defineComponent({
       const holdings = Object.values(getLatestHoldings(this.holdingsData, effectiveDate));
       const prices = getLatestPrices(this.pricesData, effectiveDate);
 
-      const quantityByAsset: Record<number, number> = {};
+      const quantityByAsset: Map<AssetId, number> = new Map();
       for (const h of holdings) {
-        quantityByAsset[h.asset_id] = (quantityByAsset[h.asset_id] || 0) + h.quantity;
+        quantityByAsset.set(h.asset_id, (quantityByAsset.get(h.asset_id) || 0) + h.quantity);
       }
 
       let total = 0;
-      for (const assetId in quantityByAsset) {
-        total += (quantityByAsset[assetId] || 0) * (prices[Number(assetId)]?.price ?? 0);
+      for (const assetId of quantityByAsset.keys()) {
+        total += (quantityByAsset.get(assetId) || 0) * (prices.get(assetId)?.price ?? 0);
       }
       return total;
     },
@@ -200,7 +201,7 @@ export default defineComponent({
 
             let total = 0;
             for (const h of holdings) {
-              total += h.quantity * (prices[h.asset_id]?.price ?? 0);
+              total += h.quantity * (prices.get(h.asset_id)?.price ?? 0);
             }
             return total;
           });
@@ -231,7 +232,7 @@ export default defineComponent({
 
             let total = 0;
             for (const h of holdings) {
-              total += h.quantity * (prices[h.asset_id]?.price ?? 0);
+              total += h.quantity * (prices.get(h.asset_id)?.price ?? 0);
             }
             return total;
           });
@@ -241,7 +242,7 @@ export default defineComponent({
     },
 
     computeGroupedByAsset(months: string[]): { name: string; data: number[] }[] {
-      const assetMap = Object.fromEntries(this.assetsData.map((a) => [a.id, a.ticker || a.name]));
+      const assetMap = new Map(this.assetsData.map((a) => [a.id, a.ticker || a.name]));
       const assetIds = this.assetsData.map((a) => a.id);
 
       return assetIds
@@ -255,11 +256,11 @@ export default defineComponent({
 
             let total = 0;
             for (const h of holdings) {
-              total += h.quantity * (prices[h.asset_id]?.price ?? 0);
+              total += h.quantity * (prices.get(h.asset_id)?.price ?? 0);
             }
             return total;
           });
-          return { name: assetMap[assetId] || `Asset ${assetId}`, data };
+          return { name: assetMap.get(assetId) || `Asset ${assetIdToString(assetId)}`, data };
         })
         .filter((s) => s.data.some((v) => v !== 0));
     },
@@ -268,18 +269,14 @@ export default defineComponent({
       const classMap = Object.fromEntries(this.assetClassesData.map((c) => [c.id, c.name]));
       const classIds = this.assetClassesData.map((c) => c.id);
 
-      // Build allocation lookup: asset_id -> [{class_id, percentage}, ...]
-      const allocationsByAsset: Record<number, { classId: number; percentage: number }[]> = {};
+      const allocationsByAsset: Map<AssetId, AssetAllocation[]> = new Map();
       for (const alloc of this.allocationsData) {
-        let assetAllocations = allocationsByAsset[alloc.asset_id];
+        let assetAllocations = allocationsByAsset.get(alloc.asset_id);
         if (!assetAllocations) {
           assetAllocations = [];
-          allocationsByAsset[alloc.asset_id] = assetAllocations;
+          allocationsByAsset.set(alloc.asset_id, assetAllocations);
         }
-        assetAllocations.push({
-          classId: alloc.asset_class_id,
-          percentage: parseFloat(String(alloc.percentage)),
-        });
+        assetAllocations.push(alloc);
       }
 
       return classIds
@@ -291,9 +288,9 @@ export default defineComponent({
 
             let total = 0;
             for (const h of holdings) {
-              const assetValue = h.quantity * (prices[h.asset_id]?.price ?? 0);
-              const allocations = allocationsByAsset[h.asset_id] || [];
-              const classAlloc = allocations.find((a) => a.classId === classId);
+              const assetValue = h.quantity * (prices.get(h.asset_id)?.price ?? 0);
+              const allocations = allocationsByAsset.get(h.asset_id) || [];
+              const classAlloc = allocations.find((a) => a.asset_class_id === classId);
               if (classAlloc) {
                 total += assetValue * classAlloc.percentage;
               }

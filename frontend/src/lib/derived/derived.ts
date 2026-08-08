@@ -1,5 +1,6 @@
 import type { PriceUpdateWithContext } from '../data/price-updates';
 import type { HoldingUpdateWithContext } from '../data/holding-updates';
+import { assetIdToString, type AssetId } from '../data/assets';
 
 /**
  * Returns the latest price update per asset.
@@ -14,21 +15,21 @@ import type { HoldingUpdateWithContext } from '../data/holding-updates';
 export function getLatestPrices(
   prices: PriceUpdateWithContext[],
   effectiveDate?: string,
-): Record<number, PriceUpdateWithContext> {
-  const latest: Record<number, PriceUpdateWithContext> = {};
+): Map<AssetId, PriceUpdateWithContext> {
+  const latest: Map<AssetId, PriceUpdateWithContext> = new Map();
 
   for (const p of prices) {
     if (effectiveDate !== undefined && p.effective_date > effectiveDate) {
       continue;
     }
 
-    const current = latest[p.asset_id];
+    const current = latest.get(p.asset_id);
     if (
       !current ||
       p.effective_date > current.effective_date ||
       (p.effective_date === current.effective_date && p.created_at > current.created_at)
     ) {
-      latest[p.asset_id] = p;
+      latest.set(p.asset_id, p);
     }
   }
 
@@ -57,7 +58,7 @@ export function getLatestHoldings(
       continue;
     }
 
-    const key = `${h.account_id}-${h.asset_id}`;
+    const key = `${h.account_id}-${assetIdToString(h.asset_id)}`;
     const current = latest[key];
     if (
       !current ||

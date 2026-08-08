@@ -1,13 +1,14 @@
 import { supabase } from '../supabase';
+import type { AssetId } from './assets';
 
 export interface HoldingUpdate {
   update_id: number;
-  asset_id: number;
+  asset_id: AssetId;
   quantity: number;
 }
 
 export interface HoldingUpdateWithContext {
-  asset_id: number;
+  asset_id: AssetId;
   account_id: number;
   effective_date: string;
   quantity: number;
@@ -17,7 +18,7 @@ export interface HoldingUpdateWithContext {
 }
 
 type HoldingUpdateRow = {
-  asset_id: number;
+  asset_id: AssetId;
   quantity: number;
   update_id: number;
   updates: {
@@ -43,7 +44,7 @@ function mapHoldingUpdateRow(row: HoldingUpdateRow): HoldingUpdateWithContext {
 
 export async function insertHoldingUpdate(holding: {
   update_id: number;
-  asset_id: number;
+  asset_id: AssetId;
   quantity: number;
 }): Promise<void> {
   const { error } = await supabase.from('holding_updates').insert({

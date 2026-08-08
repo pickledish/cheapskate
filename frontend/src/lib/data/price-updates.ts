@@ -1,13 +1,14 @@
 import { supabase } from '../supabase';
+import type { AssetId } from './assets';
 
 export interface PriceUpdate {
   update_id: number;
-  asset_id: number;
+  asset_id: AssetId;
   price: number;
 }
 
 export interface PriceUpdateWithContext {
-  asset_id: number;
+  asset_id: AssetId;
   effective_date: string;
   price: number;
   update_id: number;
@@ -17,7 +18,7 @@ export interface PriceUpdateWithContext {
 
 export async function insertPriceUpdate(price: {
   update_id: number;
-  asset_id: number;
+  asset_id: AssetId;
   price: number;
 }): Promise<void> {
   const { error } = await supabase.from('price_updates').insert({
@@ -51,7 +52,7 @@ export async function listPriceUpdatesWithContext(
   if (error) throw error;
 
   type PriceUpdateRow = {
-    asset_id: number;
+    asset_id: AssetId;
     price: number;
     update_id: number;
     updates: {

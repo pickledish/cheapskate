@@ -22,6 +22,7 @@ import { getColorClasses } from '@/lib/tagColors';
 import { formatCurrency, relativeDate } from '@/lib/format';
 import { Bars3Icon } from '@heroicons/vue/24/solid';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
+import { assetIdToString, type AssetId } from '@/lib/data/assets';
 
 export default defineComponent({
   name: 'AssetsView',
@@ -42,7 +43,7 @@ export default defineComponent({
   data(): {
     assets: AssetWithAllocations[];
     assetClasses: AssetClass[];
-    latestPrices: Record<number, PriceUpdateWithContext>;
+    latestPrices: Map<AssetId, PriceUpdateWithContext>;
     loading: boolean;
     error: string | null;
     searchQuery: string;
@@ -57,7 +58,7 @@ export default defineComponent({
     return {
       assets: [],
       assetClasses: [],
-      latestPrices: {},
+      latestPrices: new Map(),
       loading: true,
       error: null,
       searchQuery: '',
@@ -173,13 +174,14 @@ export default defineComponent({
 
     formatPrice: formatCurrency,
     relativeDate,
+    assetIdToString,
 
-    latestPrice(assetId: number): number | null {
-      return this.latestPrices[assetId]?.price ?? null;
+    latestPrice(assetId: AssetId): number | null {
+      return this.latestPrices.get(assetId)?.price ?? null;
     },
 
-    latestEffectiveDate(assetId: number): string | null {
-      return this.latestPrices[assetId]?.effective_date ?? null;
+    latestEffectiveDate(assetId: AssetId): string | null {
+      return this.latestPrices.get(assetId)?.effective_date ?? null;
     },
 
     getClassColor(colorName: string) {
@@ -282,7 +284,7 @@ export default defineComponent({
               </tr>
             </thead>
             <tbody class="divide-y divide-surface-border">
-              <tr v-for="(asset, index) in filteredAssets" v-bind:key="asset.id">
+              <tr v-for="(asset, index) in filteredAssets" v-bind:key="assetIdToString(asset.id)">
                 <td
                   class="px-6 py-4 whitespace-nowrap bg-surface"
                   v-bind:class="{ 'rounded-bl-lg': index === filteredAssets.length - 1 }"

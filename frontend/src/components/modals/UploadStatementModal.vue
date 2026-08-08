@@ -46,6 +46,7 @@ import {
   type ParsePdfResponse,
   type Holding as ParsedHolding,
 } from '@shared/parse-pdf-schema';
+import { assetIdToString, type AssetId } from '@/lib/data/assets';
 
 /**
  * ResolvedHolding — preview/save row after matching against tickers + per-account aliases.
@@ -58,7 +59,7 @@ import {
  */
 interface TickerHolding {
   kind: 'ticker';
-  assetId: number;
+  assetId: AssetId;
   quantity: number;
   total_value: number;
   price?: number;
@@ -77,7 +78,7 @@ interface NewTickerHolding {
 
 interface AliasHolding {
   kind: 'alias';
-  assetId: number;
+  assetId: AssetId;
   quantity: number;
   total_value: number;
   price?: number;
@@ -96,7 +97,7 @@ interface UnresolvedHolding {
 
 interface SoldHolding {
   kind: 'sold';
-  assetId: number;
+  assetId: AssetId;
   name: string;
   ticker: string | null;
   display: string;
@@ -106,7 +107,7 @@ type ResolvedHolding =
   TickerHolding | NewTickerHolding | AliasHolding | UnresolvedHolding | SoldHolding;
 
 interface ExistingHolding {
-  asset_id: number;
+  asset_id: AssetId;
   ticker: string | null;
   name: string;
 }
@@ -217,8 +218,8 @@ export default defineComponent({
     resolvedAccount(): Account | null {
       return this.matchedAccount;
     },
-    duplicateAssetIds(): number[] {
-      const counts = new Map<number, number>();
+    duplicateAssetIds(): AssetId[] {
+      const counts = new Map<AssetId, number>();
       for (const h of this.holdings) {
         const id = this.resolvedAssetId(h);
         if (id == null) continue;
@@ -253,6 +254,8 @@ export default defineComponent({
     displayAsset(asset: { name: string; ticker: string | null }): string {
       return asset.ticker ? `${asset.name} (${asset.ticker})` : asset.name;
     },
+
+    assetIdToString,
 
     setComboboxAnchor(index: number, el: Element | ComponentPublicInstance | null) {
       if (el instanceof HTMLElement) {
@@ -451,9 +454,9 @@ export default defineComponent({
 
         this.allAssets = assetsData;
 
-        const assetsById: Record<number, Asset> = {};
+        const assetsById: Map<AssetId, Asset> = new Map();
         for (const a of assetsData) {
-          assetsById[a.id] = a;
+          assetsById.set(a.id, a);
         }
 
         // Get latest holding per asset
@@ -463,14 +466,14 @@ export default defineComponent({
           .filter((h) => h.quantity > 0)
           .map((h) => ({
             asset_id: h.asset_id,
-            ticker: assetsById[h.asset_id]?.ticker ?? null,
-            name: assetsById[h.asset_id]?.name ?? 'Unknown',
+            ticker: assetsById.get(h.asset_id)?.ticker ?? null,
+            name: assetsById.get(h.asset_id)?.name ?? 'Unknown',
           }));
 
         // Build alias lookup: normalized statement label -> asset
         const assetsByLabel: Record<string, Asset> = {};
         for (const alias of aliasesData) {
-          const asset = assetsById[alias.asset_id];
+          const asset = assetsById.get(alias.asset_id);
           if (asset) assetsByLabel[alias.label] = asset;
         }
 
@@ -555,7 +558,7 @@ export default defineComponent({
      * Used for sold-position detection and duplicate checks — does not create anything.
      * Returns null for new-ticker and for unresolved rows with no combobox selection yet.
      */
-    resolvedAssetId(holding: ResolvedHolding): number | null {
+    resolvedAssetId(holding: ResolvedHolding): AssetId | null {
       if (holding.kind === 'ticker' || holding.kind === 'alias' || holding.kind === 'sold') {
         return holding.assetId;
       }
@@ -583,7 +586,7 @@ export default defineComponent({
     addSoldPositions() {
       // Assets already represented by a resolved holding in this statement
       const present = new Set(
-        this.holdings.map((h) => this.resolvedAssetId(h)).filter((id): id is number => id != null),
+        this.holdings.map((h) => this.resolvedAssetId(h)).filter((id): id is AssetId => id != null),
       );
 
       // Check each existing holding to see if it's missing from the parsed results
@@ -624,7 +627,7 @@ export default defineComponent({
       holding: ResolvedHolding,
       accountId: number,
       user: User,
-    ): Promise<number> {
+    ): Promise<AssetId> {
       if (holding.kind === 'ticker' || holding.kind === 'alias' || holding.kind === 'sold') {
         return holding.assetId;
       }
@@ -1065,7 +1068,7 @@ export default defineComponent({
                         </div>
                         <ComboboxOption
                           v-for="asset in filteredAssetsFor(holding)"
-                          v-bind:key="asset.id"
+                          v-bind:key="assetIdToString(asset.id)"
                           v-slot:default="{ active, selected }"
                           v-bind:value="asset"
                         >

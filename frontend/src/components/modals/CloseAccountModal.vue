@@ -3,6 +3,7 @@ import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
 import { insertUpdate, insertHoldingUpdate, updateAccount, type Account } from '@/lib/data';
+import type { AssetId } from '@/lib/data/assets';
 
 export default defineComponent({
   name: 'CloseAccountModal',
@@ -13,7 +14,7 @@ export default defineComponent({
       required: true,
     },
     heldAssets: {
-      type: Array as PropType<number[]>,
+      type: Array as PropType<AssetId[]>,
       default: () => [],
     },
   },

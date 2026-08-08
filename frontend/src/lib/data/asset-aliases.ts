@@ -1,9 +1,10 @@
 import { supabase } from '../supabase';
+import type { AssetId } from './assets';
 
 export interface AssetAlias {
   account_id: number;
   label: string;
-  asset_id: number;
+  asset_id: AssetId;
   created_at: string;
 }
 
@@ -25,7 +26,7 @@ export async function listAliasesByAccount(accountId: number): Promise<AssetAlia
 export async function insertAssetAlias(alias: {
   account_id: number;
   label: string;
-  asset_id: number;
+  asset_id: AssetId;
 }): Promise<void> {
   const { error } = await supabase.from('asset_aliases').insert({
     account_id: alias.account_id,

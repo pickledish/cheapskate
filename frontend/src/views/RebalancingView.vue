@@ -18,6 +18,7 @@ import {
 } from '@/lib/data';
 import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
 import { formatMonth } from '@/lib/format';
+import type { AssetId } from '@/lib/data/assets';
 
 export default defineComponent({
   name: 'RebalancingView',
@@ -89,15 +90,16 @@ export default defineComponent({
       );
 
       // Build allocation lookup: asset_id -> [{classId, percentage}, ...]
-      const allocationsByAsset: Record<number, { classId: number; percentage: number }[]> = {};
+      const allocationsByAsset: Map<AssetId, AssetAllocation[]> = new Map();
       for (const alloc of this.allocationsData) {
-        let assetAllocations = allocationsByAsset[alloc.asset_id];
+        let assetAllocations = allocationsByAsset.get(alloc.asset_id);
         if (!assetAllocations) {
           assetAllocations = [];
-          allocationsByAsset[alloc.asset_id] = assetAllocations;
+          allocationsByAsset.set(alloc.asset_id, assetAllocations);
         }
         assetAllocations.push({
-          classId: alloc.asset_class_id,
+          asset_id: alloc.asset_id,
+          asset_class_id: alloc.asset_class_id,
           percentage: parseFloat(String(alloc.percentage)),
         });
       }
@@ -111,7 +113,7 @@ export default defineComponent({
         const prices = getLatestPrices(this.pricesData, monthEnd);
         let totalValue = 0;
         for (const h of holdings) {
-          totalValue += h.quantity * (prices[h.asset_id]?.price ?? 0);
+          totalValue += h.quantity * (prices.get(h.asset_id)?.price ?? 0);
         }
         return totalValue > 0;
       });
@@ -140,11 +142,11 @@ export default defineComponent({
           let totalValue = 0;
 
           for (const h of holdings) {
-            const assetValue = h.quantity * (prices[h.asset_id]?.price ?? 0);
+            const assetValue = h.quantity * (prices.get(h.asset_id)?.price ?? 0);
             totalValue += assetValue;
 
-            const allocations = allocationsByAsset[h.asset_id] || [];
-            const classAlloc = allocations.find((a) => a.classId === classId);
+            const allocations = allocationsByAsset.get(h.asset_id) || [];
+            const classAlloc = allocations.find((a) => a.asset_class_id === classId);
             if (classAlloc) {
               classValue += assetValue * classAlloc.percentage;
             }
@@ -207,13 +209,13 @@ export default defineComponent({
       const currentValueByClass: Record<number, number> = {};
       let currentTotal = 0;
       for (const h of currentHoldings) {
-        const assetValue = h.quantity * (currentPrices[h.asset_id]?.price ?? 0);
+        const assetValue = h.quantity * (currentPrices.get(h.asset_id)?.price ?? 0);
         currentTotal += assetValue;
 
-        const allocations = allocationsByAsset[h.asset_id] || [];
+        const allocations = allocationsByAsset.get(h.asset_id) || [];
         for (const alloc of allocations) {
-          currentValueByClass[alloc.classId] =
-            (currentValueByClass[alloc.classId] || 0) + assetValue * alloc.percentage;
+          currentValueByClass[alloc.asset_class_id] =
+            (currentValueByClass[alloc.asset_class_id] || 0) + assetValue * alloc.percentage;
         }
       }
 

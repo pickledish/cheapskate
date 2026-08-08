@@ -18,6 +18,7 @@ import {
 import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
 import { relativeDate } from '@/lib/format';
+import type { AssetId } from '@/lib/data/assets';
 
 export default defineComponent({
   name: 'AccountsView',
@@ -98,18 +99,21 @@ export default defineComponent({
         this.hasAnyStatements = updatesData.length > 0;
 
         // Build map of asset_id -> allocations (class info)
-        const allocationsByAsset: Record<
-          number,
+        const allocationsByAsset: Map<
+          AssetId,
           { name: string; color: string; sort_order: number; percentage: number }[]
-        > = {};
+        > = new Map();
         for (const a of assetsData) {
           if (a.allocations.length > 0) {
-            allocationsByAsset[a.id] = a.allocations.map((alloc) => ({
-              name: alloc.asset_classes.name,
-              color: alloc.asset_classes.color,
-              sort_order: alloc.asset_classes.sort_order,
-              percentage: parseFloat(String(alloc.percentage)),
-            }));
+            allocationsByAsset.set(
+              a.id,
+              a.allocations.map((alloc) => ({
+                name: alloc.asset_classes.name,
+                color: alloc.asset_classes.color,
+                sort_order: alloc.asset_classes.sort_order,
+                percentage: parseFloat(String(alloc.percentage)),
+              })),
+            );
           }
         }
 
@@ -129,11 +133,11 @@ export default defineComponent({
         // so that the 10% threshold for showing asset class tags works correctly for
         // accounts with both long and short positions.
         const accountValues: Record<number, number> = {};
-        const holdingsByAccount: Record<number, { asset_id: number; value: number }[]> = {};
+        const holdingsByAccount: Record<number, { asset_id: AssetId; value: number }[]> = {};
         for (const key in latestHoldingByAccountAsset) {
           const holding = latestHoldingByAccountAsset[key];
           if (!holding) continue;
-          const price = latestPriceByAsset[holding.asset_id]?.price ?? 0;
+          const price = latestPriceByAsset.get(holding.asset_id)?.price ?? 0;
           const value = holding.quantity * price;
 
           accountValues[holding.account_id] =
@@ -167,7 +171,7 @@ export default defineComponent({
             {};
           let unclassifiedValue = 0;
           for (const h of holdings) {
-            const allocations = allocationsByAsset[h.asset_id] || [];
+            const allocations = allocationsByAsset.get(h.asset_id) || [];
             if (allocations.length === 0) {
               // Asset has no allocations - fully unclassified
               unclassifiedValue += h.value;
