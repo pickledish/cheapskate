@@ -11,9 +11,10 @@ import {
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue';
 import { TrashIcon } from '@heroicons/vue/24/solid';
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
+import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
 
 interface EditableAllocation {
-  asset_class_id: number | null;
+  asset_class_id: AssetClassId | null;
   percentage: number;
 }
 
@@ -81,6 +82,8 @@ export default defineComponent({
     }
   },
   methods: {
+    assetClassIdToString,
+
     addAllocation() {
       if (this.availableClasses.length === 0) return;
       this.allocations.push({
@@ -93,12 +96,12 @@ export default defineComponent({
       this.allocations.splice(index, 1);
     },
 
-    getClassName(classId: number) {
+    getClassName(classId: AssetClassId) {
       const c = this.assetClasses.find((c) => c.id === classId);
       return c ? c.name : '';
     },
 
-    isClassUsed(classId: number, currentAlloc: EditableAllocation) {
+    isClassUsed(classId: AssetClassId, currentAlloc: EditableAllocation) {
       return this.allocations.some((a) => a.asset_class_id === classId && a !== currentAlloc);
     },
 
@@ -110,7 +113,8 @@ export default defineComponent({
 
       // Filter out allocations with no class selected (empty rows)
       const validAllocations = this.allocations.filter(
-        (a): a is EditableAllocation & { asset_class_id: number } => a.asset_class_id !== null,
+        (a): a is EditableAllocation & { asset_class_id: AssetClassId } =>
+          a.asset_class_id !== null,
       );
 
       // Validate allocations sum to 100 if any exist
@@ -226,7 +230,7 @@ export default defineComponent({
                 >
                   <ListboxOption
                     v-for="c in assetClasses"
-                    v-bind:key="c.id"
+                    v-bind:key="assetClassIdToString(c.id)"
                     v-slot:default="{ active, selected, disabled }"
                     v-bind:value="c.id"
                     v-bind:disabled="isClassUsed(c.id, alloc)"

@@ -23,6 +23,7 @@ import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headless
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import { assetIdToString, type AssetAllocationInfo, type AssetId } from '@/lib/data/assets';
 import { accountIdToString } from '@/lib/data/accounts';
+import { assetClassIdToString } from '@/lib/data/asset-classes';
 
 type GroupBy = 'none' | 'account' | 'owner' | 'asset' | 'assetClass';
 
@@ -254,7 +255,7 @@ export default defineComponent({
     },
 
     computeGroupedByAssetClass(months: string[]): { name: string; data: number[] }[] {
-      const classMap = Object.fromEntries(this.assetClassesData.map((c) => [c.id, c.name]));
+      const classMap = new Map(this.assetClassesData.map((c) => [c.id, c.name]));
       const classIds = this.assetClassesData.map((c) => c.id);
 
       const allocationsByAsset: Map<AssetId, AssetAllocationInfo[]> = new Map();
@@ -282,7 +283,10 @@ export default defineComponent({
             }
             return total;
           });
-          return { name: classMap[classId] || `Class ${classId}`, data };
+          return {
+            name: classMap.get(classId) || `Class ${assetClassIdToString(classId)}`,
+            data,
+          };
         })
         .filter((s) => s.data.some((v) => v !== 0));
     },

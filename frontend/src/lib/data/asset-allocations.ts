@@ -1,9 +1,10 @@
 import { supabase } from '../supabase';
+import type { AssetClassId } from './asset-classes';
 import type { AssetId } from './assets';
 
 export interface AssetAllocation {
   asset_id: AssetId;
-  asset_class_id: number;
+  asset_class_id: AssetClassId;
   percentage: number;
 }
 
@@ -16,11 +17,7 @@ export async function listAssetAllocations(): Promise<AssetAllocation[]> {
   return data || [];
 }
 
-export async function insertAssetAllocation(allocation: {
-  asset_id: AssetId;
-  asset_class_id: number;
-  percentage: number;
-}): Promise<void> {
+export async function insertAssetAllocation(allocation: AssetAllocation): Promise<void> {
   const { error } = await supabase.from('asset_allocations').insert({
     asset_id: allocation.asset_id,
     asset_class_id: allocation.asset_class_id,

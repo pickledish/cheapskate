@@ -20,6 +20,7 @@ import { getColorClasses } from '@/lib/tagColors';
 import { Bars3Icon } from '@heroicons/vue/24/solid';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import type { AssetId } from '@/lib/data/assets';
+import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
 
 export default defineComponent({
   name: 'GoalsView',
@@ -40,7 +41,7 @@ export default defineComponent({
   },
   data(): {
     assetClasses: AssetClass[];
-    assetCountByClass: Record<number, number>;
+    assetCountByClass: Map<AssetClassId, number>;
     loading: boolean;
     error: string | null;
     showAddModal: boolean;
@@ -52,7 +53,7 @@ export default defineComponent({
   } {
     return {
       assetClasses: [],
-      assetCountByClass: {},
+      assetCountByClass: new Map(),
       loading: true,
       error: null,
 
@@ -106,23 +107,21 @@ export default defineComponent({
         this.assetClasses = classes;
 
         // Count unique assets per class
-        const countByClass: Record<number, Set<AssetId>> = {};
+        const countByClass: Map<AssetClassId, Set<AssetId>> = new Map();
         for (const alloc of allocations) {
-          let assets = countByClass[alloc.asset_class_id];
+          let assets = countByClass.get(alloc.asset_class_id);
           if (!assets) {
             assets = new Set();
-            countByClass[alloc.asset_class_id] = assets;
+            countByClass.set(alloc.asset_class_id, assets);
           }
           assets.add(alloc.asset_id);
         }
         // Convert Sets to counts
-        this.assetCountByClass = {};
-        for (const classId in countByClass) {
-          const assets = countByClass[classId];
-          if (assets) {
-            this.assetCountByClass[classId] = assets.size;
-          }
+        const assetCountByClass: Map<AssetClassId, number> = new Map();
+        for (const [classId, assets] of countByClass) {
+          assetCountByClass.set(classId, assets.size);
         }
+        this.assetCountByClass = assetCountByClass;
       } catch (err) {
         this.error = err instanceof Error ? err.message : String(err);
       } finally {
@@ -165,6 +164,12 @@ export default defineComponent({
 
     getClassColor(colorName: string) {
       return getColorClasses(colorName);
+    },
+
+    assetClassIdToString,
+
+    assetCount(classId: AssetClassId): number {
+      return this.assetCountByClass.get(classId) || 0;
     },
 
     setMenuAnchor(index: number, el: Element | ComponentPublicInstance | null) {
@@ -275,7 +280,10 @@ export default defineComponent({
               class="divide-y divide-surface-border"
               v-on:end="onReorder"
             >
-              <tr v-for="(assetClass, index) in assetClasses" v-bind:key="assetClass.id">
+              <tr
+                v-for="(assetClass, index) in assetClasses"
+                v-bind:key="assetClassIdToString(assetClass.id)"
+              >
                 <td
                   class="drag-handle cursor-grab px-3 py-4 text-placeholder-text hover:text-muted-text bg-surface"
                   v-bind:class="{
@@ -300,7 +308,7 @@ export default defineComponent({
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-text bg-surface">
-                  {{ assetCountByClass[assetClass.id] || 0 }}
+                  {{ assetCount(assetClass.id) }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-primary-text bg-surface">
                   {{ assetClass.goal > 0 ? assetClass.goal * 100 + '%' : '-' }}

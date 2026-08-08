@@ -23,6 +23,7 @@ import { formatCurrency, relativeDate } from '@/lib/format';
 import { Bars3Icon } from '@heroicons/vue/24/solid';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
+import { assetClassIdToString } from '@/lib/data/asset-classes';
 
 export default defineComponent({
   name: 'AssetsView',
@@ -175,6 +176,7 @@ export default defineComponent({
     formatPrice: formatCurrency,
     relativeDate,
     assetIdToString,
+    assetClassIdToString,
 
     latestPrice(assetId: AssetId): number | null {
       return this.latestPrices.get(assetId)?.price ?? null;
@@ -298,7 +300,7 @@ export default defineComponent({
                   <div v-if="asset.allocations.length" class="flex flex-nowrap gap-1">
                     <span
                       v-for="alloc in asset.allocations"
-                      v-bind:key="alloc.asset_class_id"
+                      v-bind:key="assetClassIdToString(alloc.asset_class_id)"
                       class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                       v-bind:class="[
                         getClassColor(alloc.asset_classes.color).bg,

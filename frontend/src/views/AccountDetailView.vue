@@ -39,6 +39,7 @@ import {
 } from '@headlessui/vue';
 import { assetIdToString, type AssetAllocationInfo, type AssetId } from '@/lib/data/assets';
 import { type AccountId } from '@/lib/data/accounts';
+import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
 
 export default defineComponent({
   name: 'AccountDetailView',
@@ -146,8 +147,8 @@ export default defineComponent({
       }
       return byId;
     },
-    assetClassById(): Record<number, AssetClass> {
-      return Object.fromEntries(this.assetClassesData.map((c) => [c.id, c]));
+    assetClassById(): Map<AssetClassId, AssetClass> {
+      return new Map(this.assetClassesData.map((c) => [c.id, c]));
     },
     availableAssets(): AssetWithAllocations[] {
       const usedIds = new Set(this.heldAssetIdsInSortedOrder);
@@ -221,7 +222,7 @@ export default defineComponent({
         this.heldAssetIdsInSortedOrder = heldAssetIdsInSortedOrder;
         this.totalValue = total !== 0 ? total : null;
 
-        const valueByClassId: Record<number, number> = {};
+        const valueByClassId: Map<AssetClassId, number> = new Map();
         let unclassifiedValue = 0;
         for (const assetId of heldAssetIdsInSortedOrder) {
           const assetValue = valueByAsset.get(assetId) ?? 0;
@@ -230,14 +231,16 @@ export default defineComponent({
             unclassifiedValue += assetValue;
           } else {
             for (const alloc of allocations) {
-              valueByClassId[alloc.asset_class_id] =
-                (valueByClassId[alloc.asset_class_id] || 0) +
-                assetValue * parseFloat(String(alloc.percentage));
+              valueByClassId.set(
+                alloc.asset_class_id,
+                (valueByClassId.get(alloc.asset_class_id) || 0) +
+                  assetValue * parseFloat(String(alloc.percentage)),
+              );
             }
           }
         }
         this.heldAssetClassesInSortedOrder = assetClasses
-          .filter((ac) => (valueByClassId[ac.id] || 0) > 0)
+          .filter((ac) => (valueByClassId.get(ac.id) || 0) > 0)
           .sort((a, b) => a.sort_order - b.sort_order);
         this.hasUnclassified = unclassifiedValue > 0;
 
@@ -253,6 +256,7 @@ export default defineComponent({
     formatQuantity,
     relativeDate,
     assetIdToString,
+    assetClassIdToString,
 
     getClassColor(colorName: string) {
       return getColorClasses(colorName);
@@ -268,7 +272,7 @@ export default defineComponent({
 
     classesForAsset(assetId: AssetId): AssetClass[] {
       return (this.allocationsByAsset.get(assetId) || [])
-        .map((a) => this.assetClassById[a.asset_class_id])
+        .map((a) => this.assetClassById.get(a.asset_class_id))
         .filter((c): c is AssetClass => !!c)
         .sort((a, b) => a.sort_order - b.sort_order);
     },
@@ -555,7 +559,7 @@ export default defineComponent({
                   >
                     <span
                       v-for="ac in heldAssetClassesInSortedOrder"
-                      v-bind:key="ac.id"
+                      v-bind:key="assetClassIdToString(ac.id)"
                       class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                       v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
                     >
@@ -675,7 +679,7 @@ export default defineComponent({
                     <div v-if="classesForAsset(assetId).length" class="flex flex-nowrap gap-1">
                       <span
                         v-for="ac in classesForAsset(assetId)"
-                        v-bind:key="ac.id"
+                        v-bind:key="assetClassIdToString(ac.id)"
                         class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                         v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
                       >
@@ -788,7 +792,7 @@ export default defineComponent({
                       >
                         <span
                           v-for="ac in classesForAsset(row.asset.id)"
-                          v-bind:key="ac.id"
+                          v-bind:key="assetClassIdToString(ac.id)"
                           class="inline-block shrink-0 px-2 py-0.5 text-xs font-medium rounded"
                           v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
                         >

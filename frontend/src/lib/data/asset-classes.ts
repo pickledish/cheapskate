@@ -1,7 +1,15 @@
 import { supabase } from '../supabase';
 
+// opaque type for AssetClassId, though underneath it's just a number
+declare const __brand: unique symbol;
+export type AssetClassId = { readonly [__brand]: 'AssetClassId' };
+
+export function assetClassIdToString(assetClassId: AssetClassId): string {
+  return `${assetClassId as unknown as number}`;
+}
+
 export interface AssetClass {
-  id: number;
+  id: AssetClassId;
   name: string;
   color: string;
   goal: number;
@@ -18,7 +26,7 @@ export async function listAssetClasses(): Promise<AssetClass[]> {
   return data || [];
 }
 
-export async function getAssetClass(id: number): Promise<AssetClass | null> {
+export async function getAssetClass(id: AssetClassId): Promise<AssetClass | null> {
   const { data, error } = await supabase.from('asset_classes').select('*').eq('id', id).single();
 
   if (error) {
@@ -70,7 +78,7 @@ export async function insertAssetClass(assetClass: {
 }
 
 export async function updateAssetClass(
-  id: number,
+  id: AssetClassId,
   updates: {
     name?: string;
     color?: string;
@@ -83,7 +91,7 @@ export async function updateAssetClass(
   if (error) throw error;
 }
 
-export async function updateSortOrder(id: number, sortOrder: number): Promise<void> {
+export async function updateSortOrder(id: AssetClassId, sortOrder: number): Promise<void> {
   const { error } = await supabase
     .from('asset_classes')
     .update({ sort_order: sortOrder })
@@ -92,7 +100,7 @@ export async function updateSortOrder(id: number, sortOrder: number): Promise<vo
   if (error) throw error;
 }
 
-export async function deleteAssetClass(id: number): Promise<void> {
+export async function deleteAssetClass(id: AssetClassId): Promise<void> {
   const { error } = await supabase.from('asset_classes').delete().eq('id', id);
 
   if (error) throw error;

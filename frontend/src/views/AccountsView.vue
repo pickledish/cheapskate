@@ -22,6 +22,7 @@ import { getColorClasses } from '@/lib/tagColors';
 import { relativeDate } from '@/lib/format';
 import { accountIdToString, type AccountId } from '@/lib/data/accounts';
 import type { AssetAllocationInfo, AssetId } from '@/lib/data/assets';
+import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
 
 export default defineComponent({
   name: 'AccountsView',
@@ -158,7 +159,7 @@ export default defineComponent({
           const totalValue = accountValues.get(accountId) || 0;
 
           // Aggregate value by class, track unclassified value
-          const valueByClassId: Record<number, number> = {};
+          const valueByClassId: Map<AssetClassId, number> = new Map();
           let unclassifiedValue = 0;
           for (const h of holdings) {
             const allocations = allocationsByAsset.get(h.asset_id) || [];
@@ -167,9 +168,11 @@ export default defineComponent({
               unclassifiedValue += h.value;
             } else {
               for (const alloc of allocations) {
-                valueByClassId[alloc.asset_class_id] =
-                  (valueByClassId[alloc.asset_class_id] || 0) +
-                  h.value * parseFloat(String(alloc.percentage));
+                valueByClassId.set(
+                  alloc.asset_class_id,
+                  (valueByClassId.get(alloc.asset_class_id) || 0) +
+                    h.value * parseFloat(String(alloc.percentage)),
+                );
               }
             }
           }
@@ -178,7 +181,8 @@ export default defineComponent({
           // Use Math.abs since class values can be negative (from short positions)
           const classes = assetClasses
             .filter(
-              (ac) => totalValue > 0 && Math.abs(valueByClassId[ac.id] || 0) / totalValue >= 0.1,
+              (ac) =>
+                totalValue > 0 && Math.abs(valueByClassId.get(ac.id) || 0) / totalValue >= 0.1,
             )
             .sort((a, b) => a.sort_order - b.sort_order);
 
@@ -213,6 +217,7 @@ export default defineComponent({
 
     relativeDate,
     accountIdToString,
+    assetClassIdToString,
 
     latestEffectiveDate(accountId: AccountId): string | null {
       return this.latestEffectiveByAccount.get(accountId) ?? null;
@@ -277,7 +282,7 @@ export default defineComponent({
             >
               <span
                 v-for="ac in accountAssetClasses(account.id)"
-                v-bind:key="ac.id"
+                v-bind:key="assetClassIdToString(ac.id)"
                 class="inline-block px-2 py-0.5 text-xs font-medium rounded"
                 v-bind:class="[getClassColor(ac.color).bg, getClassColor(ac.color).text]"
               >

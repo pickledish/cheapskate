@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import type { AssetClassId } from './asset-classes';
 
 // opaque type for AssetId, though underneath it's just a number
 declare const __brand: unique symbol;
@@ -18,7 +19,7 @@ export interface Asset {
 }
 
 export interface AssetAllocationInfo {
-  asset_class_id: number;
+  asset_class_id: AssetClassId;
   percentage: number;
   asset_classes: {
     name: string;

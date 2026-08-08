@@ -19,6 +19,7 @@ import {
 import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
 import { formatMonth } from '@/lib/format';
 import type { AssetId } from '@/lib/data/assets';
+import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
 
 export default defineComponent({
   name: 'RebalancingView',
@@ -116,7 +117,7 @@ export default defineComponent({
 
       this.monthLabels = monthsWithData.map((m) => this.formatMonth(m));
 
-      const classMap = Object.fromEntries(this.assetClassesData.map((c) => [c.id, c]));
+      const classMap = new Map(this.assetClassesData.map((c) => [c.id, c]));
       const classIds = this.assetClassesData.map((c) => c.id);
 
       // Compute values by class for each month (only months with data)
@@ -145,10 +146,10 @@ export default defineComponent({
           // Return percentage (will be normalized after)
           return { classValue, totalValue };
         });
-        const classInfo = classMap[classId];
+        const classInfo = classMap.get(classId);
         return {
           classId,
-          name: classInfo?.name ?? `Class ${classId}`,
+          name: classInfo?.name ?? `Class ${assetClassIdToString(classId)}`,
           color: classInfo?.color ?? 'red',
           goal: classInfo?.goal || 0,
           data,
@@ -196,7 +197,7 @@ export default defineComponent({
       const currentPrices = getLatestPrices(this.pricesData, today);
 
       // Calculate current value by class
-      const currentValueByClass: Record<number, number> = {};
+      const currentValueByClass: Map<AssetClassId, number> = new Map();
       let currentTotal = 0;
       for (const h of currentHoldings) {
         const assetValue = h.quantity * (currentPrices.get(h.asset_id)?.price ?? 0);
@@ -204,9 +205,11 @@ export default defineComponent({
 
         const allocations = allocationsByAsset.get(h.asset_id) || [];
         for (const alloc of allocations) {
-          currentValueByClass[alloc.asset_class_id] =
-            (currentValueByClass[alloc.asset_class_id] || 0) +
-            assetValue * parseFloat(String(alloc.percentage));
+          currentValueByClass.set(
+            alloc.asset_class_id,
+            (currentValueByClass.get(alloc.asset_class_id) || 0) +
+              assetValue * parseFloat(String(alloc.percentage)),
+          );
         }
       }
 
@@ -219,7 +222,7 @@ export default defineComponent({
         .map((ac) => ({
           name: ac.name,
           color: ac.color,
-          current: currentTotal > 0 ? (currentValueByClass[ac.id] || 0) / currentTotal : 0,
+          current: currentTotal > 0 ? (currentValueByClass.get(ac.id) || 0) / currentTotal : 0,
           goal: ac.goal || 0,
         }))
         .filter((ac) => ac.goal > 0 || ac.current > 0);
