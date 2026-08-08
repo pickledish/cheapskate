@@ -22,6 +22,7 @@ import { formatMonth } from '@/lib/format';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import { assetIdToString, type AssetAllocationInfo, type AssetId } from '@/lib/data/assets';
+import { accountIdToString } from '@/lib/data/accounts';
 
 type GroupBy = 'none' | 'account' | 'owner' | 'asset' | 'assetClass';
 
@@ -171,7 +172,7 @@ export default defineComponent({
     },
 
     computeGroupedByAccount(months: string[]): { name: string; data: number[] }[] {
-      const accountMap = Object.fromEntries(this.accountsData.map((a) => [a.id, a.name]));
+      const accountMap = new Map(this.accountsData.map((a) => [a.id, a.name]));
       const accountIds = this.accountsData.map((a) => a.id);
 
       return accountIds
@@ -189,7 +190,10 @@ export default defineComponent({
             }
             return total;
           });
-          return { name: accountMap[accountId] || `Account ${accountId}`, data };
+          return {
+            name: accountMap.get(accountId) || `Account ${accountIdToString(accountId)}`,
+            data,
+          };
         })
         .filter((s) => s.data.some((v) => v !== 0));
     },

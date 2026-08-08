@@ -18,6 +18,7 @@ import {
 import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
 import { relativeDate } from '@/lib/format';
+import { accountIdToString, type AccountId } from '@/lib/data/accounts';
 import type { AssetId } from '@/lib/data/assets';
 
 export default defineComponent({
@@ -32,8 +33,8 @@ export default defineComponent({
   },
   data(): {
     accounts: Account[];
-    latestEffectiveByAccount: Record<number, string>;
-    assetClassesByAccount: Record<number, { name: string; color: string; sort_order: number }[]>;
+    latestEffectiveByAccount: Map<AccountId, string>;
+    assetClassesByAccount: Map<AccountId, { name: string; color: string; sort_order: number }[]>;
     hasAnyStatements: boolean;
     loading: boolean;
     error: string | null;
@@ -44,8 +45,8 @@ export default defineComponent({
   } {
     return {
       accounts: [],
-      latestEffectiveByAccount: {},
-      assetClassesByAccount: {},
+      latestEffectiveByAccount: new Map(),
+      assetClassesByAccount: new Map(),
       hasAnyStatements: false,
       loading: true,
       error: null,
@@ -118,10 +119,10 @@ export default defineComponent({
         }
 
         // Build map of account_id -> most recent effective date
-        const latestEffectiveByAccount: Record<number, string> = {};
+        const latestEffectiveByAccount: Map<AccountId, string> = new Map();
         for (const update of updatesData) {
-          if (update.account_id && !latestEffectiveByAccount[update.account_id]) {
-            latestEffectiveByAccount[update.account_id] = update.effective_date;
+          if (update.account_id && !latestEffectiveByAccount.has(update.account_id)) {
+            latestEffectiveByAccount.set(update.account_id, update.effective_date);
           }
         }
 
@@ -132,22 +133,24 @@ export default defineComponent({
         // We use absolute values for accountValues to get total exposure (not net value),
         // so that the 10% threshold for showing asset class tags works correctly for
         // accounts with both long and short positions.
-        const accountValues: Record<number, number> = {};
-        const holdingsByAccount: Record<number, { asset_id: AssetId; value: number }[]> = {};
+        const accountValues: Map<AccountId, number> = new Map();
+        const holdingsByAccount: Map<AccountId, { asset_id: AssetId; value: number }[]> = new Map();
         for (const key in latestHoldingByAccountAsset) {
           const holding = latestHoldingByAccountAsset[key];
           if (!holding) continue;
           const price = latestPriceByAsset.get(holding.asset_id)?.price ?? 0;
           const value = holding.quantity * price;
 
-          accountValues[holding.account_id] =
-            (accountValues[holding.account_id] || 0) + Math.abs(value);
+          accountValues.set(
+            holding.account_id,
+            (accountValues.get(holding.account_id) || 0) + Math.abs(value),
+          );
 
           if (holding.quantity !== 0) {
-            let accountHoldings = holdingsByAccount[holding.account_id];
+            let accountHoldings = holdingsByAccount.get(holding.account_id);
             if (!accountHoldings) {
               accountHoldings = [];
-              holdingsByAccount[holding.account_id] = accountHoldings;
+              holdingsByAccount.set(holding.account_id, accountHoldings);
             }
             accountHoldings.push({
               asset_id: holding.asset_id,
@@ -157,14 +160,12 @@ export default defineComponent({
         }
 
         // Calculate asset classes per account
-        const assetClassesByAccount: Record<
-          number,
+        const assetClassesByAccount: Map<
+          AccountId,
           { name: string; color: string; sort_order: number }[]
-        > = {};
-        for (const accountId in holdingsByAccount) {
-          const holdings = holdingsByAccount[accountId];
-          if (!holdings) continue;
-          const totalValue = accountValues[Number(accountId)] || 0;
+        > = new Map();
+        for (const [accountId, holdings] of holdingsByAccount) {
+          const totalValue = accountValues.get(accountId) || 0;
 
           // Aggregate value by class, track unclassified value
           const classValues: Record<string, { value: number; color: string; sort_order: number }> =
@@ -204,7 +205,7 @@ export default defineComponent({
             classes.push({ name: 'Unclassified', color: 'gray', sort_order: 9999 });
           }
 
-          assetClassesByAccount[Number(accountId)] = classes;
+          assetClassesByAccount.set(accountId, classes);
         }
 
         this.accounts = accountsData;
@@ -228,13 +229,14 @@ export default defineComponent({
     },
 
     relativeDate,
+    accountIdToString,
 
-    latestEffectiveDate(accountId: number): string | null {
-      return this.latestEffectiveByAccount[accountId] ?? null;
+    latestEffectiveDate(accountId: AccountId): string | null {
+      return this.latestEffectiveByAccount.get(accountId) ?? null;
     },
 
-    accountAssetClasses(accountId: number): { name: string; color: string; sort_order: number }[] {
-      return this.assetClassesByAccount[accountId] || [];
+    accountAssetClasses(accountId: AccountId): { name: string; color: string; sort_order: number }[] {
+      return this.assetClassesByAccount.get(accountId) || [];
     },
 
     getClassColor(colorName: string) {
@@ -276,8 +278,8 @@ export default defineComponent({
           <!-- Account cards -->
           <router-link
             v-for="account in filteredAccounts"
-            v-bind:key="account.id"
-            v-bind:to="'/accounts/' + account.id"
+            v-bind:key="accountIdToString(account.id)"
+            v-bind:to="'/accounts/' + accountIdToString(account.id)"
             class="bg-surface rounded-lg shadow p-4 flex flex-col hover:shadow-md transition-shadow"
           >
             <h3 class="font-semibold text-primary-text">{{ account.name }}</h3>

@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { type AccountId } from './accounts';
 import { type PriceUpdate } from './price-updates';
 import { type HoldingUpdate } from './holding-updates';
 
@@ -7,7 +8,7 @@ export type UpdateType = 'statement' | 'manual_price' | 'manual_holdings' | 'mar
 export interface Update {
   id: number;
   family_id: string;
-  account_id: number | null;
+  account_id: AccountId | null;
   update_type: UpdateType;
   effective_date: string;
   created_by: string;
@@ -71,7 +72,7 @@ export async function listUpdatesWithDetails(
   }));
 }
 
-export async function listUpdatesByAccount(accountId: number): Promise<Update[]> {
+export async function listUpdatesByAccount(accountId: AccountId): Promise<Update[]> {
   const { data, error } = await supabase
     .from('updates')
     .select('*')
@@ -84,7 +85,7 @@ export async function listUpdatesByAccount(accountId: number): Promise<Update[]>
 
 export async function insertUpdate(update: {
   family_id: string;
-  account_id: number | null;
+  account_id: AccountId | null;
   update_type: UpdateType;
   effective_date: string;
   created_by: string;

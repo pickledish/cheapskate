@@ -1,5 +1,6 @@
 import type { PriceUpdateWithContext } from '../data/price-updates';
 import type { HoldingUpdateWithContext } from '../data/holding-updates';
+import { accountIdToString } from '../data/accounts';
 import { assetIdToString, type AssetId } from '../data/assets';
 
 /**
@@ -58,7 +59,7 @@ export function getLatestHoldings(
       continue;
     }
 
-    const key = `${h.account_id}-${assetIdToString(h.asset_id)}`;
+    const key = `${accountIdToString(h.account_id)}-${assetIdToString(h.asset_id)}`;
     const current = latest[key];
     if (
       !current ||

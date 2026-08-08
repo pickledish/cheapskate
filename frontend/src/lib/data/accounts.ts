@@ -1,7 +1,15 @@
 import { supabase } from '../supabase';
 
+// opaque type for AccountId, though underneath it's just a number
+declare const __brand: unique symbol;
+export type AccountId = { readonly [__brand]: 'AccountId' };
+
+export function accountIdToString(accountId: AccountId): string {
+  return `${accountId as unknown as number}`;
+}
+
 export interface Account {
-  id: number;
+  id: AccountId;
   name: string;
   rebalancing: boolean;
   archived_at: string | null;
@@ -18,7 +26,7 @@ export async function listAccounts(): Promise<Account[]> {
   return data || [];
 }
 
-export async function getAccount(id: number): Promise<Account | null> {
+export async function getAccount(id: AccountId): Promise<Account | null> {
   const { data, error } = await supabase.from('accounts').select('*').eq('id', id).single();
 
   if (error) {
@@ -52,7 +60,7 @@ export async function insertAccount(account: {
 }
 
 export async function updateAccount(
-  id: number,
+  id: AccountId,
   updates: {
     name?: string;
     rebalancing?: boolean;
@@ -72,7 +80,7 @@ export async function findAccountByLast4(last4: string): Promise<Account[]> {
   return data || [];
 }
 
-export async function deleteAccount(id: number): Promise<void> {
+export async function deleteAccount(id: AccountId): Promise<void> {
   const { error } = await supabase.from('accounts').delete().eq('id', id);
 
   if (error) throw error;

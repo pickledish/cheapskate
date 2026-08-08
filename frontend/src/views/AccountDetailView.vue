@@ -38,6 +38,7 @@ import {
   MenuItem,
 } from '@headlessui/vue';
 import { assetIdToString, type AssetAllocationInfo, type AssetId } from '@/lib/data/assets';
+import { type AccountId } from '@/lib/data/accounts';
 
 export default defineComponent({
   name: 'AccountDetailView',
@@ -164,7 +165,7 @@ export default defineComponent({
     async loadData() {
       this.loading = true;
       this.error = null;
-      const accountId = Number(this.$route.params.id);
+      const accountId = Number(this.$route.params.id) as unknown as AccountId;
 
       try {
         const accountData = await getAccount(accountId);

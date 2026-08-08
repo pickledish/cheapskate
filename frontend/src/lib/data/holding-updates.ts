@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import type { AccountId } from './accounts';
 import type { AssetId } from './assets';
 
 export interface HoldingUpdate {
@@ -9,7 +10,7 @@ export interface HoldingUpdate {
 
 export interface HoldingUpdateWithContext {
   asset_id: AssetId;
-  account_id: number;
+  account_id: AccountId;
   effective_date: string;
   quantity: number;
   update_id: number;
@@ -22,7 +23,7 @@ type HoldingUpdateRow = {
   quantity: number;
   update_id: number;
   updates: {
-    account_id: number;
+    account_id: AccountId;
     effective_date: string;
     created_by: string;
     created_at: string;
@@ -82,7 +83,7 @@ export async function listHoldingUpdatesWithContext(
 }
 
 export async function listHoldingUpdatesByAccount(
-  accountId: number,
+  accountId: AccountId,
   order: 'asc' | 'desc' = 'desc',
 ): Promise<HoldingUpdateWithContext[]> {
   const { data, error } = await supabase

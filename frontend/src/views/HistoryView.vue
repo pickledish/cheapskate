@@ -17,6 +17,7 @@ import dayjs from 'dayjs';
 import { formatCurrency, formatNumber } from '@/lib/format';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
+import type { AccountId } from '@/lib/data/accounts';
 
 export default defineComponent({
   name: 'HistoryView',
@@ -29,7 +30,7 @@ export default defineComponent({
   },
   data(): {
     events: UpdateWithDetails[];
-    accountNames: Record<number, string>;
+    accountNames: Map<AccountId, string>;
     assetLabels: Map<AssetId, string>;
     profileNames: Record<string, string>;
     loading: boolean;
@@ -40,7 +41,7 @@ export default defineComponent({
     const now = dayjs();
     return {
       events: [],
-      accountNames: {},
+      accountNames: new Map(),
       assetLabels: new Map(),
       profileNames: {},
       loading: true,
@@ -91,7 +92,7 @@ export default defineComponent({
           listProfiles(),
         ]);
 
-        this.accountNames = Object.fromEntries(accounts.map((a) => [a.id, a.name]));
+        this.accountNames = new Map(accounts.map((a) => [a.id, a.name]));
         this.assetLabels = new Map(assets.map((a) => [a.id, a.ticker || a.name || 'Unknown']));
         this.profileNames = Object.fromEntries(profiles.map((p) => [p.id, p.name]));
         this.events = updates;
@@ -104,7 +105,7 @@ export default defineComponent({
 
     accountName(event: UpdateWithDetails): string | null {
       if (event.account_id == null) return null;
-      return this.accountNames[event.account_id] || 'Unknown';
+      return this.accountNames.get(event.account_id) || 'Unknown';
     },
 
     creatorName(event: UpdateWithDetails): string | null {

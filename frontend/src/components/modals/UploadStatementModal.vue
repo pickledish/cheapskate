@@ -47,6 +47,7 @@ import {
   type Holding as ParsedHolding,
 } from '@shared/parse-pdf-schema';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
+import { accountIdToString, type AccountId } from '@/lib/data/accounts';
 
 /**
  * ResolvedHolding — preview/save row after matching against tickers + per-account aliases.
@@ -148,7 +149,7 @@ export default defineComponent({
     accountQuery: string;
     createNewAccount: boolean;
     newAccountName: string;
-    matchingAccountIds: number[];
+    matchingAccountIds: AccountId[];
     allAssets: Asset[];
     existingHoldings: ExistingHolding[];
     loading: boolean;
@@ -256,6 +257,7 @@ export default defineComponent({
     },
 
     assetIdToString,
+    accountIdToString,
 
     setComboboxAnchor(index: number, el: Element | ComponentPublicInstance | null) {
       if (el instanceof HTMLElement) {
@@ -625,7 +627,7 @@ export default defineComponent({
      */
     async materializeAsset(
       holding: ResolvedHolding,
-      accountId: number,
+      accountId: AccountId,
       user: User,
     ): Promise<AssetId> {
       if (holding.kind === 'ticker' || holding.kind === 'alias' || holding.kind === 'sold') {
@@ -878,7 +880,7 @@ export default defineComponent({
               </div>
               <ComboboxOption
                 v-for="acct in sortedAccounts"
-                v-bind:key="acct.id"
+                v-bind:key="accountIdToString(acct.id)"
                 v-slot:default="{ active, selected }"
                 v-bind:value="acct"
               >

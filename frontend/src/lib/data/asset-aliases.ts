@@ -1,8 +1,9 @@
 import { supabase } from '../supabase';
+import type { AccountId } from './accounts';
 import type { AssetId } from './assets';
 
 export interface AssetAlias {
-  account_id: number;
+  account_id: AccountId;
   label: string;
   asset_id: AssetId;
   created_at: string;
@@ -13,7 +14,7 @@ export function normalizeLabel(label: string): string {
   return label.toUpperCase().replace(/\s+/g, ' ').trim();
 }
 
-export async function listAliasesByAccount(accountId: number): Promise<AssetAlias[]> {
+export async function listAliasesByAccount(accountId: AccountId): Promise<AssetAlias[]> {
   const { data, error } = await supabase
     .from('asset_aliases')
     .select('*')
@@ -24,7 +25,7 @@ export async function listAliasesByAccount(accountId: number): Promise<AssetAlia
 }
 
 export async function insertAssetAlias(alias: {
-  account_id: number;
+  account_id: AccountId;
   label: string;
   asset_id: AssetId;
 }): Promise<void> {
