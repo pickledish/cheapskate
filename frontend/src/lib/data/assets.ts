@@ -63,7 +63,11 @@ export async function listAssetsWithAllocations(): Promise<AssetWithAllocations[
     created_by: row.created_by,
     created_at: row.created_at,
     family_id: row.family_id,
-    allocations: row.asset_allocations || [],
+    allocations: (row.asset_allocations || []).map((allocation) => ({
+      ...allocation,
+      // PostgREST returns Postgres numeric as a string; coerce once here.
+      percentage: parseFloat(String(allocation.percentage)),
+    })),
   }));
 }
 

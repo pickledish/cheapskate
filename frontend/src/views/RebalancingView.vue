@@ -139,7 +139,7 @@ export default defineComponent({
             const allocations = allocationsByAsset.get(h.asset_id) || [];
             const classAlloc = allocations.find((a) => a.asset_class_id === classId);
             if (classAlloc) {
-              classValue += assetValue * parseFloat(String(classAlloc.percentage));
+              classValue += assetValue * classAlloc.percentage;
             }
           }
 
@@ -207,8 +207,7 @@ export default defineComponent({
         for (const alloc of allocations) {
           currentValueByClass.set(
             alloc.asset_class_id,
-            (currentValueByClass.get(alloc.asset_class_id) || 0) +
-              assetValue * parseFloat(String(alloc.percentage)),
+            (currentValueByClass.get(alloc.asset_class_id) || 0) + assetValue * alloc.percentage,
           );
         }
       }

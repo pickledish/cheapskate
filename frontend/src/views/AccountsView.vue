@@ -170,8 +170,7 @@ export default defineComponent({
               for (const alloc of allocations) {
                 valueByClassId.set(
                   alloc.asset_class_id,
-                  (valueByClassId.get(alloc.asset_class_id) || 0) +
-                    h.value * parseFloat(String(alloc.percentage)),
+                  (valueByClassId.get(alloc.asset_class_id) || 0) + h.value * alloc.percentage,
                 );
               }
             }

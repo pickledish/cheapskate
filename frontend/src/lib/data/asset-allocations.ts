@@ -14,7 +14,12 @@ export async function listAssetAllocations(): Promise<AssetAllocation[]> {
     .select('asset_id, asset_class_id, percentage');
 
   if (error) throw error;
-  return data || [];
+  return (data || []).map((row) => ({
+    asset_id: row.asset_id,
+    asset_class_id: row.asset_class_id,
+    // PostgREST returns Postgres numeric as a string; coerce once here.
+    percentage: parseFloat(String(row.percentage)),
+  }));
 }
 
 export async function insertAssetAllocation(allocation: AssetAllocation): Promise<void> {

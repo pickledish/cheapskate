@@ -278,7 +278,7 @@ export default defineComponent({
               const allocations = allocationsByAsset.get(h.asset_id) || [];
               const classAlloc = allocations.find((a) => a.asset_class_id === classId);
               if (classAlloc) {
-                total += assetValue * parseFloat(String(classAlloc.percentage));
+                total += assetValue * classAlloc.percentage;
               }
             }
             return total;

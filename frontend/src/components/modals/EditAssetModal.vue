@@ -55,7 +55,7 @@ export default defineComponent({
       // Only count allocations with a class selected
       return this.allocations
         .filter((a) => a.asset_class_id !== null)
-        .reduce((sum, a) => sum + (parseFloat(String(a.percentage)) || 0), 0);
+        .reduce((sum, a) => sum + (a.percentage || 0), 0);
     },
     availableClasses() {
       // Filter out null ids when computing available classes
@@ -119,10 +119,7 @@ export default defineComponent({
 
       // Validate allocations sum to 100 if any exist
       if (validAllocations.length > 0) {
-        const total = validAllocations.reduce(
-          (sum, a) => sum + (parseFloat(String(a.percentage)) || 0),
-          0,
-        );
+        const total = validAllocations.reduce((sum, a) => sum + (a.percentage || 0), 0);
         if (total !== 100) {
           this.error = `Allocations must sum to 100% (currently ${total}%)`;
           return;
