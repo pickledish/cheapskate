@@ -20,7 +20,7 @@ import {
   type AssetClass,
   type AssetWithAllocations,
 } from '@/lib/data';
-import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
+import { getLatestPrices, getLatestHoldings, getValueByClass } from '@/lib/derived/derived';
 import { supabase } from '@/lib/supabase';
 import { getColorClasses } from '@/lib/tagColors';
 import { formatCurrency, formatQuantity, relativeDate } from '@/lib/format';
@@ -201,17 +201,15 @@ export default defineComponent({
 
         const latestPriceByAsset = getLatestPrices(pricesData);
         const latestByAsset = getLatestHoldings(holdingsData);
+        const positiveHoldings = Object.values(latestByAsset).filter((h) => h.quantity > 0);
 
         let total = 0;
         const quantityByAsset: Map<AssetId, number> = new Map();
         const valueByAsset: Map<AssetId, number> = new Map();
-        for (const h of Object.values(latestByAsset)) {
-          const quantity = h.quantity;
-          if (quantity <= 0) continue;
-          const price = latestPriceByAsset.get(h.asset_id)?.price ?? 0;
-          const value = quantity * price;
+        for (const h of positiveHoldings) {
+          const value = h.quantity * (latestPriceByAsset.get(h.asset_id)?.price ?? 0);
           total += value;
-          quantityByAsset.set(h.asset_id, quantity);
+          quantityByAsset.set(h.asset_id, h.quantity);
           valueByAsset.set(h.asset_id, value);
         }
         const heldAssetIdsInSortedOrder = Array.from(valueByAsset.keys()).sort(
@@ -222,26 +220,15 @@ export default defineComponent({
         this.heldAssetIdsInSortedOrder = heldAssetIdsInSortedOrder;
         this.totalValue = total !== 0 ? total : null;
 
-        const valueByClassId: Map<AssetClassId, number> = new Map();
-        let unclassifiedValue = 0;
-        for (const assetId of heldAssetIdsInSortedOrder) {
-          const assetValue = valueByAsset.get(assetId) ?? 0;
-          const allocations = allocationsByAsset.get(assetId) || [];
-          if (allocations.length === 0) {
-            unclassifiedValue += assetValue;
-          } else {
-            for (const alloc of allocations) {
-              valueByClassId.set(
-                alloc.asset_class_id,
-                (valueByClassId.get(alloc.asset_class_id) || 0) + assetValue * alloc.percentage,
-              );
-            }
-          }
-        }
+        const { byClass, unclassified } = getValueByClass(
+          positiveHoldings,
+          latestPriceByAsset,
+          assetsData,
+        );
         this.heldAssetClassesInSortedOrder = assetClasses
-          .filter((ac) => (valueByClassId.get(ac.id) || 0) > 0)
+          .filter((ac) => (byClass.get(ac.id) || 0) > 0)
           .sort((a, b) => a.sort_order - b.sort_order);
-        this.hasUnclassified = unclassifiedValue > 0;
+        this.hasUnclassified = unclassified > 0;
 
         this.latestEffectiveDate = updatesData[0]?.effective_date ?? null;
       } catch (err) {

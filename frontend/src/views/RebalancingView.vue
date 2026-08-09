@@ -16,10 +16,9 @@ import {
   type AssetClass,
   type AssetAllocation,
 } from '@/lib/data';
-import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
+import { getLatestPrices, getLatestHoldings, getValueByClass } from '@/lib/derived/derived';
 import { formatMonth } from '@/lib/format';
-import type { AssetId } from '@/lib/data/assets';
-import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
+import type { AssetClassId } from '@/lib/data/asset-classes';
 
 export default defineComponent({
   name: 'RebalancingView',
@@ -90,19 +89,14 @@ export default defineComponent({
         this.accountsData.filter((a) => a.rebalancing).map((a) => a.id),
       );
 
-      // Build allocation lookup: asset_id -> AssetAllocation[]
-      const allocationsByAsset: Map<AssetId, AssetAllocation[]> = new Map();
-      for (const alloc of this.allocationsData) {
-        let assetAllocations = allocationsByAsset.get(alloc.asset_id);
-        if (!assetAllocations) {
-          assetAllocations = [];
-          allocationsByAsset.set(alloc.asset_id, assetAllocations);
-        }
-        assetAllocations.push(alloc);
-      }
-
-      // First pass: find which months have data
-      const monthsWithData = allMonths.filter((month) => {
+      // First pass: find which months have data, and compute value-by-class once each
+      const monthsWithData: {
+        month: string;
+        totalValue: number;
+        byClass: Map<AssetClassId, number>;
+        unclassified: number;
+      }[] = [];
+      for (const month of allMonths) {
         const monthEnd = this.getMonthEnd(month);
         const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd)).filter((h) =>
           rebalancingAccountIds.has(h.account_id),
@@ -112,46 +106,24 @@ export default defineComponent({
         for (const h of holdings) {
           totalValue += h.quantity * (prices.get(h.asset_id)?.price ?? 0);
         }
-        return totalValue > 0;
-      });
+        if (totalValue <= 0) continue;
 
-      this.monthLabels = monthsWithData.map((m) => this.formatMonth(m));
+        const { byClass, unclassified } = getValueByClass(holdings, prices, this.allocationsData);
+        monthsWithData.push({ month, totalValue, byClass, unclassified });
+      }
 
-      const classMap = new Map(this.assetClassesData.map((c) => [c.id, c]));
-      const classIds = this.assetClassesData.map((c) => c.id);
+      this.monthLabels = monthsWithData.map((m) => this.formatMonth(m.month));
 
       // Compute values by class for each month (only months with data)
-      const seriesData = classIds.map((classId) => {
-        const data = monthsWithData.map((month) => {
-          const monthEnd = this.getMonthEnd(month);
-          const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd)).filter(
-            (h) => rebalancingAccountIds.has(h.account_id),
-          );
-          const prices = getLatestPrices(this.pricesData, monthEnd);
-
-          let classValue = 0;
-          let totalValue = 0;
-
-          for (const h of holdings) {
-            const assetValue = h.quantity * (prices.get(h.asset_id)?.price ?? 0);
-            totalValue += assetValue;
-
-            const allocations = allocationsByAsset.get(h.asset_id) || [];
-            const classAlloc = allocations.find((a) => a.asset_class_id === classId);
-            if (classAlloc) {
-              classValue += assetValue * classAlloc.percentage;
-            }
-          }
-
-          // Return percentage (will be normalized after)
-          return { classValue, totalValue };
-        });
-        const classInfo = classMap.get(classId);
+      const seriesData = this.assetClassesData.map((assetClass) => {
+        const data = monthsWithData.map(({ totalValue, byClass }) => ({
+          classValue: byClass.get(assetClass.id) || 0,
+          totalValue,
+        }));
         return {
-          classId,
-          name: classInfo?.name ?? `Class ${assetClassIdToString(classId)}`,
-          color: classInfo?.color ?? 'red',
-          goal: classInfo?.goal || 0,
+          name: assetClass.name,
+          color: assetClass.color,
+          goal: assetClass.goal || 0,
           data,
         };
       });
@@ -167,14 +139,9 @@ export default defineComponent({
         }))
         .filter((s) => s.goal > 0 || s.data.some((v) => v > 0));
 
-      // Compute unclassified portion for each month (assets with no/incomplete allocations)
-      const unclassifiedData = monthsWithData.map((_month, monthIndex) => {
-        const classifiedTotal = normalizedSeries.reduce(
-          (sum, s) => sum + (s.data[monthIndex] ?? 0),
-          0,
-        );
-        return Math.max(0, 1 - classifiedTotal);
-      });
+      const unclassifiedData = monthsWithData.map(({ totalValue, unclassified }) =>
+        totalValue > 0 ? unclassified / totalValue : 0,
+      );
 
       // Add unclassified series if any month has unclassified value
       if (unclassifiedData.some((v) => v > 0.001)) {
@@ -196,21 +163,15 @@ export default defineComponent({
       );
       const currentPrices = getLatestPrices(this.pricesData, today);
 
-      // Calculate current value by class
-      const currentValueByClass: Map<AssetClassId, number> = new Map();
       let currentTotal = 0;
       for (const h of currentHoldings) {
-        const assetValue = h.quantity * (currentPrices.get(h.asset_id)?.price ?? 0);
-        currentTotal += assetValue;
-
-        const allocations = allocationsByAsset.get(h.asset_id) || [];
-        for (const alloc of allocations) {
-          currentValueByClass.set(
-            alloc.asset_class_id,
-            (currentValueByClass.get(alloc.asset_class_id) || 0) + assetValue * alloc.percentage,
-          );
-        }
+        currentTotal += h.quantity * (currentPrices.get(h.asset_id)?.price ?? 0);
       }
+      const { byClass: currentValueByClass } = getValueByClass(
+        currentHoldings,
+        currentPrices,
+        this.allocationsData,
+      );
 
       // Store total value for the comparison grid
       this.currentTotalValue = currentTotal;

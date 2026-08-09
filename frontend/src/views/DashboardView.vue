@@ -17,11 +17,11 @@ import {
   type AssetWithAllocations,
   type AssetClass,
 } from '@/lib/data';
-import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
+import { getLatestPrices, getLatestHoldings, getValueByClass } from '@/lib/derived/derived';
 import { formatMonth } from '@/lib/format';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
-import { assetIdToString, type AssetAllocationInfo, type AssetId } from '@/lib/data/assets';
+import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import { accountIdToString } from '@/lib/data/accounts';
 import { assetClassIdToString } from '@/lib/data/asset-classes';
 
@@ -256,38 +256,20 @@ export default defineComponent({
 
     computeGroupedByAssetClass(months: string[]): { name: string; data: number[] }[] {
       const classMap = new Map(this.assetClassesData.map((c) => [c.id, c.name]));
-      const classIds = this.assetClassesData.map((c) => c.id);
 
-      const allocationsByAsset: Map<AssetId, AssetAllocationInfo[]> = new Map();
-      for (const asset of this.assetsData) {
-        if (asset.allocations.length > 0) {
-          allocationsByAsset.set(asset.id, asset.allocations);
-        }
-      }
+      const byClassPerMonth = months.map((month) => {
+        const monthEnd = this.getMonthEnd(month);
+        const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd));
+        const prices = getLatestPrices(this.pricesData, monthEnd);
+        // bug, unclassified is totally skipped
+        return getValueByClass(holdings, prices, this.assetsData).byClass;
+      });
 
-      return classIds
-        .map((classId) => {
-          const data = months.map((month) => {
-            const monthEnd = this.getMonthEnd(month);
-            const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd));
-            const prices = getLatestPrices(this.pricesData, monthEnd);
-
-            let total = 0;
-            for (const h of holdings) {
-              const assetValue = h.quantity * (prices.get(h.asset_id)?.price ?? 0);
-              const allocations = allocationsByAsset.get(h.asset_id) || [];
-              const classAlloc = allocations.find((a) => a.asset_class_id === classId);
-              if (classAlloc) {
-                total += assetValue * classAlloc.percentage;
-              }
-            }
-            return total;
-          });
-          return {
-            name: classMap.get(classId) || `Class ${assetClassIdToString(classId)}`,
-            data,
-          };
-        })
+      return this.assetClassesData
+        .map((assetClass) => ({
+          name: classMap.get(assetClass.id) || `Class ${assetClassIdToString(assetClass.id)}`,
+          data: byClassPerMonth.map((byClass) => byClass.get(assetClass.id) || 0),
+        }))
         .filter((s) => s.data.some((v) => v !== 0));
     },
   },

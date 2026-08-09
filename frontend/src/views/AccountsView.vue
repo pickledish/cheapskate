@@ -16,13 +16,13 @@ import {
   listAssetClasses,
   type Account,
   type AssetClass,
+  type HoldingUpdateWithContext,
 } from '@/lib/data';
-import { getLatestPrices, getLatestHoldings } from '@/lib/derived/derived';
+import { getLatestPrices, getLatestHoldings, getValueByClass } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
 import { relativeDate } from '@/lib/format';
 import { accountIdToString, type AccountId } from '@/lib/data/accounts';
-import type { AssetAllocationInfo, AssetId } from '@/lib/data/assets';
-import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
+import { assetClassIdToString } from '@/lib/data/asset-classes';
 
 export default defineComponent({
   name: 'AccountsView',
@@ -104,13 +104,6 @@ export default defineComponent({
         // Track if any updates exist (for onboarding continue card)
         this.hasAnyStatements = updatesData.length > 0;
 
-        const allocationsByAsset: Map<AssetId, AssetAllocationInfo[]> = new Map();
-        for (const a of assetsData) {
-          if (a.allocations.length > 0) {
-            allocationsByAsset.set(a.id, a.allocations);
-          }
-        }
-
         // Build map of account_id -> most recent effective date
         const latestEffectiveByAccount: Map<AccountId, string> = new Map();
         for (const update of updatesData) {
@@ -122,34 +115,27 @@ export default defineComponent({
         const latestPriceByAsset = getLatestPrices(pricesData);
         const latestHoldingByAccountAsset = getLatestHoldings(holdingsData);
 
-        // Calculate total value per account and build holdingsByAccount
-        // We use absolute values for accountValues to get total exposure (not net value),
-        // so that the 10% threshold for showing asset class tags works correctly for
-        // accounts with both long and short positions.
+        // Calculate total exposure per account and group holdings by account.
+        // Absolute values so the 10% tag threshold works for accounts with
+        // both long and short positions.
         const accountValues: Map<AccountId, number> = new Map();
-        const holdingsByAccount: Map<AccountId, { asset_id: AssetId; value: number }[]> = new Map();
+        const holdingsByAccount: Map<AccountId, HoldingUpdateWithContext[]> = new Map();
         for (const key in latestHoldingByAccountAsset) {
           const holding = latestHoldingByAccountAsset[key];
-          if (!holding) continue;
-          const price = latestPriceByAsset.get(holding.asset_id)?.price ?? 0;
-          const value = holding.quantity * price;
+          if (!holding || holding.quantity === 0) continue;
 
+          const value = holding.quantity * (latestPriceByAsset.get(holding.asset_id)?.price ?? 0);
           accountValues.set(
             holding.account_id,
             (accountValues.get(holding.account_id) || 0) + Math.abs(value),
           );
 
-          if (holding.quantity !== 0) {
-            let accountHoldings = holdingsByAccount.get(holding.account_id);
-            if (!accountHoldings) {
-              accountHoldings = [];
-              holdingsByAccount.set(holding.account_id, accountHoldings);
-            }
-            accountHoldings.push({
-              asset_id: holding.asset_id,
-              value: value,
-            });
+          let accountHoldings = holdingsByAccount.get(holding.account_id);
+          if (!accountHoldings) {
+            accountHoldings = [];
+            holdingsByAccount.set(holding.account_id, accountHoldings);
           }
+          accountHoldings.push(holding);
         }
 
         // Calculate asset classes per account
@@ -157,38 +143,22 @@ export default defineComponent({
         const unclassifiedByAccount: Set<AccountId> = new Set();
         for (const [accountId, holdings] of holdingsByAccount) {
           const totalValue = accountValues.get(accountId) || 0;
-
-          // Aggregate value by class, track unclassified value
-          const valueByClassId: Map<AssetClassId, number> = new Map();
-          let unclassifiedValue = 0;
-          for (const h of holdings) {
-            const allocations = allocationsByAsset.get(h.asset_id) || [];
-            if (allocations.length === 0) {
-              // Asset has no allocations - fully unclassified
-              unclassifiedValue += h.value;
-            } else {
-              for (const alloc of allocations) {
-                valueByClassId.set(
-                  alloc.asset_class_id,
-                  (valueByClassId.get(alloc.asset_class_id) || 0) + h.value * alloc.percentage,
-                );
-              }
-            }
-          }
+          const { byClass, unclassified } = getValueByClass(
+            holdings,
+            latestPriceByAsset,
+            assetsData,
+          );
 
           // Filter out classes <10% of account exposure, sort by sort_order
           // Use Math.abs since class values can be negative (from short positions)
           const classes = assetClasses
-            .filter(
-              (ac) =>
-                totalValue > 0 && Math.abs(valueByClassId.get(ac.id) || 0) / totalValue >= 0.1,
-            )
+            .filter((ac) => totalValue > 0 && Math.abs(byClass.get(ac.id) || 0) / totalValue >= 0.1)
             .sort((a, b) => a.sort_order - b.sort_order);
 
           assetClassesByAccount.set(accountId, classes);
 
           // Mark unclassified if >= 10% of account exposure
-          if (totalValue > 0 && Math.abs(unclassifiedValue) / totalValue >= 0.1) {
+          if (totalValue > 0 && Math.abs(unclassified) / totalValue >= 0.1) {
             unclassifiedByAccount.add(accountId);
           }
         }
