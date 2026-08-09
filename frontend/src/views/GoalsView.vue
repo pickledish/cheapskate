@@ -213,7 +213,7 @@ export default defineComponent({
     <div class="space-y-6">
       <PageHeader
         title="Goals"
-        description='Create and manage asset classes. Define a "goal" portfolio allocation for the rebalancing view.'
+        description='Create and manage asset classes. Define a "goal" allocation for your portfolio.'
       >
         <template v-slot:actions>
           <button

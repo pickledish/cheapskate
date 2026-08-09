@@ -98,11 +98,11 @@ export default defineComponent({
             type="checkbox"
             class="rounded border-surface-border-strong"
           />
-          <span class="text-sm text-secondary-text"> Include in rebalancing </span>
+          <span class="text-sm text-secondary-text"> Include in portfolio </span>
         </label>
         <p class="mt-1 text-xs text-muted-text">
-          Uncheck for accounts you don't want included in the portfolio rebalancing dashboard (this
-          is for illiquid assets, like home equity).
+          Uncheck things you own but don't manage toward a target -- your home, your car, your
+          checking account. These still count toward net worth.
         </p>
       </div>
     </div>

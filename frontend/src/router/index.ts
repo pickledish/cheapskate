@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import LoginView from '@/views/LoginView.vue';
 import SetupView from '@/views/SetupView.vue';
 import DashboardView from '@/views/DashboardView.vue';
-import RebalancingView from '@/views/RebalancingView.vue';
+import PortfolioView from '@/views/PortfolioView.vue';
 import AccountsView from '@/views/AccountsView.vue';
 import AccountDetailView from '@/views/AccountDetailView.vue';
 import AssetsView from '@/views/AssetsView.vue';
@@ -36,9 +36,9 @@ const routes = [
     meta: { requiresAuth: true, requiresOnboardingComplete: true },
   },
   {
-    path: '/rebalancing',
-    name: 'rebalancing',
-    component: RebalancingView,
+    path: '/portfolio',
+    name: 'portfolio',
+    component: PortfolioView,
     meta: { requiresAuth: true, requiresOnboardingComplete: true },
   },
   {

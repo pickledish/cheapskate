@@ -98,7 +98,7 @@ export default defineComponent({
           class="w-full px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <p class="mt-1 text-xs text-muted-text">
-          Target percentage for rebalancing. Leave at 0 to exclude from rebalancing calculations.
+          Target percentage of your portfolio. Leave at 0 to exclude from portfolio calculations.
         </p>
       </div>
     </div>

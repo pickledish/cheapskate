@@ -21,7 +21,7 @@ import { formatMonth } from '@/lib/format';
 import type { AssetClassId } from '@/lib/data/asset-classes';
 
 export default defineComponent({
-  name: 'RebalancingView',
+  name: 'PortfolioView',
   components: { AppLayout, PageHeader, AllocationHistoryChart, AllocationComparisonGrid },
   data(): {
     loading: boolean;
@@ -84,7 +84,7 @@ export default defineComponent({
     computeChartData() {
       const allMonths = this.getLast12Months();
 
-      // Get rebalancing account IDs
+      // Accounts flagged rebalancing=true are included in the portfolio view
       const rebalancingAccountIds = new Set(
         this.accountsData.filter((a) => a.rebalancing).map((a) => a.id),
       );
@@ -129,7 +129,7 @@ export default defineComponent({
       });
 
       // Normalize: convert to percentages of total for each month
-      // Exclude asset classes with no goal and no liquid holdings (nothing to rebalance)
+      // Exclude asset classes with no goal and no portfolio holdings
       const normalizedSeries = seriesData
         .map((s) => ({
           name: s.name,
@@ -177,7 +177,7 @@ export default defineComponent({
       this.currentTotalValue = currentTotal;
 
       // Build comparison data for all asset classes (respecting sort_order)
-      // Exclude asset classes with no goal and no liquid holdings (nothing to rebalance)
+      // Exclude asset classes with no goal and no portfolio holdings
       this.comparisonAllocations = this.assetClassesData
         .map((ac) => ({
           name: ac.name,
@@ -217,7 +217,7 @@ export default defineComponent({
   <AppLayout>
     <div class="space-y-6">
       <PageHeader
-        title="Rebalancing"
+        title="Portfolio"
         description='Compare "current" and "goal" allocations to each asset class. Visualize portfolio composition over time.'
       />
 

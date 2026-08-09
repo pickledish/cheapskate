@@ -29,7 +29,7 @@ export default defineComponent({
         { to: '/goals', label: 'Goals', enabled: true },
         { to: '/accounts', label: 'Accounts', enabled: this.goalsCompleted },
         { to: '/assets', label: 'Assets', enabled: this.accountsCompleted },
-        { to: '/rebalancing', label: 'Rebalancing', enabled: this.assetsCompleted },
+        { to: '/portfolio', label: 'Portfolio', enabled: this.assetsCompleted },
         { to: '/networth', label: 'Net Worth', enabled: this.assetsCompleted },
         { to: '/history', label: 'History', enabled: this.assetsCompleted },
       ];

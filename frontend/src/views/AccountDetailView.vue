@@ -120,11 +120,8 @@ export default defineComponent({
     displayAccountLast4(): string | null {
       return this.account?.last4 || null;
     },
-    displayLiquid(): string {
-      if (typeof this.account?.rebalancing === 'boolean') {
-        return this.account.rebalancing ? 'Liquid' : 'Not Liquid';
-      }
-      return 'Liquid';
+    displayInPortfolio(): string {
+      return this.account?.rebalancing ? 'Yes' : 'No';
     },
     displayTaxType(): string {
       return 'Retirement';
@@ -594,9 +591,9 @@ export default defineComponent({
                 </div>
                 <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-text">
-                    Liquidity
+                    Included In Portfolio
                   </dt>
-                  <dd class="text-sm font-semibold text-primary-text">{{ displayLiquid }}</dd>
+                  <dd class="text-sm font-semibold text-primary-text">{{ displayInPortfolio }}</dd>
                 </div>
                 <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-text">
