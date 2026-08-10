@@ -42,16 +42,7 @@ const DEMO_EMAILS = [ALEX_EMAIL, JORDAN_EMAIL, NEWBIE_EMAIL] as const;
 const FLAGS = ['--skip-cleanup', '--skip-creation'] as const;
 
 type AssetKey =
-  | 'VTI'
-  | 'VXUS'
-  | 'BND'
-  | 'VTSAX'
-  | 'VTIAX'
-  | 'VBTLX'
-  | 'VTHRX'
-  | 'STABLE'
-  | 'CASH'
-  | 'HOME';
+  'VTI' | 'VXUS' | 'BND' | 'VTSAX' | 'VTIAX' | 'VBTLX' | 'VTHRX' | 'STABLE' | 'CASH' | 'HOME';
 
 type ClassKey = 'us' | 'intl' | 'bond' | 'cash' | 're';
 
@@ -122,7 +113,8 @@ function requireServiceRoleKey(): string {
 
 function createAdminClient() {
   const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  if (!url) throw new Error('VITE_SUPABASE_URL is missing (expected from frontend/.env via vite-node)');
+  if (!url)
+    throw new Error('VITE_SUPABASE_URL is missing (expected from frontend/.env via vite-node)');
   return createClient(url, requireServiceRoleKey(), {
     auth: { autoRefreshToken: false, persistSession: false },
   });
@@ -173,8 +165,7 @@ function buildPrices(nMonths: number): Record<AssetKey, number[]> {
         // Blended target-date returns (rough 40/20/40)
         let p = BASE_PRICES.VTHRX;
         for (let j = 0; j <= i; j++) {
-          const r =
-            0.4 * RETURNS.us[j]! + 0.2 * RETURNS.intl[j]! + 0.4 * RETURNS.bond[j]!;
+          const r = 0.4 * RETURNS.us[j]! + 0.2 * RETURNS.intl[j]! + 0.4 * RETURNS.bond[j]!;
           p *= 1 + r;
         }
         prices[key].push(p);
@@ -241,7 +232,9 @@ async function listAllUsers(admin: ReturnType<typeof createAdminClient>): Promis
 async function cleanup(admin: ReturnType<typeof createAdminClient>): Promise<void> {
   console.log('Cleaning up demo users...');
   const users = await listAllUsers(admin);
-  const demoUsers = users.filter((u) => u.email && DEMO_EMAILS.includes(u.email as (typeof DEMO_EMAILS)[number]));
+  const demoUsers = users.filter(
+    (u) => u.email && DEMO_EMAILS.includes(u.email as (typeof DEMO_EMAILS)[number]),
+  );
 
   for (const user of demoUsers) {
     console.log(`  Deleting user ${user.email} (${user.id})`);
