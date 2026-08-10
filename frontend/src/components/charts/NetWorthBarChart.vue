@@ -6,7 +6,7 @@ import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/compon
 import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import { cssVar } from '@/lib/cssVar';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency } from '@/lib/util/currency';
 
 use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 

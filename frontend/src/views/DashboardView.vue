@@ -18,7 +18,7 @@ import {
   type AssetClass,
 } from '@/lib/data';
 import { getLatestPrices, getLatestHoldings, getValueByClass } from '@/lib/derived/derived';
-import { formatMonth } from '@/lib/format';
+import { formatMonth, lastNMonths, monthEnd } from '@/lib/util/date';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
@@ -114,13 +114,12 @@ export default defineComponent({
     },
 
     computeChartData() {
-      const months = this.getLast12Months();
+      const months = lastNMonths(12);
       this.monthLabels = months.map((m) => this.formatMonth(m));
 
       if (this.groupBy === 'none') {
         const values = months.map((month) => {
-          const monthEnd = this.getMonthEnd(month);
-          return this.computeNetWorthAt(monthEnd);
+          return this.computeNetWorthAt(monthEnd(month));
         });
         this.chartSeries = [{ name: 'Net Worth', data: values }];
       } else if (this.groupBy === 'account') {
@@ -132,26 +131,6 @@ export default defineComponent({
       } else if (this.groupBy === 'assetClass') {
         this.chartSeries = this.computeGroupedByAssetClass(months);
       }
-    },
-
-    getLast12Months(): string[] {
-      const months: string[] = [];
-      const now = new Date();
-      // Start from 12 months ago, end at previous month (exclude current month)
-      for (let i = 12; i >= 1; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-      }
-      return months;
-    },
-
-    getMonthEnd(monthStr: string): string {
-      const [yearStr, monthPart] = monthStr.split('-');
-      const year = Number(yearStr);
-      const month = Number(monthPart);
-      const nextMonth = new Date(year, month, 1);
-      nextMonth.setDate(nextMonth.getDate() - 1);
-      return nextMonth.toISOString().split('T')[0]!;
     },
 
     formatMonth,
@@ -179,11 +158,11 @@ export default defineComponent({
       return accountIds
         .map((accountId) => {
           const data = months.map((month) => {
-            const monthEnd = this.getMonthEnd(month);
-            const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd)).filter(
+            const end = monthEnd(month);
+            const holdings = Object.values(getLatestHoldings(this.holdingsData, end)).filter(
               (h) => h.account_id === accountId,
             );
-            const prices = getLatestPrices(this.pricesData, monthEnd);
+            const prices = getLatestPrices(this.pricesData, end);
 
             let total = 0;
             for (const h of holdings) {
@@ -213,11 +192,11 @@ export default defineComponent({
             .map((a) => a.id);
 
           const data = months.map((month) => {
-            const monthEnd = this.getMonthEnd(month);
-            const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd)).filter(
-              (h) => ownerAccountIds.includes(h.account_id),
+            const end = monthEnd(month);
+            const holdings = Object.values(getLatestHoldings(this.holdingsData, end)).filter((h) =>
+              ownerAccountIds.includes(h.account_id),
             );
-            const prices = getLatestPrices(this.pricesData, monthEnd);
+            const prices = getLatestPrices(this.pricesData, end);
 
             let total = 0;
             for (const h of holdings) {
@@ -237,11 +216,11 @@ export default defineComponent({
       return assetIds
         .map((assetId) => {
           const data = months.map((month) => {
-            const monthEnd = this.getMonthEnd(month);
-            const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd)).filter(
+            const end = monthEnd(month);
+            const holdings = Object.values(getLatestHoldings(this.holdingsData, end)).filter(
               (h) => h.asset_id === assetId,
             );
-            const prices = getLatestPrices(this.pricesData, monthEnd);
+            const prices = getLatestPrices(this.pricesData, end);
 
             let total = 0;
             for (const h of holdings) {
@@ -258,9 +237,9 @@ export default defineComponent({
       const classMap = new Map(this.assetClassesData.map((c) => [c.id, c.name]));
 
       const byClassPerMonth = months.map((month) => {
-        const monthEnd = this.getMonthEnd(month);
-        const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd));
-        const prices = getLatestPrices(this.pricesData, monthEnd);
+        const end = monthEnd(month);
+        const holdings = Object.values(getLatestHoldings(this.holdingsData, end));
+        const prices = getLatestPrices(this.pricesData, end);
         // bug, unclassified is totally skipped
         return getValueByClass(holdings, prices, this.assetsData).byClass;
       });

@@ -19,7 +19,8 @@ import {
 } from '@/lib/data';
 import { getLatestPrices } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
-import { formatCurrency, relativeDate } from '@/lib/format';
+import { formatCurrency } from '@/lib/util/currency';
+import { relativeDate } from '@/lib/util/date';
 import { Bars3Icon } from '@heroicons/vue/24/solid';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';

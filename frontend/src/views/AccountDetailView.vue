@@ -23,7 +23,8 @@ import {
 import { getLatestPrices, getLatestHoldings, getValueByClass } from '@/lib/derived/derived';
 import { supabase } from '@/lib/supabase';
 import { getColorClasses } from '@/lib/tagColors';
-import { formatCurrency, formatQuantity, relativeDate } from '@/lib/format';
+import { formatCurrency, formatQuantity } from '@/lib/util/currency';
+import { relativeDate } from '@/lib/util/date';
 import dayjs from 'dayjs';
 import { PencilSquareIcon, CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/24/solid';
 import {

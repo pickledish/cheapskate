@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue';
-import { relativeDate } from '@/lib/format';
+import { relativeDate } from '@/lib/util/date';
 import {
   DocumentTextIcon,
   CurrencyDollarIcon,

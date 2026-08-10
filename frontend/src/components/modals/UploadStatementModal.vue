@@ -40,7 +40,7 @@ import {
 import { getLatestHoldings } from '@/lib/derived/derived';
 import { parseWithLocalLlm } from '@/lib/local-llm';
 import { pdfToQuantizedTsv } from '@/lib/pdf';
-import { formatCurrency, formatNumber } from '@/lib/format';
+import { formatCurrency, formatNumber } from '@/lib/util/currency';
 import {
   ParsePdfResponseSchema,
   type ParsePdfResponse,

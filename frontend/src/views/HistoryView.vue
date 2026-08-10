@@ -14,7 +14,7 @@ import {
   type PriceUpdate,
 } from '@/lib/data';
 import dayjs from 'dayjs';
-import { formatCurrency, formatNumber } from '@/lib/format';
+import { formatCurrency, formatNumber } from '@/lib/util/currency';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import type { AccountId } from '@/lib/data/accounts';

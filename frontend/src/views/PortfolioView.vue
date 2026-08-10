@@ -17,7 +17,7 @@ import {
   type AssetAllocation,
 } from '@/lib/data';
 import { getLatestPrices, getLatestHoldings, getValueByClass } from '@/lib/derived/derived';
-import { formatMonth } from '@/lib/format';
+import { formatMonth, lastNMonths, monthEnd } from '@/lib/util/date';
 import type { AssetClassId } from '@/lib/data/asset-classes';
 
 export default defineComponent({
@@ -82,7 +82,7 @@ export default defineComponent({
     },
 
     computeChartData() {
-      const allMonths = this.getLast12Months();
+      const allMonths = lastNMonths(12);
 
       // Accounts flagged rebalancing=true are included in the portfolio view
       const rebalancingAccountIds = new Set(
@@ -97,11 +97,11 @@ export default defineComponent({
         unclassified: number;
       }[] = [];
       for (const month of allMonths) {
-        const monthEnd = this.getMonthEnd(month);
-        const holdings = Object.values(getLatestHoldings(this.holdingsData, monthEnd)).filter((h) =>
+        const end = monthEnd(month);
+        const holdings = Object.values(getLatestHoldings(this.holdingsData, end)).filter((h) =>
           rebalancingAccountIds.has(h.account_id),
         );
-        const prices = getLatestPrices(this.pricesData, monthEnd);
+        const prices = getLatestPrices(this.pricesData, end);
         let totalValue = 0;
         for (const h of holdings) {
           totalValue += h.quantity * (prices.get(h.asset_id)?.price ?? 0);
@@ -186,26 +186,6 @@ export default defineComponent({
           goal: ac.goal || 0,
         }))
         .filter((ac) => ac.goal > 0 || ac.current > 0);
-    },
-
-    getLast12Months(): string[] {
-      const months: string[] = [];
-      const now = new Date();
-      // Start from 12 months ago, end at previous month (exclude current month)
-      for (let i = 12; i >= 1; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-      }
-      return months;
-    },
-
-    getMonthEnd(monthStr: string): string {
-      const [yearStr, monthPart] = monthStr.split('-');
-      const year = Number(yearStr);
-      const month = Number(monthPart);
-      const nextMonth = new Date(year, month, 1);
-      nextMonth.setDate(nextMonth.getDate() - 1);
-      return nextMonth.toISOString().split('T')[0]!;
     },
 
     formatMonth,
