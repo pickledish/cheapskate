@@ -387,12 +387,14 @@ export default defineComponent({
               ]"
               v-on:click="toggleIsolate(item.name)"
             >
-              <span
-                class="h-2.5 w-2.5 shrink-0 rounded-sm"
-                v-bind:style="{ backgroundColor: item.color }"
-              />
-              <span class="min-w-0 flex-1 truncate text-sm text-secondary-text">
-                {{ item.name }}
+              <span class="flex min-w-0 flex-1 items-center gap-2">
+                <span
+                  class="h-2.5 w-2.5 shrink-0 rounded-sm"
+                  v-bind:style="{ backgroundColor: item.color }"
+                />
+                <span class="min-w-0 truncate text-sm text-secondary-text">
+                  {{ item.name }}
+                </span>
               </span>
               <span class="shrink-0 text-sm tabular-nums text-primary-text">
                 {{
