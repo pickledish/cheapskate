@@ -461,18 +461,20 @@ export default defineComponent({
           For example, a <a href="https://www.bogleheads.org/wiki/Three-fund_portfolio" class="text-blue-600 underline">Boglehead-style</a> composition might look like this:
         </p>
         <table class="mx-auto text-sm mt-5 mb-3">
-          <tr class="border-b border-surface-border">
-            <td class="py-1 pr-12">US Stocks</td>
-            <td class="py-1 text-right font-bold">60%</td>
-          </tr>
-          <tr class="border-b border-surface-border">
-            <td class="py-1 pr-12">International Stocks</td>
-            <td class="py-1 text-right font-bold">20%</td>
-          </tr>
-          <tr>
-            <td class="py-1 pr-12">Bonds</td>
-            <td class="py-1 text-right font-bold">20%</td>
-          </tr>
+          <tbody>
+            <tr class="border-b border-surface-border">
+              <td class="py-1 pr-12">US Stocks</td>
+              <td class="py-1 text-right font-bold">60%</td>
+            </tr>
+            <tr class="border-b border-surface-border">
+              <td class="py-1 pr-12">International Stocks</td>
+              <td class="py-1 text-right font-bold">20%</td>
+            </tr>
+            <tr>
+              <td class="py-1 pr-12">Bonds</td>
+              <td class="py-1 text-right font-bold">20%</td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </OnboardingModal>
