@@ -24,8 +24,17 @@ import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import { accountIdToString } from '@/lib/data/accounts';
 import { assetClassIdToString } from '@/lib/data/asset-classes';
+import { chartColor, NET_WORTH_CHART_HEIGHT_PX } from '@/lib/chartPalette';
+import { formatCurrency } from '@/lib/util/currency';
 
 type GroupBy = 'none' | 'account' | 'owner' | 'asset' | 'assetClass';
+
+const LEGEND_TITLES: Record<Exclude<GroupBy, 'none'>, string> = {
+  account: 'Accounts',
+  owner: 'Owners',
+  asset: 'Assets',
+  assetClass: 'Asset Classes',
+};
 
 export default defineComponent({
   name: 'DashboardView',
@@ -46,6 +55,7 @@ export default defineComponent({
     loading: boolean;
     groupBy: GroupBy;
     groupByOptions: { value: GroupBy; label: string }[];
+    isolatedSeries: string | null;
     holdingsData: HoldingUpdateWithContext[];
     pricesData: PriceUpdateWithContext[];
     accountsData: Account[];
@@ -65,6 +75,7 @@ export default defineComponent({
         { value: 'asset', label: 'Asset' },
         { value: 'assetClass', label: 'Asset Class' },
       ],
+      isolatedSeries: null,
       // Raw data from database
       holdingsData: [],
       pricesData: [],
@@ -79,9 +90,28 @@ export default defineComponent({
       const opt = this.groupByOptions.find((o) => o.value === this.groupBy);
       return opt ? opt.label : 'None';
     },
+    showLegend(): boolean {
+      return this.groupBy !== 'none' && this.chartSeries.length > 1;
+    },
+    legendTitle(): string {
+      if (this.groupBy === 'none') return 'Breakdown';
+      return LEGEND_TITLES[this.groupBy];
+    },
+    // chartSeries order is top-of-stack → bottom-of-stack (shared with the chart).
+    legendItems(): { name: string; color: string; latestValue: number }[] {
+      return this.chartSeries.map((s, i) => ({
+        name: s.name,
+        color: chartColor(i),
+        latestValue: s.data.length > 0 ? (s.data[s.data.length - 1] ?? 0) : 0,
+      }));
+    },
+    legendMaxHeightPx(): number {
+      return NET_WORTH_CHART_HEIGHT_PX;
+    },
   },
   watch: {
     groupBy() {
+      this.isolatedSeries = null;
       this.computeChartData();
     },
   },
@@ -134,6 +164,11 @@ export default defineComponent({
     },
 
     formatMonth,
+    formatCurrency,
+
+    toggleIsolate(name: string) {
+      this.isolatedSeries = this.isolatedSeries === name ? null : name;
+    },
 
     computeNetWorthAt(effectiveDate: string): number {
       const holdings = Object.values(getLatestHoldings(this.holdingsData, effectiveDate));
@@ -312,15 +347,63 @@ export default defineComponent({
       <!-- Loading state -->
       <div v-if="loading" class="text-muted-text">Loading...</div>
 
-      <!-- Chart card -->
-      <div v-else class="bg-surface shadow rounded-lg overflow-hidden">
-        <div class="bg-header px-6 py-3">
-          <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">
-            Net Worth Over Time
-          </h3>
+      <!-- Chart + legend islands -->
+      <div v-else class="flex flex-col gap-6 md:flex-row">
+        <div class="min-w-0 flex-1 bg-surface shadow rounded-lg overflow-hidden">
+          <div class="bg-header px-6 py-3">
+            <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">
+              Net Worth Over Time
+            </h3>
+          </div>
+          <div class="p-6">
+            <NetWorthBarChart
+              v-bind:labels="monthLabels"
+              v-bind:series="chartSeries"
+              v-bind:isolated-series="isolatedSeries"
+            />
+          </div>
         </div>
-        <div class="p-6">
-          <NetWorthBarChart v-bind:labels="monthLabels" v-bind:series="chartSeries" />
+
+        <div
+          v-if="showLegend"
+          class="w-full shrink-0 md:w-86 bg-surface shadow rounded-lg overflow-hidden self-start"
+        >
+          <div class="bg-header px-6 py-3">
+            <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">
+              {{ legendTitle }}
+            </h3>
+          </div>
+          <div
+            class="overflow-y-auto px-4 py-6"
+            v-bind:style="{ maxHeight: legendMaxHeightPx + 48 + 'px' }"
+          >
+            <button
+              v-for="item in legendItems"
+              v-bind:key="item.name"
+              type="button"
+              v-bind:class="[
+                'flex w-full items-center gap-6 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-surface-recessed',
+                isolatedSeries && isolatedSeries !== item.name ? 'opacity-40' : '',
+              ]"
+              v-on:click="toggleIsolate(item.name)"
+            >
+              <span
+                class="h-2.5 w-2.5 shrink-0 rounded-sm"
+                v-bind:style="{ backgroundColor: item.color }"
+              />
+              <span class="min-w-0 flex-1 truncate text-sm text-secondary-text">
+                {{ item.name }}
+              </span>
+              <span class="shrink-0 text-sm tabular-nums text-primary-text">
+                {{
+                  formatCurrency(item.latestValue, {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })
+                }}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

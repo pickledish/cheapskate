@@ -34,10 +34,7 @@ export default defineComponent({
 
 <template>
   <div class="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-black/50 backdrop-blur-sm">
-    <div
-      class="flex min-h-full items-center justify-center"
-      v-on:click="onBackdropClick"
-    >
+    <div class="flex min-h-full items-center justify-center" v-on:click="onBackdropClick">
       <div v-bind:class="['bg-surface rounded-lg shadow-xl w-full min-w-0 mx-4 my-4', maxWidth]">
         <!-- Header -->
         <div class="px-6 py-4 border-b border-surface-border">
