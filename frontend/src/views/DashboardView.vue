@@ -265,7 +265,7 @@ export default defineComponent({
         <template v-slot:actions>
           <HeadlessMenu as="div" class="relative shrink-0">
             <MenuButton
-              class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-secondary-text bg-surface border border-page-border rounded-md hover:bg-surface-recessed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+              class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-secondary-text bg-surface border border-page-border rounded-md hover:bg-surface-recessed focus:outline-none"
             >
               Group by: {{ selectedGroupByLabel }}
               <ChevronDownIcon class="w-4 h-4 text-muted-text" />
