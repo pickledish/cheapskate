@@ -89,6 +89,8 @@ export async function insertUpdate(update: {
   update_type: UpdateType;
   effective_date: string;
   created_by: string;
+  /** Defaults to now() in the database. Only backfills should set this. */
+  created_at?: string;
 }): Promise<Update> {
   const { data, error } = await supabase
     .from('updates')
@@ -98,6 +100,7 @@ export async function insertUpdate(update: {
       update_type: update.update_type,
       effective_date: update.effective_date,
       created_by: update.created_by,
+      ...(update.created_at ? { created_at: update.created_at } : {}),
     })
     .select()
     .single();

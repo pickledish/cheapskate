@@ -77,14 +77,43 @@ The app uses Google OAuth for sign-in. You need to create an OAuth client in Goo
 cd frontend
 npm install
 
-# Create .env with local Supabase URLs
-cp .env.example .env
-# Default .env points to local Supabase (127.0.0.1:54321)
+# Env files select the backend (Vite --mode):
+#   .env.localdev  → local Supabase (127.0.0.1:54321)
+#   .env.cloud      → hosted project
+# See .env.example. Edit .env.cloud with your project URL + anon key.
 
-npm run dev
+npm run dev:local    # or: npm run dev:cloud
 ```
 
-Frontend runs at `http://localhost:5173`.
+Frontend runs at `http://localhost:5173`. Plain `npm run dev` errors on purpose so the backend choice stays explicit.
+
+### 5. Seed Demo Data (optional)
+
+To populate the local (or a hosted) database with a two-person demo family plus an empty new-user account:
+
+```bash
+cd frontend
+# Service role key from `supabase status` (local) or the project API settings (hosted)
+SUPABASE_SERVICE_ROLE_KEY=<service_role_key> npm run seed:local
+# or: ... npm run seed:cloud
+```
+
+Log in with password `demo-password-123`:
+
+| Email | Purpose |
+|-------|---------|
+| `alex@skate.cheap` | Full demo family member |
+| `jordan@skate.cheap` | Spouse / co-member of the same family |
+| `newbie@skate.cheap` | Brand-new user (lands on setup) |
+
+Family secret (for joining): `11111111-1111-4111-8111-111111111111`
+
+Flags (both phases run by default):
+
+```bash
+npm run seed:local -- --skip-creation   # cleanup only
+npm run seed:local -- --skip-cleanup    # create onto a clean DB
+```
 
 ## Production Deployment
 
