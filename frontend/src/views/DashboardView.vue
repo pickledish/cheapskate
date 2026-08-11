@@ -366,7 +366,7 @@ export default defineComponent({
 
         <div
           v-if="showLegend"
-          class="w-full shrink-0 md:w-max md:max-w-96 bg-surface shadow rounded-lg overflow-hidden self-start"
+          class="w-full shrink-0 md:w-80 bg-surface shadow rounded-lg overflow-hidden self-start"
         >
           <div class="bg-header px-6 py-3">
             <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">
@@ -382,7 +382,7 @@ export default defineComponent({
               v-bind:key="item.name"
               type="button"
               v-bind:class="[
-                'flex w-full items-center gap-12 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-surface-recessed',
+                'flex w-full items-center gap-6 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-surface-recessed',
                 isolatedSeries && isolatedSeries !== item.name ? 'opacity-40' : '',
               ]"
               v-on:click="toggleIsolate(item.name)"
