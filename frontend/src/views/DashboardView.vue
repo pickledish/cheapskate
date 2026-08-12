@@ -187,7 +187,7 @@ export default defineComponent({
       this.isolatedSeries = this.isolatedSeries === name ? null : name;
     },
 
-    setGroupBy(value: GroupBy) {
+    async setGroupBy(value: GroupBy) {
       if (value === this.groupBy) return;
       const query = { ...this.$route.query };
       if (value === 'none') {
@@ -195,7 +195,7 @@ export default defineComponent({
       } else {
         query.groupBy = value;
       }
-      this.$router.replace({ path: this.$route.path, query });
+      await this.$router.replace({ path: this.$route.path, query });
     },
 
     computeNetWorthAt(effectiveDate: string): number {

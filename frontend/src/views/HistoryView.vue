@@ -70,36 +70,36 @@ export default defineComponent({
     },
   },
   watch: {
-    selectedMonthKey() {
-      this.loadData();
+    async selectedMonthKey() {
+      await this.loadData();
     },
   },
   async mounted() {
     await this.loadData();
   },
   methods: {
-    prevMonth() {
-      this.setMonth(
+    async prevMonth() {
+      await this.setMonth(
         dayjs(this.selectedMonthKey + '-01')
           .subtract(1, 'month')
           .format('YYYY-MM'),
       );
     },
-    nextMonth() {
-      this.setMonth(
+    async nextMonth() {
+      await this.setMonth(
         dayjs(this.selectedMonthKey + '-01')
           .add(1, 'month')
           .format('YYYY-MM'),
       );
     },
-    setMonth(monthKey: string) {
+    async setMonth(monthKey: string) {
       const query = { ...this.$route.query };
       if (monthKey === currentMonthKey()) {
         delete query.month;
       } else {
         query.month = monthKey;
       }
-      this.$router.replace({ path: this.$route.path, query });
+      await this.$router.replace({ path: this.$route.path, query });
     },
     async loadData() {
       this.loading = true;
