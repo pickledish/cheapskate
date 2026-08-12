@@ -14,7 +14,6 @@ import {
   listUpdatesByAccount,
   insertUpdate,
   insertHoldingUpdate,
-  updateAccount,
   deleteAccount,
   type Account,
   type AssetClass,
@@ -414,21 +413,6 @@ export default defineComponent({
       await this.loadData();
     },
 
-    async reopenAccount() {
-      const account = this.account;
-      if (!account) return;
-      if (!confirm(`Reopen "${account.name}"? It will appear in your accounts list again.`)) {
-        return;
-      }
-
-      try {
-        await updateAccount(account.id, { is_archived: false });
-        await this.loadData();
-      } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
-      }
-    },
-
     async doDeleteAccount() {
       const account = this.account;
       if (!account) return;
@@ -497,17 +481,6 @@ export default defineComponent({
                     v-on:click="showCloseAccountModal = true"
                   >
                     Mark as Closed
-                  </button>
-                </MenuItem>
-                <MenuItem v-if="isArchived" v-slot:default="{ active }">
-                  <button
-                    v-bind:class="[
-                      'w-full text-left px-4 py-2 text-sm cursor-pointer',
-                      active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text',
-                    ]"
-                    v-on:click="reopenAccount"
-                  >
-                    Reopen
                   </button>
                 </MenuItem>
                 <MenuItem v-slot:default="{ active }">
