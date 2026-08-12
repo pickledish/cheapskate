@@ -11,7 +11,7 @@ export function accountIdToString(accountId: AccountId): string {
 export interface Account {
   id: AccountId;
   name: string;
-  rebalancing: boolean;
+  in_portfolio: boolean;
   is_archived: boolean;
   last4: string | null;
   created_by: string;
@@ -38,7 +38,7 @@ export async function getAccount(id: AccountId): Promise<Account | null> {
 
 export async function insertAccount(account: {
   name: string;
-  rebalancing: boolean;
+  in_portfolio: boolean;
   created_by: string;
   family_id: string;
   last4?: string | null;
@@ -47,7 +47,7 @@ export async function insertAccount(account: {
     .from('accounts')
     .insert({
       name: account.name,
-      rebalancing: account.rebalancing,
+      in_portfolio: account.in_portfolio,
       created_by: account.created_by,
       family_id: account.family_id,
       last4: account.last4 ?? null,
@@ -63,7 +63,7 @@ export async function updateAccount(
   id: AccountId,
   updates: {
     name?: string;
-    rebalancing?: boolean;
+    in_portfolio?: boolean;
     is_archived?: boolean;
     last4?: string | null;
   },

@@ -84,9 +84,9 @@ export default defineComponent({
     computeChartData() {
       const allMonths = lastNMonths(12);
 
-      // Accounts flagged rebalancing=true are included in the portfolio view
-      const rebalancingAccountIds = new Set(
-        this.accountsData.filter((a) => a.rebalancing).map((a) => a.id),
+      // Accounts flagged in_portfolio=true are included in the portfolio view
+      const inPortfolioAccountIds = new Set(
+        this.accountsData.filter((a) => a.in_portfolio).map((a) => a.id),
       );
 
       // First pass: find which months have data, and compute value-by-class once each
@@ -99,7 +99,7 @@ export default defineComponent({
       for (const month of allMonths) {
         const end = monthEnd(month);
         const holdings = Object.values(getLatestHoldings(this.holdingsData, end)).filter((h) =>
-          rebalancingAccountIds.has(h.account_id),
+          inPortfolioAccountIds.has(h.account_id),
         );
         const prices = getLatestPrices(this.pricesData, end);
         let totalValue = 0;
@@ -159,7 +159,7 @@ export default defineComponent({
       // Use the most recent holdings (today) for current allocation
       const today = new Date().toISOString().split('T')[0]!;
       const currentHoldings = Object.values(getLatestHoldings(this.holdingsData, today)).filter(
-        (h) => rebalancingAccountIds.has(h.account_id),
+        (h) => inPortfolioAccountIds.has(h.account_id),
       );
       const currentPrices = getLatestPrices(this.pricesData, today);
 

@@ -403,7 +403,7 @@ export default defineComponent({
             family_id: user.user_metadata.family_id,
             created_by: user.id,
             name: this.newAccountName.trim(),
-            rebalancing: true, // uhh just hardcode 'true' for now I guess
+            in_portfolio: true, // uhh just hardcode 'true' for now I guess
             last4: this.parsedLast4,
           });
           this.matchedAccount = newAccount;

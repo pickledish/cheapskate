@@ -489,21 +489,21 @@ async function seedStaticAsAlex(
 
   const alex401k = await insertAccount({
     name: 'Alex 401(k) - Fidelity',
-    rebalancing: true,
+    in_portfolio: true,
     created_by: alexId,
     family_id: FAMILY_ID,
     last4: '4021',
   });
   const alexRoth = await insertAccount({
     name: 'Alex Roth IRA - Vanguard',
-    rebalancing: true,
+    in_portfolio: true,
     created_by: alexId,
     family_id: FAMILY_ID,
     last4: '8830',
   });
   const alexOld401k = await insertAccount({
     name: 'Alex Old 401(k) - MegaCorp',
-    rebalancing: true,
+    in_portfolio: true,
     created_by: alexId,
     family_id: FAMILY_ID,
     last4: '1177',
@@ -533,35 +533,35 @@ async function seedJordanAccounts(jordanId: string): Promise<JordanAccounts> {
 
   const jordan403b = await insertAccount({
     name: 'Jordan 403(b) - TIAA',
-    rebalancing: true,
+    in_portfolio: true,
     created_by: jordanId,
     family_id: FAMILY_ID,
     last4: '5510',
   });
   const jordanRoth = await insertAccount({
     name: 'Jordan Roth IRA - Fidelity',
-    rebalancing: true,
+    in_portfolio: true,
     created_by: jordanId,
     family_id: FAMILY_ID,
     last4: '6621',
   });
   const jointBrokerage = await insertAccount({
     name: 'Joint Taxable Brokerage - Schwab',
-    rebalancing: true,
+    in_portfolio: true,
     created_by: jordanId,
     family_id: FAMILY_ID,
     last4: '3388',
   });
   const emergency = await insertAccount({
     name: 'Emergency Savings - Ally',
-    rebalancing: false,
+    in_portfolio: false,
     created_by: jordanId,
     family_id: FAMILY_ID,
     last4: '7712',
   });
   const residence = await insertAccount({
     name: 'Primary Residence',
-    rebalancing: false,
+    in_portfolio: false,
     created_by: jordanId,
     family_id: FAMILY_ID,
     last4: null,

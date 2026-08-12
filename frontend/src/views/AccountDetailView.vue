@@ -121,7 +121,7 @@ export default defineComponent({
       return this.account?.last4 || null;
     },
     displayInPortfolio(): string {
-      return this.account?.rebalancing ? 'Yes' : 'No';
+      return this.account?.in_portfolio ? 'Yes' : 'No';
     },
     displayTaxType(): string {
       return 'Retirement';

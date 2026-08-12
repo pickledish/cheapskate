@@ -12,7 +12,7 @@ export default defineComponent({
     return {
       name: '',
       last4: '',
-      rebalancing: true,
+      in_portfolio: true,
       loading: false,
       error: null as string | null,
     };
@@ -37,7 +37,7 @@ export default defineComponent({
           family_id: user.user_metadata.family_id,
           created_by: user.id,
           name: this.name.trim(),
-          rebalancing: this.rebalancing,
+          in_portfolio: this.in_portfolio,
           last4: this.last4.trim() || null,
         });
 
@@ -94,7 +94,7 @@ export default defineComponent({
       <div>
         <label class="flex items-center space-x-2">
           <input
-            v-model="rebalancing"
+            v-model="in_portfolio"
             type="checkbox"
             class="rounded border-surface-border-strong"
           />
