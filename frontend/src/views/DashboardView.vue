@@ -29,12 +29,28 @@ import { formatCurrency } from '@/lib/util/currency';
 
 type GroupBy = 'none' | 'account' | 'owner' | 'asset' | 'assetClass';
 
+const GROUP_BY_VALUES: ReadonlySet<string> = new Set([
+  'none',
+  'account',
+  'owner',
+  'asset',
+  'assetClass',
+]);
+
 const LEGEND_TITLES: Record<Exclude<GroupBy, 'none'>, string> = {
   account: 'Accounts',
   owner: 'Owners',
   asset: 'Assets',
   assetClass: 'Asset Classes',
 };
+
+function parseGroupBy(value: unknown): GroupBy {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (typeof raw === 'string' && GROUP_BY_VALUES.has(raw)) {
+    return raw as GroupBy;
+  }
+  return 'none';
+}
 
 export default defineComponent({
   name: 'DashboardView',
@@ -53,7 +69,6 @@ export default defineComponent({
     monthLabels: string[];
     chartSeries: { name: string; data: number[] }[];
     loading: boolean;
-    groupBy: GroupBy;
     groupByOptions: { value: GroupBy; label: string }[];
     isolatedSeries: string | null;
     holdingsData: HoldingUpdateWithContext[];
@@ -67,7 +82,6 @@ export default defineComponent({
       monthLabels: [],
       chartSeries: [],
       loading: true,
-      groupBy: 'none',
       groupByOptions: [
         { value: 'none', label: 'None' },
         { value: 'account', label: 'Account' },
@@ -86,6 +100,9 @@ export default defineComponent({
     };
   },
   computed: {
+    groupBy(): GroupBy {
+      return parseGroupBy(this.$route.query.groupBy);
+    },
     selectedGroupByLabel(): string {
       const opt = this.groupByOptions.find((o) => o.value === this.groupBy);
       return opt ? opt.label : 'None';
@@ -168,6 +185,17 @@ export default defineComponent({
 
     toggleIsolate(name: string) {
       this.isolatedSeries = this.isolatedSeries === name ? null : name;
+    },
+
+    setGroupBy(value: GroupBy) {
+      if (value === this.groupBy) return;
+      const query = { ...this.$route.query };
+      if (value === 'none') {
+        delete query.groupBy;
+      } else {
+        query.groupBy = value;
+      }
+      this.$router.replace({ path: this.$route.path, query });
     },
 
     computeNetWorthAt(effectiveDate: string): number {
@@ -331,7 +359,7 @@ export default defineComponent({
                           ? 'text-blue-600 font-medium'
                           : 'text-secondary-text',
                       ]"
-                      v-on:click="groupBy = option.value"
+                      v-on:click="setGroupBy(option.value)"
                     >
                       {{ option.label }}
                       <CheckIcon v-if="groupBy === option.value" class="w-4 h-4" />

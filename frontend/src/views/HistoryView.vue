@@ -15,9 +15,25 @@ import {
 } from '@/lib/data';
 import dayjs from 'dayjs';
 import { formatCurrency, formatNumber } from '@/lib/util/currency';
+import { formatMonth } from '@/lib/util/date';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import type { AccountId } from '@/lib/data/accounts';
+
+function queryScalar(value: unknown): string | undefined {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return typeof raw === 'string' ? raw : undefined;
+}
+
+function currentMonthKey(): string {
+  return dayjs().format('YYYY-MM');
+}
+
+function parseMonthParam(value: unknown): string | undefined {
+  const raw = queryScalar(value);
+  if (raw === undefined || !/^\d{4}-(0[1-9]|1[0-2])$/.test(raw)) return undefined;
+  return raw;
+}
 
 export default defineComponent({
   name: 'HistoryView',
@@ -35,10 +51,7 @@ export default defineComponent({
     profileNames: Record<string, string>;
     loading: boolean;
     error: string | null;
-    selectedYear: number;
-    selectedMonth: number;
   } {
-    const now = dayjs();
     return {
       events: [],
       accountNames: new Map(),
@@ -46,47 +59,57 @@ export default defineComponent({
       profileNames: {},
       loading: true,
       error: null,
-      selectedYear: now.year(),
-      selectedMonth: now.month() + 1,
     };
   },
   computed: {
+    selectedMonthKey(): string {
+      return parseMonthParam(this.$route.query.month) ?? currentMonthKey();
+    },
     monthLabel(): string {
-      return dayjs()
-        .year(this.selectedYear)
-        .month(this.selectedMonth - 1)
-        .format('MMM YYYY');
+      return formatMonth(this.selectedMonthKey);
+    },
+  },
+  watch: {
+    selectedMonthKey() {
+      this.loadData();
     },
   },
   async mounted() {
     await this.loadData();
   },
   methods: {
-    async prevMonth() {
-      if (this.selectedMonth === 1) {
-        this.selectedMonth = 12;
-        this.selectedYear--;
-      } else {
-        this.selectedMonth--;
-      }
-      await this.loadData();
+    prevMonth() {
+      this.setMonth(
+        dayjs(this.selectedMonthKey + '-01')
+          .subtract(1, 'month')
+          .format('YYYY-MM'),
+      );
     },
-    async nextMonth() {
-      if (this.selectedMonth === 12) {
-        this.selectedMonth = 1;
-        this.selectedYear++;
+    nextMonth() {
+      this.setMonth(
+        dayjs(this.selectedMonthKey + '-01')
+          .add(1, 'month')
+          .format('YYYY-MM'),
+      );
+    },
+    setMonth(monthKey: string) {
+      const query = { ...this.$route.query };
+      if (monthKey === currentMonthKey()) {
+        delete query.month;
       } else {
-        this.selectedMonth++;
+        query.month = monthKey;
       }
-      await this.loadData();
+      this.$router.replace({ path: this.$route.path, query });
     },
     async loadData() {
       this.loading = true;
       this.error = null;
 
+      const selected = dayjs(this.selectedMonthKey + '-01');
+
       try {
         const [updates, accounts, assets, profiles] = await Promise.all([
-          listUpdatesWithDetails(this.selectedYear, this.selectedMonth),
+          listUpdatesWithDetails(selected.year(), selected.month() + 1),
           listAccounts(),
           listAssets(),
           listProfiles(),
