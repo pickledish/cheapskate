@@ -116,7 +116,7 @@ export default defineComponent({
   },
   computed: {
     isArchived(): boolean {
-      return !!this.account?.archived_at;
+      return !!this.account?.is_archived;
     },
     displayAccountLast4(): string | null {
       return this.account?.last4 || null;
@@ -422,7 +422,7 @@ export default defineComponent({
       }
 
       try {
-        await updateAccount(account.id, { archived_at: null });
+        await updateAccount(account.id, { is_archived: false });
         await this.loadData();
       } catch (err) {
         this.error = err instanceof Error ? err.message : String(err);

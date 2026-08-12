@@ -66,7 +66,7 @@ export default defineComponent({
   },
   computed: {
     filteredAccounts(): Account[] {
-      return this.accounts.filter((account) => !account.archived_at);
+      return this.accounts.filter((account) => !account.is_archived);
     },
     showContinueCard(): boolean {
       // Show continue card if: has at least 1 account, has at least 1 statement, and not yet completed
@@ -105,6 +105,8 @@ export default defineComponent({
         this.hasAnyStatements = updatesData.length > 0;
 
         // Build map of account_id -> most recent effective date
+        // todo -- we want this more robust, ie only counts holdings, DOES count assets if
+        // asset is held in the account?
         const latestEffectiveByAccount: Map<AccountId, string> = new Map();
         for (const update of updatesData) {
           if (update.account_id && !latestEffectiveByAccount.has(update.account_id)) {

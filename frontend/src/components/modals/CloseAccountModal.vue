@@ -63,7 +63,7 @@ export default defineComponent({
           }
         }
 
-        await updateAccount(this.account.id, { archived_at: this.effectiveDate });
+        await updateAccount(this.account.id, { is_archived: true });
         this.$emit('closed');
       } catch (err) {
         this.error = err instanceof Error ? err.message : String(err);

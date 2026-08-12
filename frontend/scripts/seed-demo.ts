@@ -801,7 +801,7 @@ async function seedHistory(
           asset_id: assets.VTHRX,
           quantity: 0,
         });
-        await updateAccount(accounts.alexOld401k.id, { archived_at: date });
+        await updateAccount(accounts.alexOld401k.id, { is_archived: true });
       }
     }
   });

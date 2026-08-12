@@ -12,7 +12,7 @@ export interface Account {
   id: AccountId;
   name: string;
   rebalancing: boolean;
-  archived_at: string | null;
+  is_archived: boolean;
   last4: string | null;
   created_by: string;
   created_at: string;
@@ -64,7 +64,7 @@ export async function updateAccount(
   updates: {
     name?: string;
     rebalancing?: boolean;
-    archived_at?: string | null;
+    is_archived?: boolean;
     last4?: string | null;
   },
 ): Promise<void> {

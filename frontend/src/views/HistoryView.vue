@@ -146,7 +146,7 @@ export default defineComponent({
       }
       try {
         await deleteUpdate(event.id);
-        await updateAccount(event.account_id, { archived_at: null });
+        await updateAccount(event.account_id, { is_archived: false });
         await this.loadData();
       } catch (err) {
         this.error = err instanceof Error ? err.message : String(err);
