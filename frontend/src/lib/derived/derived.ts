@@ -1,9 +1,10 @@
 import type { PriceUpdateWithContext } from '../data/price-updates';
 import type { HoldingUpdateWithContext } from '../data/holding-updates';
 import type { AssetAllocation } from '../data/asset-allocations';
-import { accountIdToString } from '../data/accounts';
+import { accountIdToString, type Account, type AccountId } from '../data/accounts';
 import { assetIdToString, type AssetId, type AssetWithAllocations } from '../data/assets';
 import type { AssetClassId } from '../data/asset-classes';
+import type { Update } from '../data/updates';
 
 /**
  * Returns the latest price update per asset.
@@ -143,4 +144,40 @@ function normalizeAllocations(
       percentage: alloc.percentage,
     })),
   );
+}
+
+/**
+ * Accounts included in portfolio as of `effectiveDate`.
+ *
+ * If an account has any `include_in_portfolio` event, it is included iff at
+ * least one such event has `effective_date <= effectiveDate`. Otherwise the
+ * account's current `in_portfolio` flag is used for all dates (created in or
+ * out of portfolio, never transitioned).
+ */
+export function getInPortfolioAccountIds(
+  accounts: Account[],
+  includeEvents: Update[],
+  effectiveDate: string,
+): Set<AccountId> {
+  const hasEvent = new Set<AccountId>();
+  const includedByDate = new Set<AccountId>();
+  for (const event of includeEvents) {
+    if (event.account_id == null) continue;
+    hasEvent.add(event.account_id);
+    if (event.effective_date <= effectiveDate) {
+      includedByDate.add(event.account_id);
+    }
+  }
+
+  const result: Set<AccountId> = new Set();
+  for (const account of accounts) {
+    if (hasEvent.has(account.id)) {
+      if (includedByDate.has(account.id)) {
+        result.add(account.id);
+      }
+    } else if (account.in_portfolio) {
+      result.add(account.id);
+    }
+  }
+  return result;
 }

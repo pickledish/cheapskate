@@ -10,13 +10,20 @@ import {
   listAccounts,
   listAssetClasses,
   listAssetAllocations,
+  listUpdates,
   type HoldingUpdateWithContext,
   type PriceUpdateWithContext,
   type Account,
   type AssetClass,
   type AssetAllocation,
+  type Update,
 } from '@/lib/data';
-import { getLatestPrices, getLatestHoldings, getValueByClass } from '@/lib/derived/derived';
+import {
+  getLatestPrices,
+  getLatestHoldings,
+  getValueByClass,
+  getInPortfolioAccountIds,
+} from '@/lib/derived/derived';
 import { formatMonth, lastNMonths, monthEnd } from '@/lib/util/date';
 import type { AssetClassId } from '@/lib/data/asset-classes';
 
@@ -33,6 +40,7 @@ export default defineComponent({
     holdingsData: HoldingUpdateWithContext[];
     pricesData: PriceUpdateWithContext[];
     accountsData: Account[];
+    includeEvents: Update[];
     assetClassesData: AssetClass[];
     allocationsData: AssetAllocation[];
   } {
@@ -46,6 +54,7 @@ export default defineComponent({
       holdingsData: [],
       pricesData: [],
       accountsData: [],
+      includeEvents: [],
       assetClassesData: [],
       allocationsData: [],
     };
@@ -59,12 +68,13 @@ export default defineComponent({
       this.error = null;
 
       try {
-        const [holdings, prices, accounts, assetClasses, allocations] = await Promise.all([
+        const [holdings, prices, accounts, assetClasses, allocations, updates] = await Promise.all([
           listHoldingUpdatesWithContext('asc'),
           listPriceUpdatesWithContext('asc'),
           listAccounts(),
           listAssetClasses(),
           listAssetAllocations(),
+          listUpdates(),
         ]);
 
         this.holdingsData = holdings;
@@ -72,6 +82,7 @@ export default defineComponent({
         this.accountsData = accounts;
         this.assetClassesData = assetClasses;
         this.allocationsData = allocations;
+        this.includeEvents = updates.filter((u) => u.update_type === 'include_in_portfolio');
 
         this.computeChartData();
       } catch (err) {
@@ -84,11 +95,6 @@ export default defineComponent({
     computeChartData() {
       const allMonths = lastNMonths(12);
 
-      // Accounts flagged in_portfolio=true are included in the portfolio view
-      const inPortfolioAccountIds = new Set(
-        this.accountsData.filter((a) => a.in_portfolio).map((a) => a.id),
-      );
-
       // First pass: find which months have data, and compute value-by-class once each
       const monthsWithData: {
         month: string;
@@ -98,6 +104,11 @@ export default defineComponent({
       }[] = [];
       for (const month of allMonths) {
         const end = monthEnd(month);
+        const inPortfolioAccountIds = getInPortfolioAccountIds(
+          this.accountsData,
+          this.includeEvents,
+          end,
+        );
         const holdings = Object.values(getLatestHoldings(this.holdingsData, end)).filter((h) =>
           inPortfolioAccountIds.has(h.account_id),
         );
@@ -158,6 +169,11 @@ export default defineComponent({
       // Compute current vs goal comparison for the grid
       // Use the most recent holdings (today) for current allocation
       const today = new Date().toISOString().split('T')[0]!;
+      const inPortfolioAccountIds = getInPortfolioAccountIds(
+        this.accountsData,
+        this.includeEvents,
+        today,
+      );
       const currentHoldings = Object.values(getLatestHoldings(this.holdingsData, today)).filter(
         (h) => inPortfolioAccountIds.has(h.account_id),
       );

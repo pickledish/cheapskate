@@ -4,6 +4,7 @@ import AppLayout from '@/components/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import EditAccountModal from '@/components/modals/EditAccountModal.vue';
 import CloseAccountModal from '@/components/modals/CloseAccountModal.vue';
+import IncludeInPortfolioModal from '@/components/modals/IncludeInPortfolioModal.vue';
 import {
   getAccount,
   getProfile,
@@ -48,6 +49,7 @@ export default defineComponent({
     PageHeader,
     EditAccountModal,
     CloseAccountModal,
+    IncludeInPortfolioModal,
     PencilSquareIcon,
     CheckIcon,
     ChevronUpDownIcon,
@@ -78,6 +80,7 @@ export default defineComponent({
     error: string | null;
     showEditAccountModal: boolean;
     showCloseAccountModal: boolean;
+    showIncludeInPortfolioModal: boolean;
     editing: boolean;
     effectiveDate: string;
     editQuantities: Map<AssetId, string>;
@@ -103,6 +106,7 @@ export default defineComponent({
 
       showEditAccountModal: false,
       showCloseAccountModal: false,
+      showIncludeInPortfolioModal: false,
 
       // Inline editing state
       editing: false,
@@ -122,6 +126,9 @@ export default defineComponent({
     },
     displayInPortfolio(): string {
       return this.account?.in_portfolio ? 'Yes' : 'No';
+    },
+    canIncludeInPortfolio(): boolean {
+      return !!this.account && !this.account.in_portfolio && !this.isArchived;
     },
     displayTaxType(): string {
       return 'Retirement';
@@ -413,6 +420,11 @@ export default defineComponent({
       await this.loadData();
     },
 
+    async onIncludedInPortfolio() {
+      this.showIncludeInPortfolioModal = false;
+      await this.loadData();
+    },
+
     async doDeleteAccount() {
       const account = this.account;
       if (!account) return;
@@ -459,7 +471,7 @@ export default defineComponent({
                 Manage<span class="hidden sm:inline">&nbsp;Account</span>
               </MenuButton>
               <MenuItems
-                class="absolute right-0 mt-1 w-36 bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col"
+                class="absolute right-0 mt-1 w-42 bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col"
               >
                 <MenuItem v-slot:default="{ active }">
                   <button
@@ -470,6 +482,17 @@ export default defineComponent({
                     v-on:click="showEditAccountModal = true"
                   >
                     Edit
+                  </button>
+                </MenuItem>
+                <MenuItem v-if="canIncludeInPortfolio" v-slot:default="{ active }">
+                  <button
+                    v-bind:class="[
+                      'w-full text-left px-4 py-2 text-sm cursor-pointer',
+                      active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text',
+                    ]"
+                    v-on:click="showIncludeInPortfolioModal = true"
+                  >
+                    Include in Portfolio
                   </button>
                 </MenuItem>
                 <MenuItem v-if="!isArchived" v-slot:default="{ active }">
@@ -845,6 +868,12 @@ export default defineComponent({
       v-bind:held-assets="heldAssetIdsInSortedOrder"
       v-on:close="showCloseAccountModal = false"
       v-on:closed="onAccountClosed"
+    />
+    <IncludeInPortfolioModal
+      v-if="showIncludeInPortfolioModal && account"
+      v-bind:account="account"
+      v-on:close="showIncludeInPortfolioModal = false"
+      v-on:included="onIncludedInPortfolio"
     />
   </AppLayout>
 </template>

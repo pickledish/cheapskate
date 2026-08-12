@@ -3,7 +3,12 @@ import { type AccountId } from './accounts';
 import { type PriceUpdate } from './price-updates';
 import { type HoldingUpdate } from './holding-updates';
 
-export type UpdateType = 'statement' | 'manual_price' | 'manual_holdings' | 'mark_as_closed';
+export type UpdateType =
+  | 'statement'
+  | 'manual_price'
+  | 'manual_holdings'
+  | 'mark_as_closed'
+  | 'include_in_portfolio';
 
 export interface Update {
   id: number;

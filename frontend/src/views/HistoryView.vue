@@ -176,6 +176,26 @@ export default defineComponent({
       }
     },
 
+    async undoIncludeInPortfolio(event: UpdateWithDetails) {
+      if (
+        !confirm(
+          `Undo include of "${this.accountName(event)}" in portfolio? The account will be excluded from portfolio allocation again.`,
+        )
+      )
+        return;
+      if (event.account_id == null) {
+        this.error = 'Cannot undo include: missing account';
+        return;
+      }
+      try {
+        await deleteUpdate(event.id);
+        await updateAccount(event.account_id, { in_portfolio: false });
+        await this.loadData();
+      } catch (err) {
+        this.error = err instanceof Error ? err.message : String(err);
+      }
+    },
+
     async doDeleteUpdate(updateId: number) {
       if (!confirm('Undo this update?')) return;
       try {
@@ -189,6 +209,8 @@ export default defineComponent({
     async onUndo(event: UpdateWithDetails) {
       if (event.update_type === 'mark_as_closed') {
         await this.undoClose(event);
+      } else if (event.update_type === 'include_in_portfolio') {
+        await this.undoIncludeInPortfolio(event);
       } else {
         await this.doDeleteUpdate(event.id);
       }
@@ -275,6 +297,9 @@ export default defineComponent({
                   {{ assetLabel(holding.asset_id) }} is now
                   {{ formatNumber(holding.quantity) }} shares
                 </li>
+              </template>
+              <template v-else-if="event.update_type === 'include_in_portfolio'">
+                <li>Included in portfolio allocation</li>
               </template>
             </ul>
           </div>

@@ -5,6 +5,7 @@
  *   1. Build cash toward a down payment
  *   2. Buy a home (cash → equity; net worth barely moves)
  *   3. Mortgage principal ($DEBT) pays down while property value stays flat
+ *   4. Alex's MegaCorp shares come off lockup near the end and enter the allocation (US-stock overweight)
  *
  * Usage:
  *   SUPABASE_SERVICE_ROLE_KEY=<key> npm run seed:local
@@ -57,7 +58,8 @@ type AssetKey =
   | 'STABLE'
   | 'CASH'
   | 'HOME'
-  | 'DEBT';
+  | 'DEBT'
+  | 'MEGA';
 
 type ClassKey = 'us' | 'intl' | 'bond' | 'cash' | 're' | 'debt';
 
@@ -86,6 +88,7 @@ const BASE_PRICES: Record<AssetKey, number> = {
   CASH: 1,
   HOME: HOME_VALUE,
   DEBT: -1, // $DEBT: qty = principal owed → value = -principal
+  MEGA: 96,
 };
 
 const ASSET_CLASS_MAP: Record<AssetKey, ClassKey> = {
@@ -100,6 +103,7 @@ const ASSET_CLASS_MAP: Record<AssetKey, ClassKey> = {
   CASH: 'cash',
   HOME: 're',
   DEBT: 'debt',
+  MEGA: 'us',
 };
 
 // ---------------------------------------------------------------------------
@@ -366,6 +370,7 @@ interface AlexAccounts {
   alex401k: Account;
   alexRoth: Account;
   alexOld401k: Account;
+  alexMegaStock: Account;
 }
 
 interface JordanAccounts {
@@ -485,6 +490,7 @@ async function seedStaticAsAlex(
     CASH: await makeAsset(null, 'Cash', [{ classKey: 'cash', pct: 1 }]),
     HOME: await makeAsset(null, 'Primary residence (property)', [{ classKey: 're', pct: 1 }]),
     DEBT: await makeAsset('$DEBT', 'Mortgage', [{ classKey: 'debt', pct: 1 }]),
+    MEGA: await makeAsset(null, 'MegaCorp Common Stock', [{ classKey: 'us', pct: 1 }]),
   };
 
   const alex401k = await insertAccount({
@@ -508,6 +514,13 @@ async function seedStaticAsAlex(
     family_id: FAMILY_ID,
     last4: '1177',
   });
+  const alexMegaStock = await insertAccount({
+    name: 'Alex MegaCorp Stock Plan',
+    in_portfolio: false,
+    created_by: alexId,
+    family_id: FAMILY_ID,
+    last4: '2294',
+  });
 
   await insertAssetAlias({
     account_id: alex401k.id,
@@ -522,7 +535,7 @@ async function seedStaticAsAlex(
 
   return {
     assets,
-    alexAccounts: { alex401k, alexRoth, alexOld401k },
+    alexAccounts: { alex401k, alexRoth, alexOld401k, alexMegaStock },
   };
 }
 
@@ -640,6 +653,22 @@ async function seedManualPrice(
   await insertPriceUpdate({ update_id: update.id, asset_id: assetId, price });
 }
 
+async function seedIncludeInPortfolio(
+  account: Account,
+  userId: string,
+  effectiveDate: string,
+): Promise<void> {
+  await insertUpdate({
+    family_id: FAMILY_ID,
+    account_id: account.id,
+    update_type: 'include_in_portfolio',
+    effective_date: effectiveDate,
+    created_by: userId,
+    created_at: uploadedAt(effectiveDate),
+  });
+  await updateAccount(account.id, { in_portfolio: true });
+}
+
 async function seedHistory(
   alexId: string,
   jordanId: string,
@@ -648,13 +677,14 @@ async function seedHistory(
 ): Promise<void> {
   console.log('Seeding ~10 months of portfolio history...');
   console.log(
-    `  Story: save → buy home at month ${BUY_MONTH} ($${HOME_VALUE.toLocaleString()} / $${MORTGAGE_START.toLocaleString()} mortgage) → equity via paydown`,
+    `  Story: save → buy home at month ${BUY_MONTH} ($${HOME_VALUE.toLocaleString()} / $${MORTGAGE_START.toLocaleString()} mortgage) → equity via paydown → MegaCorp lockup ends`,
   );
 
   const months = lastNMonths(10).map(monthEnd);
   const n = months.length;
   const prices = buildPrices(n);
   const closeMonth = 8; // roll MegaCorp 401(k) into Fidelity 401(k) late in the window
+  const liquidMonth = n - 1; // MegaCorp lockup ends the last data point
 
   // Quantity schedules
   const alex401kVtsax = growQty(
@@ -685,6 +715,7 @@ async function seedHistory(
   );
 
   const old401kVthrx = Array.from({ length: n }, () => 610);
+  const megaQty = Array.from({ length: n }, () => 400);
 
   const jordan403bVtsax = growQty(
     300,
@@ -802,6 +833,19 @@ async function seedHistory(
           quantity: 0,
         });
         await updateAccount(accounts.alexOld401k.id, { is_archived: true });
+      }
+
+      // MegaCorp shares: owned (and in net worth) the whole time; in portfolio after lockup
+      await seedStatement(
+        accounts.alexMegaStock,
+        alexId,
+        date,
+        [{ assetId: assets.MEGA, assetKey: 'MEGA', qty: megaQty[i]! }],
+        prices,
+        i,
+      );
+      if (i === liquidMonth) {
+        await seedIncludeInPortfolio(accounts.alexMegaStock, alexId, date);
       }
     }
   });

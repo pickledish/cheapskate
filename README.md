@@ -172,11 +172,11 @@ VITE_SUPABASE_URL=https://xxx.supabase.co VITE_SUPABASE_ANON_KEY=xxx npm run bui
 | `asset_classes` | User-defined categories (stocks, bonds, cash, etc.) |
 | `asset_allocations` | Maps assets to classes with percentages |
 | `asset_aliases` | Per-account label → asset mappings (for ticker-less holdings) |
-| `updates` | Portfolio change events (statement, manual price/holdings, close) |
+| `updates` | Portfolio change events (statement, manual price/holdings, close, include in portfolio) |
 | `price_updates` | Asset prices belonging to an update |
 | `holding_updates` | Asset quantities belonging to an update |
 
-Prices and holdings are stored as children of `updates` rather than standalone history tables. An update has a type (`statement`, `manual_price`, `manual_holdings`, or `mark_as_closed`), an effective date, and optional account scope.
+Prices and holdings are stored as children of `updates` rather than standalone history tables. An update has a type (`statement`, `manual_price`, `manual_holdings`, `mark_as_closed`, or `include_in_portfolio`), an effective date, and optional account scope. Close and include-in-portfolio dates live on the update row; `accounts.is_archived` and `accounts.in_portfolio` are current-state flags.
 
 ### Family Sharing
 

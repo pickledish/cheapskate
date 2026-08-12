@@ -6,6 +6,7 @@ import {
   CurrencyDollarIcon,
   ChartBarIcon,
   ArchiveBoxIcon,
+  ChartPieIcon,
 } from '@heroicons/vue/24/outline';
 import { TrashIcon } from '@heroicons/vue/24/solid';
 
@@ -37,6 +38,13 @@ const EVENT_TYPES = {
     iconClass: 'text-purple-500',
     borderClass: 'border-purple-500',
     undoTitle: 'Undo shares update',
+  },
+  include_in_portfolio: {
+    title: 'Included in Portfolio',
+    icon: ChartPieIcon,
+    iconClass: 'text-teal-500',
+    borderClass: 'border-teal-500',
+    undoTitle: 'Undo include in portfolio',
   },
 };
 
