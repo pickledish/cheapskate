@@ -1,17 +1,19 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import BaseModal from './BaseModal.vue';
+import InstitutionIcon from '@/components/InstitutionIcon.vue';
 import { supabase } from '@/lib/supabase';
 import { insertAccount } from '@/lib/data';
 
 export default defineComponent({
   name: 'AddAccountModal',
-  components: { BaseModal },
+  components: { BaseModal, InstitutionIcon },
   emits: ['close', 'created'],
   data() {
     return {
       name: '',
       last4: '',
+      institution: '',
       in_portfolio: true,
       loading: false,
       error: null as string | null,
@@ -39,6 +41,7 @@ export default defineComponent({
           name: this.name.trim(),
           in_portfolio: this.in_portfolio,
           last4: this.last4.trim() || null,
+          institution: this.institution.trim() || null,
         });
 
         this.$emit('created');
@@ -73,6 +76,22 @@ export default defineComponent({
           placeholder="e.g., Fidelity 401k"
           class="w-full px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-secondary-text mb-1"> Institution </label>
+        <div class="relative">
+          <input
+            v-model="institution"
+            type="text"
+            placeholder="e.g., Vanguard"
+            class="w-full px-3 py-2 pr-10 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <InstitutionIcon v-bind:name="institution" />
+          </span>
+        </div>
+        <p class="mt-1 text-xs text-muted-text">Optional. Bank, brokerage, or other custodian.</p>
       </div>
 
       <div>

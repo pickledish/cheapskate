@@ -6,6 +6,7 @@ import AddAccountModal from '@/components/modals/AddAccountModal.vue';
 import UploadStatementModal from '@/components/modals/UploadStatementModal.vue';
 import OnboardingModal from '@/components/modals/OnboardingModal.vue';
 import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue';
+import InstitutionIcon from '@/components/InstitutionIcon.vue';
 import { supabase } from '@/lib/supabase';
 import {
   listAccounts,
@@ -33,6 +34,7 @@ export default defineComponent({
     UploadStatementModal,
     OnboardingModal,
     OnboardingContinueCard,
+    InstitutionIcon,
   },
   data(): {
     accounts: Account[];
@@ -245,7 +247,10 @@ export default defineComponent({
             v-bind:to="'/accounts/' + accountIdToString(account.id)"
             class="bg-surface rounded-lg shadow p-4 flex flex-col hover:shadow-md transition-shadow"
           >
-            <h3 class="font-semibold text-primary-text">{{ account.name }}</h3>
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-semibold text-primary-text min-w-0 truncate">{{ account.name }}</h3>
+              <InstitutionIcon v-bind:name="account.institution" />
+            </div>
             <!-- Asset class tags -->
             <div
               v-if="accountAssetClasses(account.id).length || accountHasUnclassified(account.id)"

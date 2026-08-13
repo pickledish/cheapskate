@@ -5,6 +5,7 @@ import PageHeader from '@/components/PageHeader.vue';
 import EditAccountModal from '@/components/modals/EditAccountModal.vue';
 import CloseAccountModal from '@/components/modals/CloseAccountModal.vue';
 import IncludeInPortfolioModal from '@/components/modals/IncludeInPortfolioModal.vue';
+import InstitutionIcon from '@/components/InstitutionIcon.vue';
 import {
   getAccount,
   getProfile,
@@ -50,6 +51,7 @@ export default defineComponent({
     EditAccountModal,
     CloseAccountModal,
     IncludeInPortfolioModal,
+    InstitutionIcon,
     PencilSquareIcon,
     CheckIcon,
     ChevronUpDownIcon,
@@ -129,9 +131,6 @@ export default defineComponent({
     },
     canIncludeInPortfolio(): boolean {
       return !!this.account && !this.account.in_portfolio && !this.isArchived;
-    },
-    displayTaxType(): string {
-      return 'Retirement';
     },
     displayTotalHoldings(): string {
       return this.formatCurrency(this.totalValue || 0);
@@ -562,13 +561,14 @@ export default defineComponent({
               <dl
                 class="divide-y divide-surface-border rounded-lg bg-surface-recessed border border-surface-border px-4"
               >
-                <div class="flex items-baseline justify-between py-2.5">
+                <div class="flex items-center justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-text">
-                    Owner
+                    Institution
                   </dt>
-                  <dd class="text-sm font-semibold text-primary-text">
-                    <template v-if="ownerName">{{ ownerName }}</template>
-                    <span v-else class="text-placeholder-text font-normal">Unknown</span>
+                  <dd class="flex items-center gap-2 text-sm font-semibold text-primary-text">
+                    <InstitutionIcon v-bind:name="account.institution" />
+                    <template v-if="account.institution">{{ account.institution }}</template>
+                    <span v-else class="text-placeholder-text font-normal">Not set</span>
                   </dd>
                 </div>
                 <div class="flex items-baseline justify-between py-2.5">
@@ -582,15 +582,18 @@ export default defineComponent({
                 </div>
                 <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-text">
-                    Included In Portfolio
+                    Owner
                   </dt>
-                  <dd class="text-sm font-semibold text-primary-text">{{ displayInPortfolio }}</dd>
+                  <dd class="text-sm font-semibold text-primary-text">
+                    <template v-if="ownerName">{{ ownerName }}</template>
+                    <span v-else class="text-placeholder-text font-normal">Unknown</span>
+                  </dd>
                 </div>
                 <div class="flex items-baseline justify-between py-2.5">
                   <dt class="text-xs font-semibold uppercase tracking-wide text-muted-text">
-                    Account Type
+                    Included In Portfolio
                   </dt>
-                  <dd class="text-sm font-semibold text-primary-text">{{ displayTaxType }}</dd>
+                  <dd class="text-sm font-semibold text-primary-text">{{ displayInPortfolio }}</dd>
                 </div>
               </dl>
             </div>

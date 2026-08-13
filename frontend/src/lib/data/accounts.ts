@@ -14,6 +14,7 @@ export interface Account {
   in_portfolio: boolean;
   is_archived: boolean;
   last4: string | null;
+  institution: string | null;
   created_by: string;
   created_at: string;
   family_id: string;
@@ -42,6 +43,7 @@ export async function insertAccount(account: {
   created_by: string;
   family_id: string;
   last4?: string | null;
+  institution?: string | null;
 }): Promise<Account> {
   const { data, error } = await supabase
     .from('accounts')
@@ -51,6 +53,7 @@ export async function insertAccount(account: {
       created_by: account.created_by,
       family_id: account.family_id,
       last4: account.last4 ?? null,
+      institution: account.institution ?? null,
     })
     .select()
     .single();
@@ -66,6 +69,7 @@ export async function updateAccount(
     in_portfolio?: boolean;
     is_archived?: boolean;
     last4?: string | null;
+    institution?: string | null;
   },
 ): Promise<void> {
   const { error } = await supabase.from('accounts').update(updates).eq('id', id);

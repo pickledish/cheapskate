@@ -1,11 +1,12 @@
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
+import InstitutionIcon from '@/components/InstitutionIcon.vue';
 import { updateAccount, type Account } from '@/lib/data';
 
 export default defineComponent({
   name: 'EditAccountModal',
-  components: { BaseModal },
+  components: { BaseModal, InstitutionIcon },
   props: {
     account: {
       type: Object as PropType<Account>,
@@ -17,6 +18,7 @@ export default defineComponent({
     return {
       name: '',
       last4: '',
+      institution: '',
       loading: false,
       error: null as string | null,
     };
@@ -24,6 +26,7 @@ export default defineComponent({
   mounted() {
     this.name = this.account.name || '';
     this.last4 = this.account.last4 || '';
+    this.institution = this.account.institution || '';
   },
   methods: {
     async save() {
@@ -39,6 +42,7 @@ export default defineComponent({
         await updateAccount(this.account.id, {
           name: this.name.trim(),
           last4: this.last4.trim() || null,
+          institution: this.institution.trim() || null,
         });
         this.$emit('updated');
       } catch (err) {
@@ -68,6 +72,21 @@ export default defineComponent({
           placeholder="e.g., Fidelity 401k"
           class="w-full px-3 py-2 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-secondary-text mb-1"> Institution </label>
+        <div class="relative">
+          <input
+            v-model="institution"
+            type="text"
+            placeholder="e.g., Vanguard"
+            class="w-full px-3 py-2 pr-10 border border-surface-border-strong rounded-md bg-surface text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <InstitutionIcon v-bind:name="institution" />
+          </span>
+        </div>
+        <p class="mt-1 text-xs text-muted-text">Optional. Bank, brokerage, or other custodian.</p>
       </div>
       <div>
         <label class="block text-sm font-medium text-secondary-text mb-1">

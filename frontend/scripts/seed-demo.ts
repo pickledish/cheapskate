@@ -494,25 +494,28 @@ async function seedStaticAsAlex(
   };
 
   const alex401k = await insertAccount({
-    name: 'Alex 401(k) - Fidelity',
+    name: 'Alex 401(k)',
     in_portfolio: true,
     created_by: alexId,
     family_id: FAMILY_ID,
     last4: '4021',
+    institution: 'Fidelity',
   });
   const alexRoth = await insertAccount({
-    name: 'Alex Roth IRA - Vanguard',
+    name: 'Alex Roth IRA',
     in_portfolio: true,
     created_by: alexId,
     family_id: FAMILY_ID,
     last4: '8830',
+    institution: 'Vanguard',
   });
   const alexOld401k = await insertAccount({
-    name: 'Alex Old 401(k) - MegaCorp',
+    name: 'Alex Old 401(k)',
     in_portfolio: true,
     created_by: alexId,
     family_id: FAMILY_ID,
     last4: '1177',
+    institution: 'MegaCorp',
   });
   const alexMegaStock = await insertAccount({
     name: 'Alex MegaCorp Stock Plan',
@@ -520,6 +523,7 @@ async function seedStaticAsAlex(
     created_by: alexId,
     family_id: FAMILY_ID,
     last4: '2294',
+    institution: 'MegaCorp',
   });
 
   await insertAssetAlias({
@@ -545,32 +549,36 @@ async function seedJordanAccounts(jordanId: string): Promise<JordanAccounts> {
   await insertProfile({ id: jordanId, family_id: FAMILY_ID, name: 'Jordan Sample' });
 
   const jordan403b = await insertAccount({
-    name: 'Jordan 403(b) - TIAA',
+    name: 'Jordan 403(b)',
     in_portfolio: true,
     created_by: jordanId,
     family_id: FAMILY_ID,
     last4: '5510',
+    institution: 'TIAA',
   });
   const jordanRoth = await insertAccount({
-    name: 'Jordan Roth IRA - Fidelity',
+    name: 'Jordan Roth IRA',
     in_portfolio: true,
     created_by: jordanId,
     family_id: FAMILY_ID,
     last4: '6621',
+    institution: 'Fidelity',
   });
   const jointBrokerage = await insertAccount({
-    name: 'Joint Taxable Brokerage - Schwab',
+    name: 'Joint Taxable Brokerage',
     in_portfolio: true,
     created_by: jordanId,
     family_id: FAMILY_ID,
     last4: '3388',
+    institution: 'Schwab',
   });
   const emergency = await insertAccount({
-    name: 'Emergency Savings - Ally',
+    name: 'Emergency Savings',
     in_portfolio: false,
     created_by: jordanId,
     family_id: FAMILY_ID,
     last4: '7712',
+    institution: 'Ally',
   });
   const residence = await insertAccount({
     name: 'Primary Residence',

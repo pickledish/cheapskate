@@ -15,7 +15,8 @@
     "format-fix": "prettier --check \"**/*.{ts,vue}\" --write",
     "seed": "node -e \"console.error('Specify a backend: npm run seed:local  or  npm run seed:cloud'); process.exit(1)\"",
     "seed:local": "vite-node --mode localdev scripts/seed-demo.ts",
-    "seed:cloud": "vite-node --mode cloud scripts/seed-demo.ts"
+    "seed:cloud": "vite-node --mode cloud scripts/seed-demo.ts",
+    "fetch-institution-icons": "vite-node scripts/fetch-institution-icons.ts"
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.23",
