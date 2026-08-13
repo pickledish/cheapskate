@@ -107,12 +107,6 @@ interface SoldHolding {
 type ResolvedHolding =
   TickerHolding | NewTickerHolding | AliasHolding | UnresolvedHolding | SoldHolding;
 
-interface ExistingHolding {
-  asset_id: AssetId;
-  ticker: string | null;
-  name: string;
-}
-
 export default defineComponent({
   name: 'UploadStatementModal',
   components: {
@@ -151,7 +145,7 @@ export default defineComponent({
     newAccountName: string;
     matchingAccountIds: AccountId[];
     allAssets: Asset[];
-    existingHoldings: ExistingHolding[];
+    existingHoldings: Asset[];
     loading: boolean;
     error: string | null;
     comboboxAnchors: Record<number, HTMLElement>;
@@ -252,7 +246,7 @@ export default defineComponent({
       return a.last4 ? `${a.name} (****${a.last4})` : a.name;
     },
 
-    displayAsset(asset: { name: string; ticker: string | null }): string {
+    displayAsset(asset: Asset): string {
       return asset.ticker ? `${asset.name} (${asset.ticker})` : asset.name;
     },
 
@@ -466,11 +460,10 @@ export default defineComponent({
 
         this.existingHoldings = Object.values(latestByAsset)
           .filter((h) => h.quantity > 0)
-          .map((h) => ({
-            asset_id: h.asset_id,
-            ticker: assetsById.get(h.asset_id)?.ticker ?? null,
-            name: assetsById.get(h.asset_id)?.name ?? 'Unknown',
-          }));
+          .flatMap((h) => {
+            const asset = assetsById.get(h.asset_id);
+            return asset ? [asset] : [];
+          });
 
         // Build alias lookup: normalized statement label -> asset
         const assetsByLabel: Record<string, Asset> = {};
@@ -526,7 +519,7 @@ export default defineComponent({
           quantity: h.quantity,
           total_value: h.total_value,
           price: h.price,
-          display: this.displayAsset({ name: h.name, ticker: key }),
+          display: `${h.name} (${key})`,
         };
       }
 
@@ -593,11 +586,11 @@ export default defineComponent({
 
       // Check each existing holding to see if it's missing from the parsed results
       for (const existing of this.existingHoldings) {
-        if (!present.has(existing.asset_id)) {
+        if (!present.has(existing.id)) {
           // Asset not in statement - add as sold (quantity=0)
           this.holdings.push({
             kind: 'sold',
-            assetId: existing.asset_id,
+            assetId: existing.id,
             name: existing.name,
             ticker: existing.ticker,
             display: this.displayAsset(existing),

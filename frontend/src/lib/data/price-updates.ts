@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import type { AssetId } from './assets';
+import type { Update } from './updates';
 
 export interface PriceUpdate {
   update_id: number;
@@ -16,11 +17,7 @@ export interface PriceUpdateWithContext {
   created_at: string;
 }
 
-export async function insertPriceUpdate(price: {
-  update_id: number;
-  asset_id: AssetId;
-  price: number;
-}): Promise<void> {
+export async function insertPriceUpdate(price: PriceUpdate): Promise<void> {
   const { error } = await supabase.from('price_updates').insert({
     update_id: price.update_id,
     asset_id: price.asset_id,
@@ -51,16 +48,7 @@ export async function listPriceUpdatesWithContext(
 
   if (error) throw error;
 
-  type PriceUpdateRow = {
-    asset_id: AssetId;
-    price: number;
-    update_id: number;
-    updates: {
-      effective_date: string;
-      created_by: string;
-      created_at: string;
-    };
-  };
+  type PriceUpdateRow = PriceUpdate & { updates: Update };
 
   return ((data || []) as unknown as PriceUpdateRow[]).map((row) => ({
     asset_id: row.asset_id,

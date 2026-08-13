@@ -361,17 +361,14 @@ export default defineComponent({
         } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        const holdingsToSave: { asset_id: AssetId; quantity: number }[] = [];
+        const holdingsToSave: Map<AssetId, number> = new Map();
 
         // Existing holdings with changed quantities
         for (const assetId of this.heldAssetIdsInSortedOrder) {
           const newQty = parseFloat(this.editQuantities.get(assetId) ?? '');
           if (isNaN(newQty) || newQty < 0) continue;
           if (newQty !== this.quantityFor(assetId)) {
-            holdingsToSave.push({
-              asset_id: assetId,
-              quantity: newQty,
-            });
+            holdingsToSave.set(assetId, newQty);
           }
         }
 
@@ -380,13 +377,10 @@ export default defineComponent({
           if (!row.asset) continue;
           const qty = parseFloat(row.quantity);
           if (isNaN(qty) || qty <= 0) continue;
-          holdingsToSave.push({
-            asset_id: row.asset.id,
-            quantity: qty,
-          });
+          holdingsToSave.set(row.asset.id, qty);
         }
 
-        if (holdingsToSave.length > 0) {
+        if (holdingsToSave.size > 0) {
           const update = await insertUpdate({
             family_id: user.user_metadata.family_id,
             account_id: account.id,
@@ -395,11 +389,11 @@ export default defineComponent({
             created_by: user.id,
           });
 
-          for (const h of holdingsToSave) {
+          for (const [asset_id, quantity] of holdingsToSave) {
             await insertHoldingUpdate({
               update_id: update.id,
-              asset_id: h.asset_id,
-              quantity: h.quantity,
+              asset_id,
+              quantity,
             });
           }
         }

@@ -1,6 +1,7 @@
 import { supabase } from '../supabase';
 import type { AccountId } from './accounts';
 import type { AssetId } from './assets';
+import type { Update } from './updates';
 
 export interface HoldingUpdate {
   update_id: number;
@@ -18,22 +19,17 @@ export interface HoldingUpdateWithContext {
   created_at: string;
 }
 
-type HoldingUpdateRow = {
-  asset_id: AssetId;
-  quantity: number;
-  update_id: number;
-  updates: {
-    account_id: AccountId;
-    effective_date: string;
-    created_by: string;
-    created_at: string;
-  };
-};
+type HoldingUpdateRow = HoldingUpdate & { updates: Update };
 
 function mapHoldingUpdateRow(row: HoldingUpdateRow): HoldingUpdateWithContext {
+  const accountId = row.updates.account_id;
+  if (accountId == null) {
+    throw new Error(`holding update ${row.update_id} is missing account_id`);
+  }
+
   return {
     asset_id: row.asset_id,
-    account_id: row.updates.account_id,
+    account_id: accountId,
     effective_date: row.updates.effective_date,
     // PostgREST returns Postgres numeric as a string; coerce once here.
     quantity: parseFloat(String(row.quantity)),
@@ -43,11 +39,7 @@ function mapHoldingUpdateRow(row: HoldingUpdateRow): HoldingUpdateWithContext {
   };
 }
 
-export async function insertHoldingUpdate(holding: {
-  update_id: number;
-  asset_id: AssetId;
-  quantity: number;
-}): Promise<void> {
+export async function insertHoldingUpdate(holding: HoldingUpdate): Promise<void> {
   const { error } = await supabase.from('holding_updates').insert({
     update_id: holding.update_id,
     asset_id: holding.asset_id,
