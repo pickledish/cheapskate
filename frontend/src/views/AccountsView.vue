@@ -247,7 +247,7 @@ export default defineComponent({
             v-bind:to="'/accounts/' + accountIdToString(account.id)"
             class="bg-surface rounded-lg shadow p-4 flex flex-col hover:shadow-md transition-shadow"
           >
-            <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center justify-between gap-2">
               <h3 class="font-semibold text-primary-text min-w-0 truncate">{{ account.name }}</h3>
               <InstitutionIcon v-bind:name="account.institution" />
             </div>
