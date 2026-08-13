@@ -23,6 +23,6 @@ export default defineComponent({
     v-if="src"
     v-bind:src="src"
     v-bind:alt="name || ''"
-    class="h-4 w-4 shrink-0 object-contain"
+    class="h-4 w-4 shrink-0 object-contain rounded-sm"
   />
 </template>

@@ -31,6 +31,7 @@ export const INSTITUTION_DOMAINS: Record<string, string> = {
   acorns: 'acorns.com',
   m1: 'm1.com',
   citi: 'citi.com',
+  carta: 'carta.com',
 };
 
 const iconModules = import.meta.glob<string>('../assets/institutions/*', {
