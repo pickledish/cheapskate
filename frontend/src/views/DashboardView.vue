@@ -24,7 +24,7 @@ import { ChevronDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import { accountIdToString } from '@/lib/data/accounts';
 import { assetClassIdToString } from '@/lib/data/asset-classes';
-import { chartColor, NET_WORTH_CHART_HEIGHT_PX } from '@/lib/chartPalette';
+import { chartColor } from '@/lib/chartPalette';
 import { formatCurrency } from '@/lib/util/currency';
 
 type GroupBy = 'none' | 'account' | 'owner' | 'asset' | 'assetClass';
@@ -121,9 +121,6 @@ export default defineComponent({
         color: chartColor(i),
         latestValue: s.data.length > 0 ? (s.data[s.data.length - 1] ?? 0) : 0,
       }));
-    },
-    legendMaxHeightPx(): number {
-      return NET_WORTH_CHART_HEIGHT_PX;
     },
   },
   watch: {
@@ -319,8 +316,8 @@ export default defineComponent({
 </script>
 
 <template>
-  <AppLayout>
-    <div class="space-y-6">
+  <AppLayout fill-viewport>
+    <div class="flex flex-col gap-6 md:min-h-0 md:flex-1">
       <PageHeader
         title="Net Worth"
         description="Track your total net worth over time. Group by account, owner, asset, or asset class."
@@ -376,15 +373,18 @@ export default defineComponent({
       <div v-if="loading" class="text-muted-text">Loading...</div>
 
       <!-- Chart + legend islands -->
-      <div v-else class="flex flex-col gap-6 md:flex-row">
-        <div class="min-w-0 flex-1 bg-surface shadow rounded-lg overflow-hidden">
-          <div class="bg-header px-6 py-3">
+      <div v-else class="flex flex-col gap-6 md:min-h-0 md:flex-1 md:flex-row">
+        <div
+          class="min-w-0 overflow-hidden bg-surface shadow rounded-lg md:flex md:min-h-0 md:flex-1 md:flex-col"
+        >
+          <div class="shrink-0 bg-header px-6 py-3">
             <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">
               Net Worth Over Time
             </h3>
           </div>
-          <div class="p-6">
+          <div class="p-4 md:flex md:min-h-0 md:flex-1 md:flex-col md:p-6">
             <NetWorthBarChart
+              class="h-[40dvh] md:h-auto md:min-h-0 md:flex-1"
               v-bind:labels="monthLabels"
               v-bind:series="chartSeries"
               v-bind:isolated-series="isolatedSeries"
@@ -394,17 +394,14 @@ export default defineComponent({
 
         <div
           v-if="showLegend"
-          class="w-full shrink-0 md:w-80 bg-surface shadow rounded-lg overflow-hidden self-start"
+          class="flex w-full shrink-0 flex-col overflow-hidden self-start bg-surface shadow rounded-lg md:max-h-full md:w-80"
         >
-          <div class="bg-header px-6 py-3">
+          <div class="bg-header px-6 py-3 shrink-0">
             <h3 class="text-xs font-medium text-header-text uppercase tracking-wider">
               {{ legendTitle }}
             </h3>
           </div>
-          <div
-            class="overflow-y-auto px-4 py-6"
-            v-bind:style="{ maxHeight: legendMaxHeightPx + 48 + 'px' }"
-          >
+          <div class="px-4 py-6 md:min-h-0 md:flex-1 md:overflow-y-auto">
             <button
               v-for="item in legendItems"
               v-bind:key="item.name"

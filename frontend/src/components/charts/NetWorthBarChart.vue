@@ -6,7 +6,7 @@ import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/compon
 import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import { cssVar } from '@/lib/cssVar';
-import { chartColor, NET_WORTH_CHART_HEIGHT_PX } from '@/lib/chartPalette';
+import { chartColor } from '@/lib/chartPalette';
 import { formatCurrency } from '@/lib/util/currency';
 
 use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
@@ -22,6 +22,7 @@ interface TooltipParam {
   value?: unknown;
   color?: string;
   seriesName?: string;
+  dataIndex?: number;
 }
 
 export default defineComponent({
@@ -46,6 +47,13 @@ export default defineComponent({
       default: null,
     },
   },
+  data() {
+    return {
+      isMobile: false,
+      mobileQuery: null as MediaQueryList | null,
+      onMobileChange: null as ((event: MediaQueryListEvent) => void) | null,
+    };
+  },
   computed: {
     isStacked() {
       return this.series.length > 1;
@@ -55,6 +63,11 @@ export default defineComponent({
       return Object.fromEntries(
         this.series.map((s) => [s.name, isolated === null || isolated === s.name]),
       );
+    },
+    axisLabels() {
+      if (!this.isMobile) return this.labels;
+      // "Mar 2024" → "Mar 24" to keep category labels inside the canvas
+      return this.labels.map((label) => label.replace(/\s+(\d{2})(\d{2})$/, ' $2'));
     },
     chartOption() {
       const secondaryText = cssVar('--color-secondary-text');
@@ -68,7 +81,8 @@ export default defineComponent({
           transitionDuration: 0,
           formatter: (p: TooltipParam) => {
             if (!p.name || p.value == null || typeof p.value !== 'number') return '';
-            return `<strong>${p.name}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${fmt(p.value)}`;
+            const fullLabel = this.labels[p.dataIndex ?? -1] || p.name;
+            return `<strong>${fullLabel}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${fmt(p.value)}`;
           },
         },
         // Hidden legend still drives series visibility via `selected`.
@@ -77,16 +91,16 @@ export default defineComponent({
           selected: this.legendSelected,
         },
         grid: {
-          left: '3%',
-          right: '4%',
+          left: this.isMobile ? 0 : '3%',
+          right: this.isMobile ? '1%' : '3%',
           top: '3%',
           bottom: '3%',
           containLabel: true,
         },
         xAxis: {
           type: 'category' as const,
-          data: this.labels,
-          axisLabel: { color: secondaryText },
+          data: this.axisLabels,
+          axisLabel: { color: secondaryText, hideOverlap: true },
           axisPointer: {
             show: true,
             type: 'shadow' as const,
@@ -97,12 +111,14 @@ export default defineComponent({
           axisLabel: {
             color: secondaryText,
             formatter: (value: number) => {
-              if (value >= 1000000) {
-                return '$' + (value / 1000000).toFixed(1) + 'M';
-              } else if (value >= 1000) {
-                return '$' + (value / 1000).toFixed(0) + 'K';
+              const sign = value < 0 ? '-' : '';
+              const abs = Math.abs(value);
+              if (abs >= 1000000) {
+                return sign + '$' + (abs / 1000000).toFixed(1) + 'M';
+              } else if (abs >= 1000) {
+                return sign + '$' + (abs / 1000).toFixed(0) + 'K';
               }
-              return '$' + value;
+              return sign + '$' + abs;
             },
           },
         },
@@ -124,18 +140,34 @@ export default defineComponent({
     hasData() {
       return this.series.length > 0 && this.series.some((s) => s.data.some((v) => v !== 0));
     },
-    chartHeightPx() {
-      return NET_WORTH_CHART_HEIGHT_PX;
-    },
+  },
+  mounted() {
+    this.mobileQuery = window.matchMedia('(max-width: 639px)');
+    this.isMobile = this.mobileQuery.matches;
+    this.onMobileChange = (event: MediaQueryListEvent) => {
+      this.isMobile = event.matches;
+    };
+    this.mobileQuery.addEventListener('change', this.onMobileChange);
+  },
+  beforeUnmount() {
+    if (this.mobileQuery && this.onMobileChange) {
+      this.mobileQuery.removeEventListener('change', this.onMobileChange);
+    }
   },
 });
 </script>
 
 <template>
-  <div>
-    <div v-if="hasData" class="w-full" v-bind:style="{ height: chartHeightPx + 'px' }">
-      <VChart ref="chart" v-bind:option="chartOption" autoresize />
+  <div class="flex min-h-0 w-full flex-col">
+    <VChart
+      v-if="hasData"
+      ref="chart"
+      class="min-h-0 w-full flex-1"
+      v-bind:option="chartOption"
+      autoresize
+    />
+    <div v-else class="flex flex-1 items-center justify-center py-8 text-muted-text">
+      No net worth data to display.
     </div>
-    <div v-else class="text-center text-muted-text py-8">No net worth data to display.</div>
   </div>
 </template>

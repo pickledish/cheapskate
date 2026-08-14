@@ -1,6 +1,3 @@
-/** Plot area height for the net-worth bar chart (px). Legend body shares this max. */
-export const NET_WORTH_CHART_HEIGHT_PX = 500;
-
 /** Shared bar/line chart series colors (hex). */
 export const CHART_PALETTE = [
   '#3B82F6',
