@@ -58,21 +58,23 @@ export default defineComponent({
       const secondaryText = cssVar('--color-secondary-text');
       return {
         animation: false,
-        tooltip: {
-          trigger: 'item' as const,
-          transitionDuration: 0,
-          formatter: (p: TooltipParam) => {
-            if (!p.name || p.value == null || typeof p.value !== 'number') return '';
-            // Use the full label in tooltips even when the axis shows a short form
-            const fullLabel = this.labels[p.dataIndex ?? -1] || p.name;
-            const pct = (p.value * 100).toFixed(1);
-            return `<strong>${fullLabel}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${pct}%`;
-          },
-        },
+        tooltip: this.isMobile
+          ? { show: false }
+          : {
+              trigger: 'item' as const,
+              transitionDuration: 0,
+              formatter: (p: TooltipParam) => {
+                if (!p.name || p.value == null || typeof p.value !== 'number') return '';
+                // Use the full label in tooltips even when the axis shows a short form
+                const fullLabel = this.labels[p.dataIndex ?? -1] || p.name;
+                const pct = (p.value * 100).toFixed(1);
+                return `<strong>${fullLabel}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${pct}%`;
+              },
+            },
         legend: { show: false },
         grid: {
           left: this.isMobile ? 0 : '3%',
-          right: '3%',
+          right: this.isMobile ? '1%' : '3%',
           top: '3%',
           bottom: '3%',
           containLabel: true,
@@ -80,7 +82,7 @@ export default defineComponent({
         xAxis: {
           type: 'value' as const,
           max: 1,
-          interval: this.isMobile ? 0.5 : 0.2,
+          interval: this.isMobile ? 0.5 : 0.25,
           axisLabel: {
             color: secondaryText,
             // Keep "100%" inside the canvas without extra right padding
@@ -93,7 +95,7 @@ export default defineComponent({
           data: this.axisLabels,
           axisLabel: { color: secondaryText },
           axisPointer: {
-            show: true,
+            show: !this.isMobile,
             type: 'shadow' as const,
           },
         },
@@ -101,11 +103,12 @@ export default defineComponent({
           name: s.name,
           type: 'bar' as const,
           stack: 'total',
-          barWidth: 14,
+          barWidth: 16,
           data: s.data,
           itemStyle: { color: getHexForColor(s.color) },
-          emphasis: { focus: 'series' as const },
-          cursor: 'crosshair',
+          silent: this.isMobile,
+          emphasis: this.isMobile ? { disabled: true } : { focus: 'series' as const },
+          cursor: this.isMobile ? 'default' : 'crosshair',
         })),
       };
     },
@@ -113,8 +116,8 @@ export default defineComponent({
       return this.series.length > 0 && this.series.some((s) => s.data.some((v) => v > 0));
     },
     chartHeight() {
-      // 60px base padding (for axis labels) + 32px per row
-      const rowHeight = 32;
+      // 60px base padding (for axis labels) + 24px per row
+      const rowHeight = 24;
       const basePadding = 60;
       return Math.max(basePadding + this.labels.length * rowHeight, 100);
     },
@@ -138,7 +141,11 @@ export default defineComponent({
 <template>
   <div>
     <div v-if="hasData" class="w-full" v-bind:style="{ height: chartHeight + 'px' }">
-      <VChart v-bind:option="chartOption" autoresize />
+      <VChart
+        v-bind:class="isMobile ? 'pointer-events-none' : ''"
+        v-bind:option="chartOption"
+        autoresize
+      />
     </div>
     <div v-else class="text-center text-muted-text py-8">No allocation history to display.</div>
   </div>

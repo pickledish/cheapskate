@@ -76,15 +76,17 @@ export default defineComponent({
 
       return {
         animation: false,
-        tooltip: {
-          trigger: 'item' as const,
-          transitionDuration: 0,
-          formatter: (p: TooltipParam) => {
-            if (!p.name || p.value == null || typeof p.value !== 'number') return '';
-            const fullLabel = this.labels[p.dataIndex ?? -1] || p.name;
-            return `<strong>${fullLabel}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${fmt(p.value)}`;
-          },
-        },
+        tooltip: this.isMobile
+          ? { show: false }
+          : {
+              trigger: 'item' as const,
+              transitionDuration: 0,
+              formatter: (p: TooltipParam) => {
+                if (!p.name || p.value == null || typeof p.value !== 'number') return '';
+                const fullLabel = this.labels[p.dataIndex ?? -1] || p.name;
+                return `<strong>${fullLabel}</strong><br/><span style="display:inline-block;width:10px;height:10px;background:${p.color};border-radius:2px;margin-right:6px;"></span>${p.seriesName}: ${fmt(p.value)}`;
+              },
+            },
         // Hidden legend still drives series visibility via `selected`.
         legend: {
           show: false,
@@ -102,7 +104,7 @@ export default defineComponent({
           data: this.axisLabels,
           axisLabel: { color: secondaryText, hideOverlap: true },
           axisPointer: {
-            show: true,
+            show: !this.isMobile,
             type: 'shadow' as const,
           },
         },
@@ -131,8 +133,9 @@ export default defineComponent({
             stack: this.isStacked ? 'total' : undefined,
             data: s.data,
             itemStyle: { color: chartColor(colorIndex) },
-            emphasis: { focus: 'series' as const },
-            cursor: 'crosshair',
+            silent: this.isMobile,
+            emphasis: this.isMobile ? { disabled: true } : { focus: 'series' as const },
+            cursor: this.isMobile ? 'default' : 'crosshair',
           };
         }),
       };
@@ -162,7 +165,7 @@ export default defineComponent({
     <VChart
       v-if="hasData"
       ref="chart"
-      class="min-h-0 w-full flex-1"
+      v-bind:class="['min-h-0 w-full flex-1', isMobile ? 'pointer-events-none' : '']"
       v-bind:option="chartOption"
       autoresize
     />
