@@ -384,7 +384,7 @@ export default defineComponent({
           </div>
           <div class="p-4 md:flex md:min-h-0 md:flex-1 md:flex-col md:p-6">
             <NetWorthBarChart
-              class="h-[40dvh] md:h-auto md:min-h-0 md:flex-1"
+              class="h-[40svh] md:h-auto md:min-h-0 md:flex-1"
               v-bind:labels="monthLabels"
               v-bind:series="chartSeries"
               v-bind:isolated-series="isolatedSeries"

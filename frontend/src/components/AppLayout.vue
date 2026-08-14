@@ -20,7 +20,7 @@ export default defineComponent({
   <div
     v-bind:class="[
       'bg-page flex flex-col',
-      fillViewport ? 'min-h-dvh md:h-dvh md:overflow-hidden' : 'min-h-screen',
+      fillViewport ? 'min-h-svh md:h-dvh md:overflow-hidden' : 'min-h-screen',
     ]"
   >
     <AppNav class="shrink-0" />
