@@ -43,6 +43,9 @@ export default defineComponent({
     includeEvents: Update[];
     assetClassesData: AssetClass[];
     allocationsData: AssetAllocation[];
+    isMobile: boolean;
+    mobileQuery: MediaQueryList | null;
+    onMobileChange: ((event: MediaQueryListEvent) => void) | null;
   } {
     return {
       loading: true,
@@ -57,10 +60,25 @@ export default defineComponent({
       includeEvents: [],
       assetClassesData: [],
       allocationsData: [],
+      isMobile: false,
+      mobileQuery: null,
+      onMobileChange: null,
     };
   },
   async mounted() {
+    this.mobileQuery = window.matchMedia('(max-width: 639px)');
+    this.isMobile = this.mobileQuery.matches;
+    this.onMobileChange = (event: MediaQueryListEvent) => {
+      this.isMobile = event.matches;
+      if (!this.loading) this.computeChartData();
+    };
+    this.mobileQuery.addEventListener('change', this.onMobileChange);
     await this.loadData();
+  },
+  beforeUnmount() {
+    if (this.mobileQuery && this.onMobileChange) {
+      this.mobileQuery.removeEventListener('change', this.onMobileChange);
+    }
   },
   methods: {
     async loadData() {
@@ -93,7 +111,7 @@ export default defineComponent({
     },
 
     computeChartData() {
-      const allMonths = lastNMonths(12);
+      const allMonths = lastNMonths(this.isMobile ? 6 : 12);
 
       // First pass: find which months have data, and compute value-by-class once each
       const monthsWithData: {
@@ -231,7 +249,7 @@ export default defineComponent({
               Current vs Target Allocation
             </h3>
           </div>
-          <div class="p-6">
+          <div class="p-4 sm:p-6">
             <AllocationComparisonGrid
               v-if="
                 comparisonAllocations.length > 0 && comparisonAllocations.some((a) => a.current > 0)

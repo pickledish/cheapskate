@@ -64,7 +64,7 @@ export default defineComponent({
     <div
       v-for="alloc in allocations"
       v-bind:key="alloc.name"
-      class="bg-surface-recessed rounded-lg p-3 flex flex-col w-full max-w-[160px] min-w-0"
+      class="bg-surface-recessed rounded-lg p-3 flex flex-col w-full max-w-[180px] min-w-0"
     >
       <!-- Asset class name -->
       <div

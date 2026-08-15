@@ -77,6 +77,9 @@ export default defineComponent({
     profilesData: Profile[];
     assetsData: AssetWithAllocations[];
     assetClassesData: AssetClass[];
+    isMobile: boolean;
+    mobileQuery: MediaQueryList | null;
+    onMobileChange: ((event: MediaQueryListEvent) => void) | null;
   } {
     return {
       monthLabels: [],
@@ -97,6 +100,9 @@ export default defineComponent({
       profilesData: [],
       assetsData: [],
       assetClassesData: [],
+      isMobile: false,
+      mobileQuery: null,
+      onMobileChange: null,
     };
   },
   computed: {
@@ -130,7 +136,19 @@ export default defineComponent({
     },
   },
   async mounted() {
+    this.mobileQuery = window.matchMedia('(max-width: 639px)');
+    this.isMobile = this.mobileQuery.matches;
+    this.onMobileChange = (event: MediaQueryListEvent) => {
+      this.isMobile = event.matches;
+      if (!this.loading) this.computeChartData();
+    };
+    this.mobileQuery.addEventListener('change', this.onMobileChange);
     await this.loadData();
+  },
+  beforeUnmount() {
+    if (this.mobileQuery && this.onMobileChange) {
+      this.mobileQuery.removeEventListener('change', this.onMobileChange);
+    }
   },
   methods: {
     async loadData() {
@@ -158,7 +176,7 @@ export default defineComponent({
     },
 
     computeChartData() {
-      const months = lastNMonths(12);
+      const months = lastNMonths(this.isMobile ? 6 : 12);
       this.monthLabels = months.map((m) => this.formatMonth(m));
 
       if (this.groupBy === 'none') {
