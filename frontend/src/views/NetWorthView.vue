@@ -419,7 +419,7 @@ export default defineComponent({
               {{ legendTitle }}
             </h3>
           </div>
-          <div class="px-4 py-6 md:min-h-0 md:flex-1 md:overflow-y-auto">
+          <div class="px-4 py-4 md:min-h-0 md:flex-1 md:overflow-y-auto">
             <button
               v-for="item in legendItems"
               v-bind:key="item.name"
