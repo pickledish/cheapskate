@@ -53,7 +53,7 @@ function parseGroupBy(value: unknown): GroupBy {
 }
 
 export default defineComponent({
-  name: 'DashboardView',
+  name: 'NetWorthView',
   components: {
     AppLayout,
     PageHeader,

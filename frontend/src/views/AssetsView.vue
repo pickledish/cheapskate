@@ -403,7 +403,7 @@ export default defineComponent({
           v-if="showContinueCard"
           step="assets"
           message="All your assets are categorized. You're all set to start tracking your portfolio!"
-          next-step-label="Go to Dashboard"
+          next-step-label="Go to Net Worth"
           next-route="/networth"
           class="mt-4"
         />

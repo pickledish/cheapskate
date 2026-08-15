@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 
 import LoginView from '@/views/LoginView.vue';
 import SetupView from '@/views/SetupView.vue';
-import DashboardView from '@/views/DashboardView.vue';
+import NetWorthView from '@/views/NetWorthView.vue';
 import PortfolioView from '@/views/PortfolioView.vue';
 import AccountsView from '@/views/AccountsView.vue';
 import AccountDetailView from '@/views/AccountDetailView.vue';
@@ -31,8 +31,8 @@ const routes = [
   },
   {
     path: '/networth',
-    name: 'dashboard',
-    component: DashboardView,
+    name: 'networth',
+    component: NetWorthView,
     meta: { requiresAuth: true, requiresOnboardingComplete: true },
   },
   {
