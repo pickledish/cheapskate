@@ -78,16 +78,15 @@ export default defineComponent({
       <div class="flex items-end justify-center gap-2" v-bind:style="{ height: '60px' }">
         <!-- Current bar -->
         <div
-          class="w-8 rounded-t transition-all"
+          class="w-[27%] rounded-t transition-all"
           v-bind:style="{
             height: barHeightPx(currentDollars(alloc), globalMax),
             backgroundColor: getColor(alloc.color),
           }"
         ></div>
-
         <!-- Goal bar -->
         <div
-          class="w-8 rounded-t transition-all"
+          class="w-[27%] rounded-t transition-all"
           v-bind:style="{
             height: barHeightPx(goalDollars(alloc), globalMax),
             backgroundColor: getColor(alloc.color),

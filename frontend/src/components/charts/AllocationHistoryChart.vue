@@ -51,8 +51,8 @@ export default defineComponent({
   computed: {
     axisLabels() {
       if (!this.isMobile) return this.labels;
-      // "Jan 2024" → "Jan 24" to free horizontal space for the bars
-      return this.labels.map((label) => label.replace(/\s+(\d{2})(\d{2})$/, ' $2'));
+      // "Jan 2024" → "Jan"
+      return this.labels.map((label) => label.replace(/\s+\d{4}$/, ''));
     },
     chartOption() {
       const secondaryText = cssVar('--color-secondary-text');

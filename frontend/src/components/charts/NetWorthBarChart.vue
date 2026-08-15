@@ -66,8 +66,8 @@ export default defineComponent({
     },
     axisLabels() {
       if (!this.isMobile) return this.labels;
-      // "Mar 2024" → "Mar 24" to keep category labels inside the canvas
-      return this.labels.map((label) => label.replace(/\s+(\d{2})(\d{2})$/, ' $2'));
+      // "Mar 2024" → "Mar"
+      return this.labels.map((label) => label.replace(/\s+\d{4}$/, ''));
     },
     chartOption() {
       const secondaryText = cssVar('--color-secondary-text');
@@ -110,6 +110,7 @@ export default defineComponent({
         },
         yAxis: {
           type: 'value' as const,
+          splitNumber: this.isMobile ? 3 : 5,
           axisLabel: {
             color: secondaryText,
             formatter: (value: number) => {
