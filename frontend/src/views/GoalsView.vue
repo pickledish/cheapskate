@@ -239,8 +239,8 @@ export default defineComponent({
         class="flex flex-col-reverse gap-6 md:flex-row"
       >
         <!-- Asset classes table -->
-        <div class="w-full md:w-7/12 bg-surface shadow rounded-lg self-start overflow-x-auto">
-          <table class="min-w-full divide-y divide-surface-border">
+        <div class="w-full md:w-7/12 bg-page shadow rounded-lg self-start overflow-x-auto">
+          <table class="min-w-full divide-y divide-surface-border bg-surface">
             <thead>
               <tr>
                 <th class="bg-header rounded-tl-lg w-10"></th>

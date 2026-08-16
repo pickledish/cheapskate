@@ -255,8 +255,8 @@ export default defineComponent({
 
       <!-- Assets table -->
       <div v-if="!loading">
-        <div v-if="assets.length > 0" class="bg-surface shadow rounded-lg overflow-x-auto">
-          <table class="min-w-full divide-y divide-surface-border">
+        <div v-if="assets.length > 0" class="bg-page shadow rounded-lg overflow-x-auto">
+          <table class="min-w-full divide-y divide-surface-border bg-surface">
             <thead>
               <tr>
                 <th

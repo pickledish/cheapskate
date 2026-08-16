@@ -603,9 +603,9 @@ export default defineComponent({
         <!-- Holdings table -->
         <div
           v-if="heldAssetIdsInSortedOrder.length > 0 || editing"
-          class="bg-surface shadow rounded-lg overflow-x-auto"
+          class="bg-page shadow rounded-lg overflow-x-auto"
         >
-          <table class="min-w-full divide-y divide-surface-border">
+          <table class="min-w-full divide-y divide-surface-border bg-surface">
             <thead>
               <tr>
                 <th
