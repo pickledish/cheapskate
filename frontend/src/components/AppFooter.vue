@@ -15,8 +15,8 @@ export default defineComponent({
 
 <template>
   <footer class="py-4 text-center text-xs text-placeholder-text">
-    <span>Cheapskate</span>
-    <span class="mx-2">·</span>
+    <span class="hidden sm:inline">Cheapskate</span>
+    <span class="hidden sm:inline mx-2">·</span>
     <span>{{ env }}</span>
     <span class="mx-2">·</span>
     <span>Commit {{ commitHash }}</span>
