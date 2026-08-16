@@ -6,6 +6,8 @@
     overscroll-behavior-x: none;
     /* Safari/iOS overscroll bounce uses the html/body canvas color */
     background-color: var(--color-page);
+    /* Disable double-tap-to-zoom; pinch-zoom still works */
+    touch-action: manipulation;
   }
 
   /* Keep placeholders consistently muted (Tailwind preflight uses currentColor @ 50%) */
