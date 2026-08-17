@@ -2,6 +2,7 @@
 import { defineComponent } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
+import { insertFamily, updateProfileFamily } from '@/lib/data';
 
 export default defineComponent({
   name: 'ChangeFamilyModal',
@@ -44,12 +45,7 @@ export default defineComponent({
         if (this.mode === 'create') {
           // Generate UUID client-side (same pattern as SetupView)
           newFamilyId = crypto.randomUUID();
-
-          const { error: insertError } = await supabase
-            .from('families')
-            .insert({ id: newFamilyId });
-
-          if (insertError) throw insertError;
+          await insertFamily(newFamilyId);
         } else {
           // Validate UUID format
           const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -59,13 +55,8 @@ export default defineComponent({
           newFamilyId = this.familyId.trim();
         }
 
-        // Update profile first (trigger cleanup_empty_family() handles deleting old family if empty)
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ family_id: newFamilyId })
-          .eq('id', user.id);
-
-        if (profileError) throw profileError;
+        // Profile first so cleanup_empty_family() can drop the old family if empty
+        await updateProfileFamily(user.id, newFamilyId);
 
         // Now update user_metadata to match
         const { error: updateError } = await supabase.auth.updateUser({

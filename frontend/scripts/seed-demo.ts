@@ -12,6 +12,7 @@
  *   SUPABASE_SERVICE_ROLE_KEY=<key> npm run seed:cloud
  *   SUPABASE_SERVICE_ROLE_KEY=<key> npm run seed:local -- --skip-creation
  *   SUPABASE_SERVICE_ROLE_KEY=<key> npm run seed:local -- --skip-cleanup
+ *   SUPABASE_SERVICE_ROLE_KEY=<key> npm run seed:local -- --create-newbie
  */
 import { createClient, type User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -27,6 +28,7 @@ import {
   insertPriceUpdate,
   insertHoldingUpdate,
   updateAccount,
+  DEMO_FAMILY_ID,
   type Account,
 } from '@/lib/data';
 import type { AssetId } from '@/lib/data/assets';
@@ -37,7 +39,7 @@ import { lastNMonths, monthEnd } from '@/lib/util/date';
 // Constants
 // ---------------------------------------------------------------------------
 
-const FAMILY_ID = '11111111-1111-4111-8111-111111111111';
+const FAMILY_ID = DEMO_FAMILY_ID;
 const PASSWORD = 'demo-password-123';
 
 const ALEX_EMAIL = 'alex@skate.cheap';
@@ -45,7 +47,7 @@ const JORDAN_EMAIL = 'jordan@skate.cheap';
 const NEWBIE_EMAIL = 'newbie@skate.cheap';
 const DEMO_EMAILS = [ALEX_EMAIL, JORDAN_EMAIL, NEWBIE_EMAIL] as const;
 
-const FLAGS = ['--skip-cleanup', '--skip-creation'] as const;
+const FLAGS = ['--skip-cleanup', '--skip-creation', '--create-newbie'] as const;
 
 type AssetKey =
   | 'VTI'
@@ -110,7 +112,7 @@ const ASSET_CLASS_MAP: Record<AssetKey, ClassKey> = {
 // CLI flags
 // ---------------------------------------------------------------------------
 
-function parseFlags(): { doCleanup: boolean; doCreation: boolean } {
+function parseFlags(): { doCleanup: boolean; doCreation: boolean; createNewbie: boolean } {
   const args = process.argv.slice(2);
   const unknown = args.filter((a) => !FLAGS.includes(a as (typeof FLAGS)[number]));
   if (unknown.length > 0) {
@@ -122,6 +124,7 @@ function parseFlags(): { doCleanup: boolean; doCreation: boolean } {
   return {
     doCleanup: !args.includes('--skip-cleanup'),
     doCreation: !args.includes('--skip-creation'),
+    createNewbie: args.includes('--create-newbie'),
   };
 }
 
@@ -317,11 +320,10 @@ async function cleanup(admin: ReturnType<typeof createAdminClient>): Promise<voi
 // Create users
 // ---------------------------------------------------------------------------
 
-async function createDemoUsers(admin: ReturnType<typeof createAdminClient>): Promise<{
-  alex: User;
-  jordan: User;
-  newbie: User;
-}> {
+async function createDemoUsers(
+  admin: ReturnType<typeof createAdminClient>,
+  createNewbie: boolean,
+): Promise<{ alex: User; jordan: User }> {
   console.log('Creating demo auth users...');
 
   const onboardingMeta = {
@@ -347,19 +349,21 @@ async function createDemoUsers(admin: ReturnType<typeof createAdminClient>): Pro
   });
   if (jordanErr) throw jordanErr;
 
-  const { data: newbieData, error: newbieErr } = await admin.auth.admin.createUser({
-    email: NEWBIE_EMAIL,
-    password: PASSWORD,
-    email_confirm: true,
-    user_metadata: {},
-  });
-  if (newbieErr) throw newbieErr;
-
   console.log(`  Alex:   ${alexData.user.id}`);
   console.log(`  Jordan: ${jordanData.user.id}`);
-  console.log(`  Newbie: ${newbieData.user.id}`);
 
-  return { alex: alexData.user, jordan: jordanData.user, newbie: newbieData.user };
+  if (createNewbie) {
+    const { data: newbieData, error: newbieErr } = await admin.auth.admin.createUser({
+      email: NEWBIE_EMAIL,
+      password: PASSWORD,
+      email_confirm: true,
+      user_metadata: {},
+    });
+    if (newbieErr) throw newbieErr;
+    console.log(`  Newbie: ${newbieData.user.id}`);
+  }
+
+  return { alex: alexData.user, jordan: jordanData.user };
 }
 
 /** Set after seeding: the script writes as these users, so the flag cannot go on createUser. */
@@ -943,7 +947,7 @@ async function seedHistory(
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
-  const { doCleanup, doCreation } = parseFlags();
+  const { doCleanup, doCreation, createNewbie } = parseFlags();
 
   if (!doCleanup && !doCreation) {
     console.log('Both --skip-cleanup and --skip-creation set; nothing to do.');
@@ -964,21 +968,21 @@ async function main(): Promise<void> {
     return;
   }
 
-  const { alex, jordan } = await createDemoUsers(admin);
+  const { alex, jordan } = await createDemoUsers(admin, createNewbie);
 
   const { assets, alexAccounts } = await asUser(ALEX_EMAIL, () => seedStaticAsAlex(alex.id));
   const jordanAccounts = await asUser(JORDAN_EMAIL, () => seedJordanAccounts(jordan.id));
   await seedHistory(alex.id, jordan.id, assets, { ...alexAccounts, ...jordanAccounts });
 
-  // Newbie stays writable so empty-state / setup flows can still be tested.
   await lockReadOnlyUsers(admin, [alex, jordan]);
 
   console.log('\nDemo seed complete.\n');
   console.log('Log in with password:', PASSWORD);
   console.log(`  Alex (full demo, read-only):  ${ALEX_EMAIL}`);
   console.log(`  Jordan (spouse, read-only):   ${JORDAN_EMAIL}`);
-  console.log(`  Newbie (empty, writable):     ${NEWBIE_EMAIL}`);
-  console.log(`Family secret (join): ${FAMILY_ID}`);
+  if (createNewbie) {
+    console.log(`  Newbie (empty, writable):     ${NEWBIE_EMAIL}`);
+  }
 }
 
 main().catch((err) => {

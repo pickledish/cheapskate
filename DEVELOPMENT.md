@@ -109,7 +109,7 @@ The SPA uses hash routing (`/#/accounts`, …), so any static host works without
 
 ### 5. Seed demo data (optional)
 
-Populates the database chosen by the Vite mode with a two-person household (~10 months of history, including a home purchase) plus an empty new-user account.
+Populates the database chosen by the Vite mode with a two-person household (~10 months of history, including a home purchase). Alex and Jordan are marked read-only; that family cannot be joined.
 
 ```bash
 cd frontend
@@ -118,23 +118,22 @@ SUPABASE_SERVICE_ROLE_KEY=<service_role_key> npm run seed:local
 # or: ... npm run seed:cloud
 ```
 
-`seed:cloud` writes to whatever project is in `.env.cloud`. Only use it on a database you are willing to mutate.
+`seed:cloud` writes to whatever project is in `.env.cloud`. Only use it on a database you are willing to mutate. Do not pass `--create-newbie` against cloud — that account is writable and is only for local empty-state testing.
 
 Log in with password `demo-password-123`:
 
 | Email | Purpose |
 |-------|---------|
-| `alex@skate.cheap` | Full demo family member |
-| `jordan@skate.cheap` | Spouse / co-member of the same family |
-| `newbie@skate.cheap` | Brand-new user (lands on setup) |
+| `alex@skate.cheap` | Full demo family member (read-only) |
+| `jordan@skate.cheap` | Spouse / co-member of the same family (read-only) |
+| `newbie@skate.cheap` | Brand-new user (lands on setup; writable). Only created with `--create-newbie`. |
 
-Family secret (for joining): `11111111-1111-4111-8111-111111111111`
-
-Both phases run by default (cleanup, then create):
+Both phases run by default (cleanup, then create). Cleanup still deletes `newbie@` if it exists, even when you do not recreate it.
 
 ```bash
-npm run seed:local -- --skip-creation   # cleanup only
-npm run seed:local -- --skip-cleanup    # create onto a clean DB
+npm run seed:local -- --skip-creation    # cleanup only
+npm run seed:local -- --skip-cleanup     # create onto a clean DB
+npm run seed:local -- --create-newbie    # also create the empty setup-test user
 ```
 
 ### Frontend scripts

@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { assertCanJoinFamily } from './families';
 
 export interface LocalLlmConfig {
   api: 'disabled' | 'ollama' | 'openai';
@@ -50,6 +51,8 @@ export async function insertProfile(profile: {
   name: string;
   family_id: string;
 }): Promise<void> {
+  assertCanJoinFamily(profile.family_id);
+
   const { error } = await supabase.from('profiles').insert({
     id: profile.id,
     name: profile.name,
@@ -61,6 +64,14 @@ export async function insertProfile(profile: {
 
 export async function updateProfile(id: string, updates: { name: string }): Promise<void> {
   const { error } = await supabase.from('profiles').update({ name: updates.name }).eq('id', id);
+
+  if (error) throw error;
+}
+
+export async function updateProfileFamily(id: string, familyId: string): Promise<void> {
+  assertCanJoinFamily(familyId);
+
+  const { error } = await supabase.from('profiles').update({ family_id: familyId }).eq('id', id);
 
   if (error) throw error;
 }

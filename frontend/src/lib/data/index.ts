@@ -1,5 +1,5 @@
 // Families
-export { insertFamily } from './families';
+export { insertFamily, DEMO_FAMILY_ID, assertCanJoinFamily } from './families';
 export type { Family } from './families';
 
 // Accounts
@@ -35,6 +35,7 @@ export {
   listProfilesByFamily,
   insertProfile,
   updateProfile,
+  updateProfileFamily,
   updatePreferences,
 } from './profiles';
 export type { Profile, UserPreferences, LocalLlmConfig } from './profiles';
