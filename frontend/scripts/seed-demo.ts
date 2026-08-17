@@ -362,6 +362,21 @@ async function createDemoUsers(admin: ReturnType<typeof createAdminClient>): Pro
   return { alex: alexData.user, jordan: jordanData.user, newbie: newbieData.user };
 }
 
+/** Set after seeding: the script writes as these users, so the flag cannot go on createUser. */
+async function lockReadOnlyUsers(
+  admin: ReturnType<typeof createAdminClient>,
+  users: User[],
+): Promise<void> {
+  console.log('Marking demo family users as read-only...');
+  for (const user of users) {
+    const { error } = await admin.auth.admin.updateUserById(user.id, {
+      app_metadata: { read_only: true },
+    });
+    if (error) throw error;
+    console.log(`  ${user.email}`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Static data + history
 // ---------------------------------------------------------------------------
@@ -955,11 +970,14 @@ async function main(): Promise<void> {
   const jordanAccounts = await asUser(JORDAN_EMAIL, () => seedJordanAccounts(jordan.id));
   await seedHistory(alex.id, jordan.id, assets, { ...alexAccounts, ...jordanAccounts });
 
+  // Newbie stays writable so empty-state / setup flows can still be tested.
+  await lockReadOnlyUsers(admin, [alex, jordan]);
+
   console.log('\nDemo seed complete.\n');
   console.log('Log in with password:', PASSWORD);
-  console.log(`  Alex (full demo):  ${ALEX_EMAIL}`);
-  console.log(`  Jordan (spouse):   ${JORDAN_EMAIL}`);
-  console.log(`  Newbie (empty):    ${NEWBIE_EMAIL}`);
+  console.log(`  Alex (full demo, read-only):  ${ALEX_EMAIL}`);
+  console.log(`  Jordan (spouse, read-only):   ${JORDAN_EMAIL}`);
+  console.log(`  Newbie (empty, writable):     ${NEWBIE_EMAIL}`);
   console.log(`Family secret (join): ${FAMILY_ID}`);
 }
 

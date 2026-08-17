@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { isReadOnlyAccount } from "../_shared/read-only.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 
@@ -37,6 +38,13 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Unauthorized", details: authError?.message ?? "Invalid or missing user session" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (isReadOnlyAccount(user)) {
+      return new Response(
+        JSON.stringify({ error: "This account is read-only" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

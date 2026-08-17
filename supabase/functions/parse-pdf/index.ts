@@ -7,6 +7,7 @@ import {
   buildPrompt,
   type ParsePdfResponse,
 } from "../_shared/parse-pdf-schema.ts";
+import { isReadOnlyAccount } from "../_shared/read-only.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const DEFAULT_MODEL = "google/gemini-3-flash";
@@ -50,6 +51,13 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Unauthorized", details: authError?.message ?? "Invalid or missing user session" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (isReadOnlyAccount(user)) {
+      return new Response(
+        JSON.stringify({ error: "This account is read-only" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
