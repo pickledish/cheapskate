@@ -41,9 +41,9 @@ export default defineComponent({
       type: Array as PropType<NetWorthSeries[]>,
       required: true,
     },
-    /** When set, only this series is visible; null shows all. */
-    isolatedSeries: {
-      type: String as PropType<string | null>,
+    /** Visible series names; null shows all. */
+    selectedSeries: {
+      type: Array as PropType<string[] | null>,
       default: null,
     },
   },
@@ -59,9 +59,9 @@ export default defineComponent({
       return this.series.length > 1;
     },
     legendSelected(): Record<string, boolean> {
-      const isolated = this.isolatedSeries;
+      const selected = this.selectedSeries;
       return Object.fromEntries(
-        this.series.map((s) => [s.name, isolated === null || isolated === s.name]),
+        this.series.map((s) => [s.name, selected === null || selected.includes(s.name)]),
       );
     },
     axisLabels() {

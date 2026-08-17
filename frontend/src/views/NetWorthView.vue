@@ -70,7 +70,7 @@ export default defineComponent({
     chartSeries: { name: string; data: number[] }[];
     loading: boolean;
     groupByOptions: { value: GroupBy; label: string }[];
-    isolatedSeries: string | null;
+    selectedSeries: string[] | null;
     holdingsData: HoldingUpdateWithContext[];
     pricesData: PriceUpdateWithContext[];
     accountsData: Account[];
@@ -92,7 +92,7 @@ export default defineComponent({
         { value: 'asset', label: 'Asset' },
         { value: 'assetClass', label: 'Asset Class' },
       ],
-      isolatedSeries: null,
+      selectedSeries: null,
       // Raw data from database
       holdingsData: [],
       pricesData: [],
@@ -128,10 +128,15 @@ export default defineComponent({
         latestValue: s.data.length > 0 ? (s.data[s.data.length - 1] ?? 0) : 0,
       }));
     },
+    legendTotal(): number {
+      return this.legendItems
+        .filter((item) => this.isSeriesSelected(item.name))
+        .reduce((sum, item) => sum + item.latestValue, 0);
+    },
   },
   watch: {
     groupBy() {
-      this.isolatedSeries = null;
+      this.selectedSeries = null;
       this.computeChartData();
     },
   },
@@ -198,8 +203,39 @@ export default defineComponent({
     formatMonth,
     formatCurrency,
 
-    toggleIsolate(name: string) {
-      this.isolatedSeries = this.isolatedSeries === name ? null : name;
+    isSeriesSelected(name: string): boolean {
+      return this.selectedSeries === null || this.selectedSeries.includes(name);
+    },
+
+    onLegendClick(name: string, event: MouseEvent) {
+      if (event.metaKey || event.ctrlKey) {
+        this.toggleSeries(name);
+      } else {
+        this.isolateSeries(name);
+      }
+    },
+
+    isolateSeries(name: string) {
+      const onlyThis =
+        this.selectedSeries !== null &&
+        this.selectedSeries.length === 1 &&
+        this.selectedSeries[0] === name;
+      this.selectedSeries = onlyThis ? null : [name];
+    },
+
+    toggleSeries(name: string) {
+      const allNames = this.chartSeries.map((s) => s.name);
+      const current = this.selectedSeries === null ? allNames : this.selectedSeries;
+      const isSelected = current.includes(name);
+
+      if (isSelected) {
+        if (current.length === 1) return;
+        const next = current.filter((n) => n !== name);
+        this.selectedSeries = next.length === allNames.length ? null : next;
+      } else {
+        const next = [...current, name];
+        this.selectedSeries = next.length === allNames.length ? null : next;
+      }
     },
 
     async setGroupBy(value: GroupBy) {
@@ -405,7 +441,7 @@ export default defineComponent({
               class="h-[40svh] md:h-auto md:min-h-0 md:flex-1"
               v-bind:labels="monthLabels"
               v-bind:series="chartSeries"
-              v-bind:isolated-series="isolatedSeries"
+              v-bind:selected-series="selectedSeries"
             />
           </div>
         </div>
@@ -420,15 +456,30 @@ export default defineComponent({
             </h3>
           </div>
           <div class="px-4 py-4 md:min-h-0 md:flex-1 md:overflow-y-auto">
+            <div
+              class="mb-1 flex w-full items-center gap-6 border-b border-surface-border px-3 pt-2 pb-3.5"
+            >
+              <span class="min-w-0 flex-1 truncate text-sm font-medium text-secondary-text">
+                Total
+              </span>
+              <span class="shrink-0 text-sm font-medium tabular-nums text-primary-text">
+                {{
+                  formatCurrency(legendTotal, {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })
+                }}
+              </span>
+            </div>
             <button
               v-for="item in legendItems"
               v-bind:key="item.name"
               type="button"
               v-bind:class="[
                 'flex w-full items-center gap-6 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-surface-recessed',
-                isolatedSeries && isolatedSeries !== item.name ? 'opacity-40' : '',
+                isSeriesSelected(item.name) ? '' : 'opacity-40',
               ]"
-              v-on:click="toggleIsolate(item.name)"
+              v-on:click="onLegendClick(item.name, $event)"
             >
               <span class="flex min-w-0 flex-1 items-center gap-2">
                 <span
