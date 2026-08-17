@@ -2,6 +2,7 @@
 import { defineComponent } from 'vue';
 import { supabase } from '@/lib/supabase';
 import { insertFamily, insertProfile } from '@/lib/data';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'SetupView',
@@ -93,7 +94,7 @@ export default defineComponent({
         // Redirect: new families start onboarding, joining families go to accounts
         await this.$router.push(this.mode === 'create' ? '/goals' : '/accounts');
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }

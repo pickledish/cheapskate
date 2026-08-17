@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { supabase } from '@/lib/supabase';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'LoginView',
@@ -28,7 +29,7 @@ export default defineComponent({
           redirectTo: window.location.origin + window.location.pathname,
         },
       });
-      if (error) this.error = error.message;
+      if (error) this.error = formatError(error);
     },
     async submit() {
       this.error = null;
@@ -51,7 +52,7 @@ export default defineComponent({
           await this.$router.push('/accounts');
         }
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }

@@ -2,6 +2,7 @@
 import { defineComponent, type PropType } from 'vue';
 import { supabase } from '@/lib/supabase';
 import { CheckCircleIcon } from '@heroicons/vue/24/solid';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'OnboardingContinueCard',
@@ -55,7 +56,7 @@ export default defineComponent({
         // Navigate to next step
         await this.$router.push(this.nextRoute);
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
         this.loading = false;
       }
     },

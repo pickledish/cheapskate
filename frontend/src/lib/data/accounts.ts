@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { throwIfError } from '../util/error';
 
 // opaque type for AccountId, though underneath it's just a number
 declare const __brand: unique symbol;
@@ -23,7 +24,7 @@ export interface Account {
 export async function listAccounts(): Promise<Account[]> {
   const { data, error } = await supabase.from('accounts').select('*').order('created_at');
 
-  if (error) throw error;
+  throwIfError(error);
   return data || [];
 }
 
@@ -32,7 +33,7 @@ export async function getAccount(id: AccountId): Promise<Account | null> {
 
   if (error) {
     if (error.code === 'PGRST116') return null;
-    throw error;
+    throwIfError(error);
   }
   return data;
 }
@@ -58,7 +59,7 @@ export async function insertAccount(account: {
     .select()
     .single();
 
-  if (error) throw error;
+  throwIfError(error);
   return data;
 }
 
@@ -74,18 +75,18 @@ export async function updateAccount(
 ): Promise<void> {
   const { error } = await supabase.from('accounts').update(updates).eq('id', id);
 
-  if (error) throw error;
+  throwIfError(error);
 }
 
 export async function findAccountByLast4(last4: string): Promise<Account[]> {
   const { data, error } = await supabase.from('accounts').select('*').eq('last4', last4);
 
-  if (error) throw error;
+  throwIfError(error);
   return data || [];
 }
 
 export async function deleteAccount(id: AccountId): Promise<void> {
   const { error } = await supabase.from('accounts').delete().eq('id', id);
 
-  if (error) throw error;
+  throwIfError(error);
 }

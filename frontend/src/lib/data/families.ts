@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { throwIfError } from '../util/error';
 
 /** Well-known demo household from `scripts/seed-demo.ts`. */
 export const DEMO_FAMILY_ID = '11111111-1111-4111-8111-111111111111';
@@ -27,5 +28,5 @@ export function assertCanJoinFamily(familyId: string): void {
 export async function insertFamily(id: string): Promise<void> {
   const { error } = await supabase.from('families').insert({ id });
 
-  if (error) throw error;
+  throwIfError(error);
 }

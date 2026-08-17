@@ -3,6 +3,7 @@ import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
 import { insertUpdate, insertPriceUpdate, type Asset } from '@/lib/data';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'UpdatePriceModal',
@@ -64,7 +65,7 @@ export default defineComponent({
 
         this.$emit('updated');
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }

@@ -19,6 +19,7 @@ import { formatMonth } from '@/lib/util/date';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import type { AccountId } from '@/lib/data/accounts';
+import { formatError } from '@/lib/util/error';
 
 function queryScalar(value: unknown): string | undefined {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -120,7 +121,7 @@ export default defineComponent({
         this.profileNames = Object.fromEntries(profiles.map((p) => [p.id, p.name]));
         this.events = updates;
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }
@@ -172,7 +173,7 @@ export default defineComponent({
         await updateAccount(event.account_id, { is_archived: false });
         await this.loadData();
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       }
     },
 
@@ -192,7 +193,7 @@ export default defineComponent({
         await updateAccount(event.account_id, { in_portfolio: false });
         await this.loadData();
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       }
     },
 
@@ -202,7 +203,7 @@ export default defineComponent({
         await deleteUpdate(updateId);
         await this.loadData();
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       }
     },
 

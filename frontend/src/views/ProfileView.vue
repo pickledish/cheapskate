@@ -18,6 +18,7 @@ import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headless
 import { ClipboardIcon } from '@heroicons/vue/24/outline';
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import dayjs from 'dayjs';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'ProfileView',
@@ -146,7 +147,7 @@ export default defineComponent({
         this.originalLlmProvider = this.localLlmProvider;
         this.originalLlmPort = this.localLlmPort;
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }
@@ -185,7 +186,7 @@ export default defineComponent({
         await updateProfile(this.userId, { name: this.userName });
         this.originalName = this.userName;
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.saving = false;
       }
@@ -207,7 +208,7 @@ export default defineComponent({
         this.originalLlmProvider = this.localLlmProvider;
         this.originalLlmPort = this.localLlmPort;
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.saving = false;
       }

@@ -4,6 +4,7 @@ import BaseModal from './BaseModal.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
 import { updateAssetClass, type AssetClass } from '@/lib/data';
 import type { TagColorName } from '@/lib/tagColors';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'EditAssetClassModal',
@@ -54,7 +55,7 @@ export default defineComponent({
 
         this.$emit('updated');
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }

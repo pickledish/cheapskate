@@ -2,6 +2,7 @@ import { supabase } from '../supabase';
 import type { AccountId } from './accounts';
 import type { AssetId } from './assets';
 import type { Update } from './updates';
+import { throwIfError } from '../util/error';
 
 export interface HoldingUpdate {
   update_id: number;
@@ -46,7 +47,7 @@ export async function insertHoldingUpdate(holding: HoldingUpdate): Promise<void>
     quantity: holding.quantity,
   });
 
-  if (error) throw error;
+  throwIfError(error);
 }
 
 export async function listHoldingUpdatesWithContext(
@@ -69,7 +70,7 @@ export async function listHoldingUpdatesWithContext(
     )
     .order('updates(effective_date)', { ascending: order === 'asc' });
 
-  if (error) throw error;
+  throwIfError(error);
 
   return ((data || []) as unknown as HoldingUpdateRow[]).map(mapHoldingUpdateRow);
 }
@@ -96,7 +97,7 @@ export async function listHoldingUpdatesByAccount(
     .eq('updates.account_id', accountId)
     .order('updates(effective_date)', { ascending: order === 'asc' });
 
-  if (error) throw error;
+  throwIfError(error);
 
   return ((data || []) as unknown as HoldingUpdateRow[]).map(mapHoldingUpdateRow);
 }

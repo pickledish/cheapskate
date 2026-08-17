@@ -1,6 +1,7 @@
 import { supabase } from '../supabase';
 import type { AccountId } from './accounts';
 import type { AssetId } from './assets';
+import { throwIfError } from '../util/error';
 
 export interface AssetAlias {
   account_id: AccountId;
@@ -20,7 +21,7 @@ export async function listAliasesByAccount(accountId: AccountId): Promise<AssetA
     .select('*')
     .eq('account_id', accountId);
 
-  if (error) throw error;
+  throwIfError(error);
   return data || [];
 }
 
@@ -35,5 +36,5 @@ export async function insertAssetAlias(alias: {
     asset_id: alias.asset_id,
   });
 
-  if (error) throw error;
+  throwIfError(error);
 }

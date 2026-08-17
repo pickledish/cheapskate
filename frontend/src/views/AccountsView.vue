@@ -24,6 +24,7 @@ import { getColorClasses } from '@/lib/tagColors';
 import { relativeDate } from '@/lib/util/date';
 import { accountIdToString, type AccountId } from '@/lib/data/accounts';
 import { assetClassIdToString } from '@/lib/data/asset-classes';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'AccountsView',
@@ -172,7 +173,7 @@ export default defineComponent({
         this.assetClassesByAccount = assetClassesByAccount;
         this.unclassifiedByAccount = unclassifiedByAccount;
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }

@@ -2,6 +2,7 @@ import { supabase } from '../supabase';
 import { type AccountId } from './accounts';
 import { type PriceUpdate } from './price-updates';
 import { type HoldingUpdate } from './holding-updates';
+import { throwIfError } from '../util/error';
 
 export type UpdateType =
   'statement' | 'manual_price' | 'manual_holdings' | 'mark_as_closed' | 'include_in_portfolio';
@@ -27,7 +28,7 @@ export async function listUpdates(): Promise<Update[]> {
     .select('*')
     .order('effective_date', { ascending: false });
 
-  if (error) throw error;
+  throwIfError(error);
   return data || [];
 }
 
@@ -53,7 +54,7 @@ export async function listUpdatesWithDetails(
     .lt('created_at', endDate)
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
+  throwIfError(error);
 
   type UpdateRow = Update & {
     price_updates: PriceUpdate[] | null;
@@ -80,7 +81,7 @@ export async function listUpdatesByAccount(accountId: AccountId): Promise<Update
     .eq('account_id', accountId)
     .order('effective_date', { ascending: false });
 
-  if (error) throw error;
+  throwIfError(error);
   return data || [];
 }
 
@@ -106,12 +107,12 @@ export async function insertUpdate(update: {
     .select()
     .single();
 
-  if (error) throw error;
+  throwIfError(error);
   return data;
 }
 
 export async function deleteUpdate(id: number): Promise<void> {
   const { error } = await supabase.from('updates').delete().eq('id', id);
 
-  if (error) throw error;
+  throwIfError(error);
 }

@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import type { AssetClass, AssetClassId } from './asset-classes';
+import { throwIfError } from '../util/error';
 
 // opaque type for AssetId, though underneath it's just a number
 declare const __brand: unique symbol;
@@ -31,7 +32,7 @@ export interface AssetWithAllocations extends Asset {
 export async function listAssets(): Promise<Asset[]> {
   const { data, error } = await supabase.from('assets').select('*').order('name');
 
-  if (error) throw error;
+  throwIfError(error);
   return data || [];
 }
 
@@ -46,7 +47,7 @@ export async function listAssetsWithAllocations(): Promise<AssetWithAllocations[
     )
     .order('name');
 
-  if (error) throw error;
+  throwIfError(error);
 
   type AssetRow = Asset & {
     asset_allocations: AssetAllocationInfo[] | null;
@@ -72,7 +73,7 @@ export async function getAsset(id: AssetId): Promise<Asset | null> {
 
   if (error) {
     if (error.code === 'PGRST116') return null;
-    throw error;
+    throwIfError(error);
   }
   return data;
 }
@@ -94,7 +95,7 @@ export async function insertAsset(asset: {
     .select()
     .single();
 
-  if (error) throw error;
+  throwIfError(error);
   return data;
 }
 
@@ -107,11 +108,11 @@ export async function updateAsset(
 ): Promise<void> {
   const { error } = await supabase.from('assets').update(updates).eq('id', id);
 
-  if (error) throw error;
+  throwIfError(error);
 }
 
 export async function deleteAsset(id: AssetId): Promise<void> {
   const { error } = await supabase.from('assets').delete().eq('id', id);
 
-  if (error) throw error;
+  throwIfError(error);
 }

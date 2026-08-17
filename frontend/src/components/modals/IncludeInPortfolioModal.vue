@@ -3,6 +3,7 @@ import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
 import { insertUpdate, updateAccount, type Account } from '@/lib/data';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'IncludeInPortfolioModal',
@@ -51,7 +52,7 @@ export default defineComponent({
         await updateAccount(this.account.id, { in_portfolio: true });
         this.$emit('included');
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }

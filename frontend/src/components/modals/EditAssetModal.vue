@@ -12,6 +12,7 @@ import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headless
 import { TrashIcon } from '@heroicons/vue/24/solid';
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
+import { formatError } from '@/lib/util/error';
 
 interface EditableAllocation {
   asset_class_id: AssetClassId | null;
@@ -150,7 +151,7 @@ export default defineComponent({
 
         this.$emit('updated');
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }

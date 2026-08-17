@@ -1,6 +1,7 @@
 import { supabase } from '../supabase';
 import type { AssetId } from './assets';
 import type { Update } from './updates';
+import { throwIfError } from '../util/error';
 
 export interface PriceUpdate {
   update_id: number;
@@ -24,7 +25,7 @@ export async function insertPriceUpdate(price: PriceUpdate): Promise<void> {
     price: price.price,
   });
 
-  if (error) throw error;
+  throwIfError(error);
 }
 
 export async function listPriceUpdatesWithContext(
@@ -46,7 +47,7 @@ export async function listPriceUpdatesWithContext(
     )
     .order('updates(effective_date)', { ascending: order === 'asc' });
 
-  if (error) throw error;
+  throwIfError(error);
 
   type PriceUpdateRow = PriceUpdate & { updates: Update };
 

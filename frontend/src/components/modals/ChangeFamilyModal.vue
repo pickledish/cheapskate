@@ -3,6 +3,7 @@ import { defineComponent } from 'vue';
 import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
 import { insertFamily, updateProfileFamily } from '@/lib/data';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'ChangeFamilyModal',
@@ -70,7 +71,7 @@ export default defineComponent({
 
         this.$emit('changed');
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }

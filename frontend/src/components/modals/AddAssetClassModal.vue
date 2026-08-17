@@ -5,6 +5,7 @@ import ColorPicker from '@/components/ColorPicker.vue';
 import { supabase } from '@/lib/supabase';
 import { getMaxSortOrder, insertAssetClass } from '@/lib/data';
 import type { TagColorName } from '@/lib/tagColors';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'AddAssetClassModal',
@@ -58,7 +59,7 @@ export default defineComponent({
 
         this.$emit('created');
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }

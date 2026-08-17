@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { throwIfError } from '../util/error';
 
 // opaque type for AssetClassId, though underneath it's just a number
 declare const __brand: unique symbol;
@@ -22,7 +23,7 @@ export interface AssetClass {
 export async function listAssetClasses(): Promise<AssetClass[]> {
   const { data, error } = await supabase.from('asset_classes').select('*').order('sort_order');
 
-  if (error) throw error;
+  throwIfError(error);
   return data || [];
 }
 
@@ -31,7 +32,7 @@ export async function getAssetClass(id: AssetClassId): Promise<AssetClass | null
 
   if (error) {
     if (error.code === 'PGRST116') return null;
-    throw error;
+    throwIfError(error);
   }
   return data;
 }
@@ -47,7 +48,7 @@ export async function getMaxSortOrder(familyId: string): Promise<number> {
 
   if (error) {
     if (error.code === 'PGRST116') return -1;
-    throw error;
+    throwIfError(error);
   }
   return data?.sort_order ?? -1;
 }
@@ -73,7 +74,7 @@ export async function insertAssetClass(assetClass: {
     .select()
     .single();
 
-  if (error) throw error;
+  throwIfError(error);
   return data;
 }
 
@@ -88,7 +89,7 @@ export async function updateAssetClass(
 ): Promise<void> {
   const { error } = await supabase.from('asset_classes').update(updates).eq('id', id);
 
-  if (error) throw error;
+  throwIfError(error);
 }
 
 export async function updateSortOrder(id: AssetClassId, sortOrder: number): Promise<void> {
@@ -97,11 +98,11 @@ export async function updateSortOrder(id: AssetClassId, sortOrder: number): Prom
     .update({ sort_order: sortOrder })
     .eq('id', id);
 
-  if (error) throw error;
+  throwIfError(error);
 }
 
 export async function deleteAssetClass(id: AssetClassId): Promise<void> {
   const { error } = await supabase.from('asset_classes').delete().eq('id', id);
 
-  if (error) throw error;
+  throwIfError(error);
 }

@@ -48,6 +48,7 @@ import {
 } from '@shared/parse-pdf-schema';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import { accountIdToString, type AccountId } from '@/lib/data/accounts';
+import { formatError } from '@/lib/util/error';
 
 /**
  * ResolvedHolding — preview/save row after matching against tickers + per-account aliases.
@@ -311,7 +312,7 @@ export default defineComponent({
 
         await this.handleParseResult(result);
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }
@@ -404,7 +405,7 @@ export default defineComponent({
           this.matchingAccountIds = [];
           await this.onAccountResolved();
         } catch (err) {
-          this.error = err instanceof Error ? err.message : String(err);
+          this.error = formatError(err);
           this.loading = false;
         }
         return;
@@ -421,7 +422,7 @@ export default defineComponent({
         this.matchingAccountIds = [];
         await this.onAccountResolved();
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
         this.loading = false;
       }
     },
@@ -485,7 +486,7 @@ export default defineComponent({
         this.addSoldPositions();
         this.step = 'preview';
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }
@@ -750,7 +751,7 @@ export default defineComponent({
         // Success!
         this.$emit('uploaded');
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
         this.step = 'preview';
       } finally {
         this.loading = false;

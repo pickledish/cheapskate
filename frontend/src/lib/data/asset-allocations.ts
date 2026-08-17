@@ -1,6 +1,7 @@
 import { supabase } from '../supabase';
 import type { AssetClassId } from './asset-classes';
 import type { AssetId } from './assets';
+import { throwIfError } from '../util/error';
 
 export interface AssetAllocation {
   asset_id: AssetId;
@@ -13,7 +14,7 @@ export async function listAssetAllocations(): Promise<AssetAllocation[]> {
     .from('asset_allocations')
     .select('asset_id, asset_class_id, percentage');
 
-  if (error) throw error;
+  throwIfError(error);
   return (data || []).map((row) => ({
     asset_id: row.asset_id,
     asset_class_id: row.asset_class_id,
@@ -29,11 +30,11 @@ export async function insertAssetAllocation(allocation: AssetAllocation): Promis
     percentage: allocation.percentage,
   });
 
-  if (error) throw error;
+  throwIfError(error);
 }
 
 export async function deleteAssetAllocationsByAsset(assetId: AssetId): Promise<void> {
   const { error } = await supabase.from('asset_allocations').delete().eq('asset_id', assetId);
 
-  if (error) throw error;
+  throwIfError(error);
 }

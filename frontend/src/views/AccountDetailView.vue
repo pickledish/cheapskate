@@ -42,6 +42,7 @@ import {
 import { assetIdToString, type AssetAllocationInfo, type AssetId } from '@/lib/data/assets';
 import { type AccountId } from '@/lib/data/accounts';
 import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'AccountDetailView',
@@ -235,7 +236,7 @@ export default defineComponent({
 
         this.latestEffectiveDate = updatesData[0]?.effective_date ?? null;
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }
@@ -402,7 +403,7 @@ export default defineComponent({
         this.newRows = [];
         await this.loadData();
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.saving = false;
       }
@@ -431,7 +432,7 @@ export default defineComponent({
         await deleteAccount(account.id);
         await this.$router.push('/accounts');
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       }
     },
 

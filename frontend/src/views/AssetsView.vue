@@ -25,6 +25,7 @@ import { Bars3Icon } from '@heroicons/vue/24/solid';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import { assetClassIdToString } from '@/lib/data/asset-classes';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'AssetsView',
@@ -137,7 +138,7 @@ export default defineComponent({
           ),
         }));
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }
@@ -222,7 +223,7 @@ export default defineComponent({
         await deleteAsset(asset.id);
         await this.loadData();
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       }
     },
   },

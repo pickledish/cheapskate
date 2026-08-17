@@ -26,6 +26,7 @@ import {
 } from '@/lib/derived/derived';
 import { formatMonth, lastNMonths, monthEnd } from '@/lib/util/date';
 import type { AssetClassId } from '@/lib/data/asset-classes';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'PortfolioView',
@@ -104,7 +105,7 @@ export default defineComponent({
 
         this.computeChartData();
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }

@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import { assertCanJoinFamily } from './families';
+import { throwIfError } from '../util/error';
 
 export interface LocalLlmConfig {
   api: 'disabled' | 'ollama' | 'openai';
@@ -21,7 +22,7 @@ export interface Profile {
 export async function listProfiles(): Promise<Profile[]> {
   const { data, error } = await supabase.from('profiles').select('*').order('created_at');
 
-  if (error) throw error;
+  throwIfError(error);
   return data || [];
 }
 
@@ -30,7 +31,7 @@ export async function getProfile(id: string): Promise<Profile | null> {
 
   if (error) {
     if (error.code === 'PGRST116') return null;
-    throw error;
+    throwIfError(error);
   }
   return data;
 }
@@ -42,7 +43,7 @@ export async function listProfilesByFamily(familyId: string): Promise<Profile[]>
     .eq('family_id', familyId)
     .order('created_at');
 
-  if (error) throw error;
+  throwIfError(error);
   return data || [];
 }
 
@@ -59,13 +60,13 @@ export async function insertProfile(profile: {
     family_id: profile.family_id,
   });
 
-  if (error) throw error;
+  throwIfError(error);
 }
 
 export async function updateProfile(id: string, updates: { name: string }): Promise<void> {
   const { error } = await supabase.from('profiles').update({ name: updates.name }).eq('id', id);
 
-  if (error) throw error;
+  throwIfError(error);
 }
 
 export async function updateProfileFamily(id: string, familyId: string): Promise<void> {
@@ -73,11 +74,11 @@ export async function updateProfileFamily(id: string, familyId: string): Promise
 
   const { error } = await supabase.from('profiles').update({ family_id: familyId }).eq('id', id);
 
-  if (error) throw error;
+  throwIfError(error);
 }
 
 export async function updatePreferences(id: string, preferences: UserPreferences): Promise<void> {
   const { error } = await supabase.from('profiles').update({ preferences }).eq('id', id);
 
-  if (error) throw error;
+  throwIfError(error);
 }

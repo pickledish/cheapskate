@@ -4,6 +4,7 @@ import BaseModal from './BaseModal.vue';
 import InstitutionIcon from '@/components/InstitutionIcon.vue';
 import { supabase } from '@/lib/supabase';
 import { insertAccount } from '@/lib/data';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'AddAccountModal',
@@ -46,7 +47,7 @@ export default defineComponent({
 
         this.$emit('created');
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }

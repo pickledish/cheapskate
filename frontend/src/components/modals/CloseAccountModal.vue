@@ -4,6 +4,7 @@ import BaseModal from './BaseModal.vue';
 import { supabase } from '@/lib/supabase';
 import { insertUpdate, insertHoldingUpdate, updateAccount, type Account } from '@/lib/data';
 import type { AssetId } from '@/lib/data/assets';
+import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'CloseAccountModal',
@@ -66,7 +67,7 @@ export default defineComponent({
         await updateAccount(this.account.id, { is_archived: true });
         this.$emit('closed');
       } catch (err) {
-        this.error = err instanceof Error ? err.message : String(err);
+        this.error = formatError(err);
       } finally {
         this.loading = false;
       }
