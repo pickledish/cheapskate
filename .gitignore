@@ -12,7 +12,8 @@ access-token
 *.key
 supabase/.env
 supabase/.env.local
-supabase/.temp/*
+supabase/.temp/
+supabase/.branches/
 
 # OS
 .DS_Store
