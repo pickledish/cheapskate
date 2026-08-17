@@ -9,7 +9,7 @@ import {
 } from "../_shared/parse-pdf-schema.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const DEFAULT_MODEL = "google/gemini-2.5-flash";
+const DEFAULT_MODEL = "google/gemini-3-flash";
 
 interface ParsePdfRequest {
   /** Quantized TSV text extracted client-side from the statement PDF. */
@@ -149,6 +149,6 @@ Deno.serve(async (req) => {
 
   Environment variables required:
     - OPENROUTER_API_KEY: Your OpenRouter API key (get from openrouter.ai/settings/keys)
-    - OPENROUTER_MODEL (optional): Model to use, defaults to google/gemini-2.5-flash
+    - OPENROUTER_MODEL (optional): Model to use, defaults to google/gemini-3-flash
 
 */
