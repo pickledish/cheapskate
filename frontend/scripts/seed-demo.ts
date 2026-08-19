@@ -1,11 +1,15 @@
 /**
  * Seed demo users and portfolio data for local / hosted Supabase.
  *
- * Alex & Jordan story (~10 months):
- *   1. Build cash toward a down payment
- *   2. Buy a home (cash → equity; net worth barely moves)
- *   3. Mortgage principal ($DEBT) pays down while property value stays flat
- *   4. Alex's MegaCorp shares come off lockup near the end and enter the allocation (US-stock overweight)
+ * Alex & Jordan story (~12 months):
+ *   1. Start badly allocated: almost everything in VTSAX/VTI + cash
+ *      (Jordan's 403(b) still has a leftover target-date fund)
+ *   2. Use Cheapskate to steer new contributions — and one 401(k) reallocation —
+ *      toward international and bonds. They never quite reach 60/20/20.
+ *   3. Buy a home (cash → equity plus closing-cost dip; house value wobbles)
+ *   4. Roll Alex's old 401(k) into Fidelity toward the remaining gap
+ *   5. MegaCorp RSUs vest, then come off lockup and enter the portfolio
+ *      (US overweight; intl & bonds ~2/3 of their 20% targets)
  *
  * Usage:
  *   SUPABASE_SERVICE_ROLE_KEY=<key> npm run seed:local
@@ -65,18 +69,52 @@ type AssetKey =
 
 type ClassKey = 'us' | 'intl' | 'bond' | 'cash' | 're' | 'debt';
 
+const N_MONTHS = 12;
+
 const RETURNS = {
-  us: [0.021, -0.014, 0.033, 0.012, -0.026, 0.041, 0.008, 0.019, -0.007, 0.024],
-  intl: [0.013, -0.008, 0.022, 0.005, -0.019, 0.028, 0.011, 0.006, 0.014, 0.009],
-  bond: [0.004, 0.002, -0.003, 0.006, 0.001, -0.002, 0.005, 0.003, 0.002, 0.004],
+  us: [0.018, -0.092, 0.041, 0.015, -0.031, 0.067, 0.008, -0.054, 0.038, 0.022, -0.011, 0.045],
+  intl: [0.012, -0.078, 0.028, 0.008, -0.022, 0.048, 0.014, -0.041, 0.031, 0.009, 0.016, 0.027],
+  bond: [0.004, 0.018, -0.006, 0.005, 0.002, -0.008, 0.003, 0.012, -0.004, 0.003, 0.001, 0.004],
 } as const;
 
-/** Demo house purchase: fixed property value + amortizing $DEBT mortgage. */
+/** MegaCorp is a single name: bigger swings than the US index. */
+const MEGA_RETURNS = [
+  0.042, -0.155, 0.088, -0.028, 0.015, 0.112, -0.048, -0.095, 0.061, 0.033, 0.148, -0.037,
+] as const;
+
+/** Demo house purchase: wobbling property value + amortizing $DEBT mortgage. */
 const HOME_VALUE = 450_000;
-const DOWN_PAYMENT = 90_000; // 20% — mostly from emergency, rest from joint cash
+const DOWN_PAYMENT = 90_000; // 20%
+const CLOSING_COSTS = 12_000;
+const FROM_EMERGENCY = 70_000;
+const FROM_JOINT = DOWN_PAYMENT - FROM_EMERGENCY + CLOSING_COSTS; // 32_000
 const MORTGAGE_START = HOME_VALUE - DOWN_PAYMENT; // 360_000
 const MORTGAGE_PAYDOWN_PER_MONTH = 1_500;
-const BUY_MONTH = 5; // 0-based index into lastNMonths(10)
+
+/** 0-based indexes into lastNMonths(N_MONTHS). */
+const BUY_MONTH = 6;
+const REALLOC_MONTH = 3; // Alex 401(k): VTSAX → VTIAX
+const BONUS_MONTH = 8; // emergency-fund lump (out of portfolio)
+const DEPLOY_MONTH = 8; // leftover joint cash → VXUS / BND
+const SKIP_ROTH_MONTH = 9; // vacation; skip IRA contributions
+const VEST_MONTH = 10; // MegaCorp RSU vest
+const CLOSE_MONTH = 10; // roll old 401(k) into Fidelity
+
+/** Property value by month. Unused before BUY_MONTH; then dips and recovers. */
+const HOME_PRICES = [
+  HOME_VALUE,
+  HOME_VALUE,
+  HOME_VALUE,
+  HOME_VALUE,
+  HOME_VALUE,
+  HOME_VALUE,
+  HOME_VALUE,
+  438_000,
+  440_000,
+  439_000,
+  452_000,
+  458_000,
+] as const;
 
 const BASE_PRICES: Record<AssetKey, number> = {
   VTI: 250,
@@ -100,7 +138,7 @@ const ASSET_CLASS_MAP: Record<AssetKey, ClassKey> = {
   VTSAX: 'us',
   VTIAX: 'intl',
   VBTLX: 'bond',
-  VTHRX: 'us', // multi-class handled separately for allocations; returns use US-ish blend via VTHRX price path
+  VTHRX: 'us', // multi-class handled separately for allocations; returns use a 40/20/40 blend
   STABLE: 'bond',
   CASH: 'cash',
   HOME: 're',
@@ -186,8 +224,13 @@ function buildPrices(nMonths: number): Record<AssetKey, number[]> {
         continue;
       }
       if (key === 'HOME') {
-        // Property value is flat for the whole demo window (equity grows via paydown).
-        prices[key].push(HOME_VALUE);
+        prices[key].push(HOME_PRICES[i] ?? HOME_VALUE);
+        continue;
+      }
+      if (key === 'MEGA') {
+        let p = BASE_PRICES.MEGA;
+        for (let j = 0; j <= i; j++) p *= 1 + MEGA_RETURNS[j]!;
+        prices[key].push(p);
         continue;
       }
       if (key === 'STABLE') {
@@ -219,44 +262,57 @@ function buildPrices(nMonths: number): Record<AssetKey, number[]> {
   return prices;
 }
 
-function growQty(startQty: number, monthlyDollars: number[], prices: number[]): number[] {
+function qtyPath(
+  startQty: number,
+  prices: number[],
+  dollarsAt: (monthIndex: number) => number,
+  extraQtyAt: (monthIndex: number) => number = () => 0,
+): number[] {
   const qtys: number[] = [];
   let qty = startQty;
   for (let i = 0; i < prices.length; i++) {
     if (i > 0) {
-      qty += monthlyDollars[i]! / prices[i]!;
+      qty += dollarsAt(i) / prices[i]! + extraQtyAt(i);
     }
     qtys.push(qty);
   }
   return qtys;
 }
 
+function aroundHouse(monthIndex: number): boolean {
+  return monthIndex === BUY_MONTH || monthIndex === BUY_MONTH + 1;
+}
+
+function skipRoth(monthIndex: number): boolean {
+  return aroundHouse(monthIndex) || monthIndex === SKIP_ROTH_MONTH;
+}
+
 /**
- * Emergency savings story: build a down-payment pile, then cliff into the house.
- * ~$70k of the $90k down payment comes from here; joint cash covers the rest.
+ * Emergency savings: pile up a down payment, cliff at closing, bonus later, then drip back.
+ * Closing costs come from joint cash, not here.
  */
 function emergencyCashQtys(nMonths: number): number[] {
-  const fromEmergency = 70_000;
   const qtys: number[] = [];
-  let bal = 48_000;
+  let bal = 60_000;
   for (let i = 0; i < nMonths; i++) {
-    if (i > 0 && i < BUY_MONTH) bal += 9_000; // save hard pre-purchase
-    if (i === BUY_MONTH) bal -= fromEmergency;
-    if (i > BUY_MONTH) bal += 500; // replenish emergency fund slowly
+    if (i > 0 && i < BUY_MONTH) bal += 8_000;
+    if (i === BUY_MONTH) bal -= FROM_EMERGENCY;
+    if (i === BONUS_MONTH) bal += 12_000;
+    if (i > BUY_MONTH && i !== BONUS_MONTH) bal += 700;
     qtys.push(bal);
   }
   return qtys;
 }
 
-/** Joint brokerage cash sleeve — contributes the rest of the down payment. */
+/** Joint brokerage cash: the rest of the down payment + closing, then deploy leftovers. */
 function jointCashQtys(nMonths: number): number[] {
-  const fromJoint = DOWN_PAYMENT - 70_000; // 20_000
   const qtys: number[] = [];
-  let bal = 14_000;
+  let bal = 32_000;
   for (let i = 0; i < nMonths; i++) {
-    if (i > 0 && i < BUY_MONTH) bal += 2_000;
-    if (i === BUY_MONTH) bal -= fromJoint;
-    if (i > BUY_MONTH) bal += 250;
+    if (i > 0 && i < BUY_MONTH) bal += 3_500;
+    if (i === BUY_MONTH) bal -= FROM_JOINT;
+    if (i === DEPLOY_MONTH) bal -= 8_000;
+    if (i > BUY_MONTH && i !== DEPLOY_MONTH && !aroundHouse(i)) bal += 200;
     qtys.push(bal);
   }
   return qtys;
@@ -417,7 +473,7 @@ async function seedStaticAsAlex(
     family_id: FAMILY_ID,
   });
   const intl = await insertAssetClass({
-    name: 'International Stocks',
+    name: "Int'l Stocks",
     color: 'teal',
     goal: 0.2,
     sort_order: 1,
@@ -552,6 +608,11 @@ async function seedStaticAsAlex(
   });
   await insertAssetAlias({
     account_id: alex401k.id,
+    label: 'VANG TOT INTL STK IDX ADM',
+    asset_id: assets.VTIAX,
+  });
+  await insertAssetAlias({
+    account_id: alex401k.id,
     label: 'STABLE VALUE FUND',
     asset_id: assets.STABLE,
   });
@@ -618,6 +679,9 @@ async function seedStatement(
   prices: Record<AssetKey, number[]>,
   monthIndex: number,
 ): Promise<void> {
+  const held = holdings.filter((h) => h.qty > 0);
+  if (held.length === 0) return;
+
   const update = await insertUpdate({
     family_id: FAMILY_ID,
     account_id: account.id,
@@ -626,7 +690,7 @@ async function seedStatement(
     created_by: userId,
     created_at: uploadedAt(effectiveDate),
   });
-  for (const h of holdings) {
+  for (const h of held) {
     await insertPriceUpdate({
       update_id: update.id,
       asset_id: h.assetId,
@@ -702,105 +766,118 @@ async function seedHistory(
   assets: Record<AssetKey, AssetId>,
   accounts: AlexAccounts & JordanAccounts,
 ): Promise<void> {
-  console.log('Seeding ~10 months of portfolio history...');
+  console.log(`Seeding ~${N_MONTHS} months of portfolio history...`);
   console.log(
-    `  Story: save → buy home at month ${BUY_MONTH} ($${HOME_VALUE.toLocaleString()} / $${MORTGAGE_START.toLocaleString()} mortgage) → equity via paydown → MegaCorp lockup ends`,
+    `  Story: VTSAX+cash start → cheapskate rebalance → house at month ${BUY_MONTH} → old 401(k) rollover → MegaCorp lockup ends`,
   );
 
-  const months = lastNMonths(10).map(monthEnd);
+  const months = lastNMonths(N_MONTHS).map(monthEnd);
   const n = months.length;
   const prices = buildPrices(n);
-  const closeMonth = 8; // roll MegaCorp 401(k) into Fidelity 401(k) late in the window
-  const liquidMonth = n - 1; // MegaCorp lockup ends the last data point
+  const liquidMonth = n - 1;
 
-  // Quantity schedules
-  const alex401kVtsax = growQty(
-    480,
-    Array.from({ length: n }, (_, i) => (i === 0 ? 0 : 900)),
+  const reallocDollars = 10_000;
+
+  // Alex 401(k): start 100% VTSAX; after looking at Cheapskate, new money + one reallocation go to intl/bonds
+  const alex401kVtsax = qtyPath(
+    620,
     prices.VTSAX,
+    (i) => (i <= 2 ? 1_400 : 500),
+    (i) => (i === REALLOC_MONTH ? -reallocDollars / prices.VTSAX[i]! : 0),
   );
-  const alex401kVtiax = growQty(
-    900,
-    Array.from({ length: n }, (_, i) => (i === 0 ? 0 : 300)),
+  const alex401kVtiax = qtyPath(
+    0,
     prices.VTIAX,
+    (i) => (i <= 2 ? 0 : 450),
+    (i) => (i === REALLOC_MONTH ? reallocDollars / prices.VTIAX[i]! : 0),
   );
-  const alex401kStable = growQty(
-    1200,
-    Array.from({ length: n }, (_, i) => (i === 0 ? 0 : 200)),
-    prices.STABLE,
-  );
+  const alex401kStable = qtyPath(0, prices.STABLE, (i) => (i <= 2 ? 0 : 300));
 
-  const alexRothVti = growQty(
-    62,
-    Array.from({ length: n }, (_, i) => (i === 0 ? 0 : 250)),
-    prices.VTI,
-  );
-  const alexRothVxus = growQty(
-    90,
-    Array.from({ length: n }, (_, i) => (i === 0 ? 0 : 100)),
+  // Roths: US first, then 100% international once they see the underweight
+  const alexRothVti = qtyPath(48, prices.VTI, (i) => (skipRoth(i) ? 0 : i <= 2 ? 500 : 0));
+  const alexRothVxus = qtyPath(0, prices.VXUS, (i) => (skipRoth(i) ? 0 : i <= 2 ? 0 : 350));
+
+  // Old MegaCorp 401(k): leftover VTSAX, rolled into Fidelity toward the remaining gap
+  const old401kVtsax = Array.from({ length: n }, () => 200);
+  const megaQty = Array.from({ length: n }, (_, i) => (i >= VEST_MONTH ? 480 : 400));
+
+  // Jordan 403(b): target-date stays for the whole window; VTSAX leftover + later VBTLX
+  const jordan403bVthrx = qtyPath(720, prices.VTHRX, () => 800);
+  const jordan403bVtsax = qtyPath(200, prices.VTSAX, (i) => (i <= 2 ? 250 : 0));
+  const jordan403bVbtlx = qtyPath(0, prices.VBTLX, (i) => (i <= 2 ? 0 : 200));
+
+  const jordanRothVti = qtyPath(32, prices.VTI, (i) => (skipRoth(i) ? 0 : i <= 2 ? 400 : 0));
+  const jordanRothVxus = qtyPath(0, prices.VXUS, (i) => (skipRoth(i) ? 0 : i <= 2 ? 0 : 250));
+
+  const jointVti = qtyPath(80, prices.VTI, (i) => (aroundHouse(i) ? 0 : i <= 3 ? 400 : 0));
+  const jointVxus = qtyPath(
+    0,
     prices.VXUS,
+    (i) => (aroundHouse(i) ? 0 : i <= 3 ? 0 : 250),
+    (i) => (i === DEPLOY_MONTH ? 4_000 / prices.VXUS[i]! : 0),
   );
-
-  const old401kVthrx = Array.from({ length: n }, () => 610);
-  const megaQty = Array.from({ length: n }, () => 400);
-
-  const jordan403bVtsax = growQty(
-    300,
-    Array.from({ length: n }, (_, i) => (i === 0 ? 0 : 800)),
-    prices.VTSAX,
+  const jointBnd = qtyPath(
+    0,
+    prices.BND,
+    (i) => (aroundHouse(i) ? 0 : i <= 3 ? 0 : 350),
+    (i) => (i === DEPLOY_MONTH ? 4_000 / prices.BND[i]! : 0),
   );
-  const jordan403bVbtlx = growQty(
-    1400,
-    Array.from({ length: n }, (_, i) => (i === 0 ? 0 : 300)),
-    prices.VBTLX,
-  );
-
-  const jordanRothVti = growQty(
-    40,
-    Array.from({ length: n }, (_, i) => (i === 0 ? 0 : 250)),
-    prices.VTI,
-  );
-  const jordanRothVxus = growQty(
-    70,
-    Array.from({ length: n }, (_, i) => (i === 0 ? 0 : 120)),
-    prices.VXUS,
-  );
-
-  // Pause taxable contributions around closing so cash for the down payment feels intentional
-  const jointContribute = (i: number, normal: number) =>
-    i === 0 || i === BUY_MONTH || i === BUY_MONTH + 1 ? 0 : normal;
-
-  const jointVti = growQty(
-    150,
-    Array.from({ length: n }, (_, i) => jointContribute(i, 600)),
-    prices.VTI,
-  );
-  const jointVxus = growQty(
-    210,
-    Array.from({ length: n }, (_, i) => jointContribute(i, 200)),
-    prices.VXUS,
-  );
-  const jointBnd = Array.from({ length: n }, () => 120);
   const jointCash = jointCashQtys(n);
   const emergencyQtys = emergencyCashQtys(n);
   const mortgageQtys = mortgagePrincipalQtys(n);
 
-  // Rollover: Old 401(k) VTHRX → Fidelity 401(k) funds (~60/40 VTSAX / STABLE)
-  const rolloverValue = 610 * prices.VTHRX[closeMonth]!;
-  const rolloverVtsaxQty = (rolloverValue * 0.6) / prices.VTSAX[closeMonth]!;
-  const rolloverStableQty = (rolloverValue * 0.4) / prices.STABLE[closeMonth]!;
+  // Rollover: old 401(k) VTSAX → 30% VTIAX / 50% STABLE / 20% VTSAX
+  const rolloverValue = 200 * prices.VTSAX[CLOSE_MONTH]!;
+  const rolloverVtiaxQty = (rolloverValue * 0.3) / prices.VTIAX[CLOSE_MONTH]!;
+  const rolloverStableQty = (rolloverValue * 0.5) / prices.STABLE[CLOSE_MONTH]!;
+  const rolloverVtsaxQty = (rolloverValue * 0.2) / prices.VTSAX[CLOSE_MONTH]!;
 
-  // Unit prices for cash / debt / home (flat for the demo window)
+  const dollars = (key: AssetKey, qty: number, i: number) => qty * prices[key][i]!;
+  const mixAt = (i: number) => {
+    let us = 0;
+    let intl = 0;
+    let bond = 0;
+    const vthrx = dollars('VTHRX', jordan403bVthrx[i]!, i);
+    us += dollars(
+      'VTSAX',
+      alex401kVtsax[i]! + jordan403bVtsax[i]! + (i >= CLOSE_MONTH ? rolloverVtsaxQty : 0),
+      i,
+    );
+    us += dollars('VTI', alexRothVti[i]! + jordanRothVti[i]! + jointVti[i]!, i);
+    intl += dollars('VTIAX', alex401kVtiax[i]! + (i >= CLOSE_MONTH ? rolloverVtiaxQty : 0), i);
+    intl += dollars('VXUS', alexRothVxus[i]! + jordanRothVxus[i]! + jointVxus[i]!, i);
+    bond += dollars('STABLE', alex401kStable[i]! + (i >= CLOSE_MONTH ? rolloverStableQty : 0), i);
+    bond += dollars('VBTLX', jordan403bVbtlx[i]!, i);
+    bond += dollars('BND', jointBnd[i]!, i);
+    us += vthrx * 0.4;
+    intl += vthrx * 0.2;
+    bond += vthrx * 0.4;
+    if (i < CLOSE_MONTH) us += dollars('VTSAX', old401kVtsax[i]!, i);
+    if (i >= liquidMonth) us += dollars('MEGA', megaQty[i]!, i);
+    const cash = jointCash[i]!;
+    const total = us + intl + bond + cash;
+    return { us, intl, bond, cash, total };
+  };
+  const fmtMix = (label: string, i: number) => {
+    const m = mixAt(i);
+    const p = (n: number) => `${((100 * n) / m.total).toFixed(0)}%`;
+    console.log(
+      `  ${label}: US ${p(m.us)} / Intl ${p(m.intl)} / Bond ${p(m.bond)} / Cash ${p(m.cash)}  ($${Math.round(m.total).toLocaleString()})`,
+    );
+  };
+  fmtMix('Start allocation', 0);
+  fmtMix('End allocation  ', n - 1);
+
   await asUser(ALEX_EMAIL, async () => {
     await seedManualPrice(alexId, months[0]!, assets.CASH, 1);
     await seedManualPrice(alexId, months[0]!, assets.DEBT, -1);
-    // Home price exists before purchase so the first residence holdings update prices cleanly
-    await seedManualPrice(alexId, months[BUY_MONTH]!, assets.HOME, HOME_VALUE);
+    for (let i = BUY_MONTH; i < n; i++) {
+      await seedManualPrice(alexId, months[i]!, assets.HOME, HOME_PRICES[i] ?? HOME_VALUE);
+    }
 
     for (let i = 0; i < n; i++) {
       const date = months[i]!;
 
-      // Alex 401(k) — after closeMonth, includes MegaCorp rollover shares
       await seedStatement(
         accounts.alex401k,
         alexId,
@@ -809,20 +886,23 @@ async function seedHistory(
           {
             assetId: assets.VTSAX,
             assetKey: 'VTSAX',
-            qty: alex401kVtsax[i]! + (i >= closeMonth ? rolloverVtsaxQty : 0),
+            qty: alex401kVtsax[i]! + (i >= CLOSE_MONTH ? rolloverVtsaxQty : 0),
           },
-          { assetId: assets.VTIAX, assetKey: 'VTIAX', qty: alex401kVtiax[i]! },
+          {
+            assetId: assets.VTIAX,
+            assetKey: 'VTIAX',
+            qty: alex401kVtiax[i]! + (i >= CLOSE_MONTH ? rolloverVtiaxQty : 0),
+          },
           {
             assetId: assets.STABLE,
             assetKey: 'STABLE',
-            qty: alex401kStable[i]! + (i >= closeMonth ? rolloverStableQty : 0),
+            qty: alex401kStable[i]! + (i >= CLOSE_MONTH ? rolloverStableQty : 0),
           },
         ],
         prices,
         i,
       );
 
-      // Alex Roth
       await seedStatement(
         accounts.alexRoth,
         alexId,
@@ -835,17 +915,16 @@ async function seedHistory(
         i,
       );
 
-      // Old 401(k) until rolled into Fidelity 401(k)
-      if (i < closeMonth) {
+      if (i < CLOSE_MONTH) {
         await seedStatement(
           accounts.alexOld401k,
           alexId,
           date,
-          [{ assetId: assets.VTHRX, assetKey: 'VTHRX', qty: old401kVthrx[i]! }],
+          [{ assetId: assets.VTSAX, assetKey: 'VTSAX', qty: old401kVtsax[i]! }],
           prices,
           i,
         );
-      } else if (i === closeMonth) {
+      } else if (i === CLOSE_MONTH) {
         const closeUpdate = await insertUpdate({
           family_id: FAMILY_ID,
           account_id: accounts.alexOld401k.id,
@@ -856,13 +935,12 @@ async function seedHistory(
         });
         await insertHoldingUpdate({
           update_id: closeUpdate.id,
-          asset_id: assets.VTHRX,
+          asset_id: assets.VTSAX,
           quantity: 0,
         });
         await updateAccount(accounts.alexOld401k.id, { is_archived: true });
       }
 
-      // MegaCorp shares: owned (and in net worth) the whole time; in portfolio after lockup
       await seedStatement(
         accounts.alexMegaStock,
         alexId,
@@ -879,6 +957,11 @@ async function seedHistory(
 
   await asUser(JORDAN_EMAIL, async () => {
     await insertAssetAlias({
+      account_id: accounts.jordan403b.id,
+      label: 'VANG TARGET RET 2030',
+      asset_id: assets.VTHRX,
+    });
+    await insertAssetAlias({
       account_id: accounts.residence.id,
       label: 'MORTGAGE PRINCIPAL',
       asset_id: assets.DEBT,
@@ -892,6 +975,7 @@ async function seedHistory(
         jordanId,
         date,
         [
+          { assetId: assets.VTHRX, assetKey: 'VTHRX', qty: jordan403bVthrx[i]! },
           { assetId: assets.VTSAX, assetKey: 'VTSAX', qty: jordan403bVtsax[i]! },
           { assetId: assets.VBTLX, assetKey: 'VBTLX', qty: jordan403bVbtlx[i]! },
         ],
@@ -929,7 +1013,6 @@ async function seedHistory(
         { assetId: assets.CASH, qty: emergencyQtys[i]! },
       ]);
 
-      // Residence appears at purchase: HOME (flat) + $DEBT (shrinking principal) = growing equity
       if (i >= BUY_MONTH) {
         await seedManualHoldings(accounts.residence, jordanId, date, [
           { assetId: assets.HOME, qty: 1 },

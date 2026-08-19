@@ -109,7 +109,7 @@ The SPA uses hash routing (`/#/accounts`, …), so any static host works without
 
 ### 5. Seed demo data (optional)
 
-Populates the database chosen by the Vite mode with a two-person household (~10 months of history, including a home purchase). Alex and Jordan are marked read-only; that family cannot be joined.
+Populates the database chosen by the Vite mode with a two-person household (~12 months of history, including a home purchase and a rebalance toward target allocation). Alex and Jordan are marked read-only; that family cannot be joined.
 
 ```bash
 cd frontend
