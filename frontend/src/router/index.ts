@@ -1,28 +1,17 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import { supabase } from '@/lib/supabase';
 
-import LoginView from '@/views/LoginView.vue';
-import SetupView from '@/views/SetupView.vue';
-import NetWorthView from '@/views/NetWorthView.vue';
-import PortfolioView from '@/views/PortfolioView.vue';
-import AccountsView from '@/views/AccountsView.vue';
-import AccountDetailView from '@/views/AccountDetailView.vue';
-import AssetsView from '@/views/AssetsView.vue';
-import GoalsView from '@/views/GoalsView.vue';
-import HistoryView from '@/views/HistoryView.vue';
-import ProfileView from '@/views/ProfileView.vue';
-
 const routes = [
   {
     path: '/login',
     name: 'login',
-    component: LoginView,
+    component: () => import('@/views/LoginView.vue'),
     meta: { requiresAuth: false },
   },
   {
     path: '/setup',
     name: 'setup',
-    component: SetupView,
+    component: () => import('@/views/SetupView.vue'),
     meta: { requiresAuth: true },
   },
   {
@@ -32,49 +21,49 @@ const routes = [
   {
     path: '/networth',
     name: 'networth',
-    component: NetWorthView,
+    component: () => import('@/views/NetWorthView.vue'),
     meta: { requiresAuth: true, requiresOnboardingComplete: true },
   },
   {
     path: '/portfolio',
     name: 'portfolio',
-    component: PortfolioView,
+    component: () => import('@/views/PortfolioView.vue'),
     meta: { requiresAuth: true, requiresOnboardingComplete: true },
   },
   {
     path: '/assets',
     name: 'assets',
-    component: AssetsView,
+    component: () => import('@/views/AssetsView.vue'),
     meta: { requiresAuth: true, requiresAccountsComplete: true },
   },
   {
     path: '/goals',
     name: 'goals',
-    component: GoalsView,
+    component: () => import('@/views/GoalsView.vue'),
     meta: { requiresAuth: true },
   },
   {
     path: '/accounts',
     name: 'accounts',
-    component: AccountsView,
+    component: () => import('@/views/AccountsView.vue'),
     meta: { requiresAuth: true, requiresGoalsComplete: true },
   },
   {
     path: '/accounts/:id',
     name: 'account-detail',
-    component: AccountDetailView,
+    component: () => import('@/views/AccountDetailView.vue'),
     meta: { requiresAuth: true, requiresGoalsComplete: true },
   },
   {
     path: '/history',
     name: 'history',
-    component: HistoryView,
+    component: () => import('@/views/HistoryView.vue'),
     meta: { requiresAuth: true, requiresOnboardingComplete: true },
   },
   {
     path: '/profile',
     name: 'profile',
-    component: ProfileView,
+    component: () => import('@/views/ProfileView.vue'),
     meta: { requiresAuth: true },
   },
 ];
