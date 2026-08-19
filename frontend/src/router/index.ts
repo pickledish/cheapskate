@@ -16,7 +16,9 @@ const routes = [
   },
   {
     path: '/',
-    redirect: '/accounts',
+    name: 'splash',
+    component: () => import('@/views/SplashView.vue'),
+    meta: { requiresAuth: false },
   },
   {
     path: '/networth',
@@ -95,6 +97,11 @@ router.beforeEach(async (to, _from, next) => {
     if (!familyId) return next('/setup');
     if (!assetsCompleted) return next('/goals');
     return next('/accounts');
+  }
+
+  // Splash is public even when logged in
+  if (to.path === '/') {
+    return next();
   }
 
   // Setup page - always allow
