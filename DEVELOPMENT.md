@@ -144,7 +144,7 @@ From `frontend/`:
 |--------|---------|
 | `npm run dev:local` / `dev:cloud` | Vite dev server |
 | `npm run build` | Typecheck + production build → `dist/` |
-| `npm run preview` | Serve the production build |
+| `npm run preview:local` / `preview:cloud` | Production build, then serve `dist/` on http://localhost:5173 |
 | `npm run lint` / `lint-fix` | ESLint (`--max-warnings=0`; CI runs `lint`) |
 | `npm run format` / `format-fix` | Prettier check / write (CI runs `format`) |
 | `npm run seed:local` / `seed:cloud` | Demo data (needs `SUPABASE_SERVICE_ROLE_KEY`) |

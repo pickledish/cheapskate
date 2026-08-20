@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from 'vue-router';
+import { createRouter, createWebHashHistory, loadRouteLocation } from 'vue-router';
 import { supabase } from '@/lib/supabase';
 
 const routes = [
@@ -131,6 +131,29 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   next();
+});
+
+async function prefetchAllRoutes() {
+  const currentName = router.currentRoute.value.name;
+  for (const route of routes) {
+    if (route.name === currentName) continue;
+    const path = route.path.replace(/:[^/?*]+/g, '_');
+    try {
+      await loadRouteLocation(router.resolve(path));
+    } catch (err) {
+      console.warn(`Failed to prefetch route ${path}`, err);
+    }
+  }
+}
+
+// After the first screen paints, fetch the other route chunks sequentially so
+// later tab clicks don't wait on the network.
+// It runs once per full app boot (refresh or first visit), after the first route is ready.
+// Clicking tabs is not a new load, so it does not run again until you reload the page.
+// It downloads the JS chunks. It does not render every page.
+// loadRouteLocation only calls each route’s () => import(...).
+void router.isReady().then(() => {
+  void prefetchAllRoutes();
 });
 
 export default router;
