@@ -276,7 +276,7 @@ export default defineComponent({
             <!-- As of date -->
             <p class="mt-3 text-xs text-placeholder-text">
               <span v-if="latestEffectiveDate(account.id)">
-                Current as of {{ relativeDate(latestEffectiveDate(account.id)) }}
+                Current as of {{ relativeDate(latestEffectiveDate(account.id), { unit: 'day' }) }}
               </span>
               <span v-else class="italic">No data yet</span>
             </p>

@@ -10,9 +10,22 @@ export function formatMonth(monthStr: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
 
-/** Relative time via dayjs (e.g. "2 days ago"). Nullish → null. */
-export function relativeDate(dateStr: string | null | undefined): string | null {
+/**
+ * Relative time. Nullish → null.
+ * Default uses mixed units (e.g. "a month ago"); `{ unit: 'day' }` stays in days
+ * (e.g. "today", "1 day ago", "32 days ago").
+ */
+export function relativeDate(
+  dateStr: string | null | undefined,
+  options?: { unit?: 'day' },
+): string | null {
   if (!dateStr) return null;
+  if (options?.unit === 'day') {
+    const days = dayjs().diff(dayjs(dateStr), 'day');
+    if (days === 0) return 'today';
+    if (days === 1) return '1 day ago';
+    return `${days} days ago`;
+  }
   return dayjs(dateStr).fromNow();
 }
 
