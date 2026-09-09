@@ -566,7 +566,7 @@ export default defineComponent({
 
     removeHolding(index: number) {
       this.holdings.splice(index, 1);
-      this.refreshSoldPositions();
+      // (refreshSoldPositions is useful when asset mapping changes, but not desirable here)
     },
 
     onChosenAssetChange() {
@@ -1010,7 +1010,12 @@ export default defineComponent({
                       class="w-full px-3 py-1.5 pr-8 text-sm border border-surface-border-strong rounded-md bg-surface-recessed text-secondary-text cursor-default"
                     />
                   </div>
-                  <!-- Unresolved: pick an existing asset, or leave blank to create + alias -->
+                  <!--
+                    Unresolved: pick an existing asset, or leave blank to create + alias.
+                    • Leave it alone: the name is visible, and Save still creates ticker-less assets from those names.
+                    • Search / remap: click and type into an empty field; the placeholder disappears.
+                    • After picking an asset: the box shows Name (TICKER) as the actual value.
+                  -->
                   <Combobox
                     v-else
                     v-slot:default="{ open }"
@@ -1023,9 +1028,9 @@ export default defineComponent({
                     <div v-bind:ref="(el) => setComboboxAnchor(index, el)" class="relative">
                       <ComboboxInput
                         v-bind:display-value="
-                          (asset) => (asset ? displayAsset(asset as Asset) : holding.name)
+                          (asset) => (asset ? displayAsset(asset as Asset) : '')
                         "
-                        placeholder="Search assets…"
+                        v-bind:placeholder="holding.name"
                         v-bind:class="[
                           'w-full px-3 py-1.5 pr-8 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
                           holding.chosenAsset
@@ -1094,6 +1099,7 @@ export default defineComponent({
                 </td>
                 <td class="px-4 py-2 text-right whitespace-nowrap">
                   <button
+                    type="button"
                     class="w-7 h-7 inline-flex items-center justify-center text-placeholder-text hover:text-error-text hover:bg-error rounded cursor-pointer"
                     title="Remove holding"
                     v-on:click="removeHolding(index)"
