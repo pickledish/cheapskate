@@ -25,7 +25,6 @@ import { getLatestPrices, getLatestHoldings, getValueByClass } from '@/lib/deriv
 import { supabase } from '@/lib/supabase';
 import { getColorClasses } from '@/lib/tagColors';
 import { formatCurrency, formatQuantity } from '@/lib/util/currency';
-import { relativeDate } from '@/lib/util/date';
 import dayjs from 'dayjs';
 import { PencilSquareIcon, CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/24/solid';
 import {
@@ -40,7 +39,7 @@ import {
   MenuItem,
 } from '@headlessui/vue';
 import { assetIdToString, type AssetAllocationInfo, type AssetId } from '@/lib/data/assets';
-import { type AccountId } from '@/lib/data/accounts';
+import { accountIdToString, type AccountId } from '@/lib/data/accounts';
 import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
 import { formatError } from '@/lib/util/error';
 
@@ -135,9 +134,6 @@ export default defineComponent({
     },
     displayTotalHoldings(): string {
       return this.formatCurrency(this.totalValue || 0);
-    },
-    displayEffectiveRelative(): string | null {
-      return this.latestEffectiveDate ? this.relativeDate(this.latestEffectiveDate) : 'No data yet';
     },
     displayEffectiveDate(): string {
       return this.latestEffectiveDate
@@ -248,8 +244,8 @@ export default defineComponent({
 
     formatCurrency,
     formatQuantity,
-    relativeDate,
     assetIdToString,
+    accountIdToString,
     assetClassIdToString,
 
     getClassColor(colorName: string) {
@@ -558,7 +554,16 @@ export default defineComponent({
                   </div>
                   <div class="mt-1 text-sm text-primary-text">
                     {{ displayEffectiveDate }}
-                    <span class="text-muted-text">({{ displayEffectiveRelative }})</span>
+                    <span class="text-muted-text"
+                      >(<router-link
+                        class="text-blue-600 hover:text-blue-800 underline"
+                        v-bind:to="{
+                          name: 'history',
+                          query: { account: accountIdToString(account.id) },
+                        }"
+                        >view update history</router-link
+                      >)</span
+                    >
                   </div>
                 </div>
               </div>

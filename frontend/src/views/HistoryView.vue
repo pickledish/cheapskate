@@ -11,6 +11,7 @@ import {
   deleteUpdate,
   updateAccount,
   type UpdateWithDetails,
+  type UpdateHistoryQuery,
   type PriceUpdate,
 } from '@/lib/data';
 import dayjs from 'dayjs';
@@ -34,6 +35,14 @@ function parseMonthParam(value: unknown): string | undefined {
   const raw = queryScalar(value);
   if (raw === undefined || !/^\d{4}-(0[1-9]|1[0-2])$/.test(raw)) return undefined;
   return raw;
+}
+
+function parseIdParam(value: unknown): number | undefined {
+  const raw = queryScalar(value);
+  if (raw === undefined || !/^\d+$/.test(raw)) return undefined;
+  const id = Number(raw);
+  if (!Number.isSafeInteger(id)) return undefined;
+  return id;
 }
 
 export default defineComponent({
@@ -66,20 +75,44 @@ export default defineComponent({
     selectedMonthKey(): string {
       return parseMonthParam(this.$route.query.month) ?? currentMonthKey();
     },
+    historyQuery(): UpdateHistoryQuery {
+      const accountId = parseIdParam(this.$route.query.account);
+      const assetId = parseIdParam(this.$route.query.asset);
+      // One filter at a time. Both ids, or neither, keeps the month view.
+      if (accountId !== undefined && assetId === undefined) {
+        return { scope: 'account', accountId: accountId as unknown as AccountId };
+      }
+      if (assetId !== undefined && accountId === undefined) {
+        return { scope: 'asset', assetId: assetId as unknown as AssetId };
+      }
+      const selected = dayjs(this.selectedMonthKey + '-01');
+      return { scope: 'month', year: selected.year(), month: selected.month() + 1 };
+    },
+    isAllTime(): boolean {
+      return this.historyQuery.scope !== 'month';
+    },
     monthLabel(): string {
-      return formatMonth(this.selectedMonthKey);
+      return this.isAllTime ? 'All Time' : formatMonth(this.selectedMonthKey);
+    },
+    titleSuffix(): string | null {
+      if (this.loading) return null;
+      const query = this.historyQuery;
+      if (query.scope === 'account') return this.accountNames.get(query.accountId) ?? null;
+      if (query.scope === 'asset') return this.assetLabels.get(query.assetId) ?? null;
+      return null;
     },
   },
   watch: {
-    async selectedMonthKey() {
-      await this.loadData();
+    '$route.fullPath': {
+      immediate: true,
+      async handler() {
+        await this.loadData();
+      },
     },
-  },
-  async mounted() {
-    await this.loadData();
   },
   methods: {
     async prevMonth() {
+      if (this.isAllTime) return;
       await this.setMonth(
         dayjs(this.selectedMonthKey + '-01')
           .subtract(1, 'month')
@@ -87,6 +120,7 @@ export default defineComponent({
       );
     },
     async nextMonth() {
+      if (this.isAllTime) return;
       await this.setMonth(
         dayjs(this.selectedMonthKey + '-01')
           .add(1, 'month')
@@ -106,11 +140,9 @@ export default defineComponent({
       this.loading = true;
       this.error = null;
 
-      const selected = dayjs(this.selectedMonthKey + '-01');
-
       try {
         const [updates, accounts, assets, profiles] = await Promise.all([
-          listUpdatesWithDetails(selected.year(), selected.month() + 1),
+          listUpdatesWithDetails(this.historyQuery),
           listAccounts(),
           listAssets(),
           listProfiles(),
@@ -225,21 +257,27 @@ export default defineComponent({
     <div class="space-y-6">
       <PageHeader
         title="Update History"
+        v-bind:title-suffix="titleSuffix"
         description="View all price and position updates, from statement uploads and manual entries. Undo mistakes."
       >
         <template v-slot:actions>
           <div
-            class="inline-flex items-center text-sm font-medium text-secondary-text bg-surface border border-page-border rounded-md shrink-0"
+            class="inline-flex items-center text-sm font-medium bg-surface border border-page-border rounded-md shrink-0"
+            v-bind:class="
+              isAllTime ? 'text-placeholder-text cursor-not-allowed' : 'text-secondary-text'
+            "
           >
             <button
-              class="px-2 py-1.5 hover:bg-surface-recessed rounded-l-md border-r border-page-border"
+              class="px-2 py-1.5 hover:bg-surface-recessed rounded-l-md border-r border-page-border disabled:pointer-events-none"
+              v-bind:disabled="isAllTime"
               v-on:click="prevMonth"
             >
               <ChevronLeftIcon class="h-4 w-4" />
             </button>
             <span class="px-3 py-1.5 w-22 sm:w-24 text-center">{{ monthLabel }}</span>
             <button
-              class="px-2 py-1.5 hover:bg-surface-recessed rounded-r-md border-l border-page-border"
+              class="px-2 py-1.5 hover:bg-surface-recessed rounded-r-md border-l border-page-border disabled:pointer-events-none"
+              v-bind:disabled="isAllTime"
               v-on:click="nextMonth"
             >
               <ChevronRightIcon class="h-4 w-4" />

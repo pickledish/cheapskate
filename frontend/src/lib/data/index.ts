@@ -48,7 +48,7 @@ export {
   insertUpdate,
   deleteUpdate,
 } from './updates';
-export type { Update, UpdateWithDetails, UpdateType } from './updates';
+export type { Update, UpdateWithDetails, UpdateType, UpdateHistoryQuery } from './updates';
 
 // Price Updates
 export { insertPriceUpdate, listPriceUpdatesWithContext } from './price-updates';

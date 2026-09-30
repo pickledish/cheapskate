@@ -12,13 +12,19 @@ export default defineComponent({
       type: String as PropType<string | null>,
       default: null,
     },
+    titleSuffix: {
+      type: String as PropType<string | null>,
+      default: null,
+    },
   },
 });
 </script>
 
 <template>
   <div class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 sm:gap-y-1">
-    <h2 class="min-w-0 truncate text-2xl font-bold text-primary-text">{{ title }}</h2>
+    <h2 class="min-w-0 truncate text-2xl font-bold text-primary-text">
+      {{ title }}<span v-if="titleSuffix" class="hidden sm:inline"> - {{ titleSuffix }}</span>
+    </h2>
     <div class="shrink-0 self-center" v-bind:class="{ 'sm:row-span-2': description }">
       <slot name="actions" />
     </div>

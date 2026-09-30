@@ -364,7 +364,7 @@ export default defineComponent({
                     <Teleport to="body">
                       <MenuItems
                         v-bind:style="open ? menuDropdownStyle(index) : undefined"
-                        class="fixed z-50 w-36 bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
+                        class="fixed z-50 w-44 bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
                       >
                         <MenuItem v-slot:default="{ active }">
                           <button
@@ -391,6 +391,22 @@ export default defineComponent({
                           >
                             Update Price
                           </button>
+                        </MenuItem>
+                        <MenuItem v-slot:default="{ active }">
+                          <router-link
+                            v-bind:to="{
+                              name: 'history',
+                              query: { asset: assetIdToString(asset.id) },
+                            }"
+                            v-bind:class="[
+                              'block w-full text-left px-4 py-2 text-sm cursor-pointer',
+                              active
+                                ? 'bg-surface-recessed-deep text-primary-text'
+                                : 'text-secondary-text',
+                            ]"
+                          >
+                            View Update History
+                          </router-link>
                         </MenuItem>
                         <MenuItem v-slot:default="{ active }">
                           <button

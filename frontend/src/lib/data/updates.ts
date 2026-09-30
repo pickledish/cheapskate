@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import { type AccountId } from './accounts';
+import { type AssetId } from './assets';
 import { type PriceUpdate } from './price-updates';
 import { type HoldingUpdate } from './holding-updates';
 import { throwIfError } from '../util/error';
@@ -32,36 +33,13 @@ export async function listUpdates(): Promise<Update[]> {
   return data || [];
 }
 
-export async function listUpdatesWithDetails(
-  year: number,
-  month: number,
-): Promise<UpdateWithDetails[]> {
-  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const nextMonth = month === 12 ? 1 : month + 1;
-  const nextYear = month === 12 ? year + 1 : year;
-  const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+type UpdateRow = Update & {
+  price_updates: PriceUpdate[] | null;
+  holding_updates: HoldingUpdate[] | null;
+};
 
-  const { data, error } = await supabase
-    .from('updates')
-    .select(
-      `
-      *,
-      price_updates (*),
-      holding_updates (*)
-    `,
-    )
-    .gte('created_at', startDate)
-    .lt('created_at', endDate)
-    .order('created_at', { ascending: false });
-
-  throwIfError(error);
-
-  type UpdateRow = Update & {
-    price_updates: PriceUpdate[] | null;
-    holding_updates: HoldingUpdate[] | null;
-  };
-
-  return ((data || []) as UpdateRow[]).map((row) => ({
+function mapUpdateRows(data: UpdateRow[] | null): UpdateWithDetails[] {
+  return (data || []).map((row) => ({
     id: row.id,
     family_id: row.family_id,
     account_id: row.account_id,
@@ -72,6 +50,47 @@ export async function listUpdatesWithDetails(
     prices: row.price_updates || [],
     holdings: row.holding_updates || [],
   }));
+}
+
+export type UpdateHistoryQuery =
+  | { scope: 'month'; year: number; month: number }
+  | { scope: 'account'; accountId: AccountId }
+  | { scope: 'asset'; assetId: AssetId };
+
+export async function listUpdatesWithDetails(
+  query: UpdateHistoryQuery,
+): Promise<UpdateWithDetails[]> {
+  if (query.scope === 'asset') {
+    // price_match is only the join. price_updates stays unfiltered so a statement
+    // still returns every price on that update.
+    const { data, error } = await supabase
+      .from('updates')
+      .select('*, price_match:price_updates!inner(asset_id), price_updates(*), holding_updates(*)')
+      .eq('price_match.asset_id', query.assetId)
+      .order('created_at', { ascending: false });
+
+    throwIfError(error);
+    return mapUpdateRows(data as UpdateRow[] | null);
+  }
+
+  let request = supabase
+    .from('updates')
+    .select('*, price_updates (*), holding_updates (*)')
+    .order('created_at', { ascending: false });
+
+  if (query.scope === 'month') {
+    const startDate = `${query.year}-${String(query.month).padStart(2, '0')}-01`;
+    const nextMonth = query.month === 12 ? 1 : query.month + 1;
+    const nextYear = query.month === 12 ? query.year + 1 : query.year;
+    const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+    request = request.gte('created_at', startDate).lt('created_at', endDate);
+  } else {
+    request = request.eq('account_id', query.accountId);
+  }
+
+  const { data, error } = await request;
+  throwIfError(error);
+  return mapUpdateRows(data as UpdateRow[] | null);
 }
 
 export async function listUpdatesByAccount(accountId: AccountId): Promise<Update[]> {
