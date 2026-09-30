@@ -148,8 +148,8 @@
   --color-info-text: var(--color-blue-700);
   --color-info-border: var(--color-blue-200);
 
-  /* for warning text; alpha keeps the amber from shouting */
-  --color-warning-text: color-mix(in oklab, var(--color-amber-600) 95%, transparent);
+  /* for warning text; frustratingly gold is hard to read on white */
+  --color-warning-text: color-mix(in oklab, var(--color-amber-600) 90%, transparent);
 }
 
 /* Dark mode — flips semantic tokens via prefers-color-scheme (Tailwind default) */
@@ -192,8 +192,8 @@
       --color-info-text: var(--color-blue-300);
       --color-info-border: var(--color-blue-800);
 
-      /* for warning text */
-      --color-warning-text: color-mix(in oklab, var(--color-amber-400) 80%, transparent);
+      /* for warning text; alpha keeps the amber from shouting */
+      --color-warning-text: color-mix(in oklab, var(--color-amber-400) 75%, transparent);
     }
   }
 }
