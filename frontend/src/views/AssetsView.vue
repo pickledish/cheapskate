@@ -23,7 +23,7 @@ import {
 import { getCurrentAssets, getLatestPrices } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
 import { formatCurrency } from '@/lib/util/currency';
-import { relativeDate } from '@/lib/util/date';
+import { isStaleDate, relativeDate } from '@/lib/util/date';
 import { Bars3Icon } from '@heroicons/vue/24/solid';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
@@ -199,6 +199,7 @@ export default defineComponent({
 
     formatPrice: formatCurrency,
     relativeDate,
+    isStaleDate,
     assetIdToString,
     assetClassIdToString,
 
@@ -340,7 +341,15 @@ export default defineComponent({
                   <div class="text-sm text-primary-text">
                     {{ formatPrice(latestPrice(asset.id)) }}
                   </div>
-                  <div v-if="latestEffectiveDate(asset.id)" class="text-xs text-placeholder-text">
+                  <div
+                    v-if="latestEffectiveDate(asset.id)"
+                    class="text-xs"
+                    v-bind:class="
+                      isStaleDate(latestEffectiveDate(asset.id))
+                        ? 'text-warning-text'
+                        : 'text-placeholder-text'
+                    "
+                  >
                     {{ relativeDate(latestEffectiveDate(asset.id), { unit: 'day' }) }}
                   </div>
                 </td>

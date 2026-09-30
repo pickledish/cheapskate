@@ -580,7 +580,10 @@ export default defineComponent({
                   {{ copyFeedback ? 'Copied!' : 'Copy' }}
                 </button>
               </div>
-              <p v-if="familyIdRevealed" class="text-amber-600 text-sm mt-2 flex items-start gap-1">
+              <p
+                v-if="familyIdRevealed"
+                class="text-warning-text text-sm mt-2 flex items-start gap-1"
+              >
                 <span class="shrink-0">&#9888;</span>
                 <!-- prettier-ignore -->
                 <span>Be careful - anyone with this value can view and edit your family's data.</span>

@@ -147,6 +147,9 @@
   --color-info: var(--color-blue-50);
   --color-info-text: var(--color-blue-700);
   --color-info-border: var(--color-blue-200);
+
+  /* for warning text; alpha keeps the amber from shouting */
+  --color-warning-text: color-mix(in oklab, var(--color-amber-600) 95%, transparent);
 }
 
 /* Dark mode — flips semantic tokens via prefers-color-scheme (Tailwind default) */
@@ -188,6 +191,9 @@
       --color-info: var(--color-blue-950);
       --color-info-text: var(--color-blue-300);
       --color-info-border: var(--color-blue-800);
+
+      /* for warning text */
+      --color-warning-text: color-mix(in oklab, var(--color-amber-400) 80%, transparent);
     }
   }
 }

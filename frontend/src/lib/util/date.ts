@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { STALE_DATE_DAYS } from './constants';
 
 dayjs.extend(relativeTime);
 
@@ -27,6 +28,12 @@ export function relativeDate(
     return `${days} days ago`;
   }
   return dayjs(dateStr).fromNow();
+}
+
+/** True when the date is strictly more than STALE_DATE_DAYS ago. */
+export function isStaleDate(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
+  return dayjs().diff(dayjs(dateStr), 'day') > STALE_DATE_DAYS;
 }
 
 /**

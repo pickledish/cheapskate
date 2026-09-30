@@ -22,7 +22,7 @@ import {
 } from '@/lib/data';
 import { getLatestPrices, getLatestHoldings, getValueByClass } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
-import { relativeDate } from '@/lib/util/date';
+import { isStaleDate, relativeDate } from '@/lib/util/date';
 import { accountIdToString, type AccountId } from '@/lib/data/accounts';
 import { assetClassIdToString } from '@/lib/data/asset-classes';
 import { formatError } from '@/lib/util/error';
@@ -229,6 +229,7 @@ export default defineComponent({
     },
 
     relativeDate,
+    isStaleDate,
     accountIdToString,
     assetClassIdToString,
 
@@ -316,11 +317,18 @@ export default defineComponent({
               </span>
             </div>
             <!-- As of date -->
-            <p class="mt-3 text-xs text-placeholder-text">
-              <span v-if="latestEffectiveDate(account.id)">
+            <p class="mt-3 text-xs">
+              <span
+                v-if="latestEffectiveDate(account.id)"
+                v-bind:class="
+                  isStaleDate(latestEffectiveDate(account.id))
+                    ? 'text-warning-text'
+                    : 'text-placeholder-text'
+                "
+              >
                 Holdings as of {{ relativeDate(latestEffectiveDate(account.id), { unit: 'day' }) }}
               </span>
-              <span v-else class="italic">No data yet</span>
+              <span v-else class="italic text-placeholder-text">No data yet</span>
             </p>
           </router-link>
 
