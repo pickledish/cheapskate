@@ -77,6 +77,39 @@ export function getLatestHoldings(
 }
 
 /**
+ * Current assets for the asset list.
+ *
+ * An asset is excluded when it used to be held but every account's latest
+ * quantity is now zero. Those are closed-out positions, the same idea as
+ * hiding a closed account. Input order is preserved.
+ *
+ * Assets that never had any holdings (e.g. brand new) are included still.
+ */
+export function getCurrentAssets(
+  assets: AssetWithAllocations[],
+  holdings: HoldingUpdateWithContext[],
+): AssetWithAllocations[] {
+  const everHeld = new Set<string>();
+  for (const holding of holdings) {
+    if (holding.quantity !== 0) {
+      everHeld.add(assetIdToString(holding.asset_id));
+    }
+  }
+
+  const stillHeld = new Set<string>();
+  for (const holding of Object.values(getLatestHoldings(holdings))) {
+    if (holding.quantity !== 0) {
+      stillHeld.add(assetIdToString(holding.asset_id));
+    }
+  }
+
+  return assets.filter((asset) => {
+    const id = assetIdToString(asset.id);
+    return !everHeld.has(id) || stillHeld.has(id);
+  });
+}
+
+/**
  * Groups holding value by asset class.
  *
  * For each holding, value is `quantity * price` (missing prices treated as 0).
