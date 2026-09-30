@@ -234,7 +234,11 @@ export default defineComponent({
           .sort((a, b) => a.sort_order - b.sort_order);
         this.hasUnclassified = unclassified > 0;
 
-        this.latestEffectiveDate = updatesData[0]?.effective_date ?? null;
+        this.latestEffectiveDate =
+          // updatesData is sorted most recently first
+          updatesData.find(
+            (u) => u.update_type === 'statement' || u.update_type === 'manual_holdings',
+          )?.effective_date ?? null;
       } catch (err) {
         this.error = formatError(err);
       } finally {
@@ -550,7 +554,7 @@ export default defineComponent({
                 </div>
                 <div>
                   <div class="text-xs font-semibold uppercase tracking-wide text-muted-text">
-                    Current as of
+                    Holdings as of
                   </div>
                   <div class="mt-1 text-sm text-primary-text">
                     {{ displayEffectiveDate }}

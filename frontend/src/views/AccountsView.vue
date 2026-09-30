@@ -107,15 +107,37 @@ export default defineComponent({
         // Track if any updates exist (for onboarding continue card)
         this.hasAnyStatements = updatesData.length > 0;
 
-        // Build map of account_id -> most recent effective date
-        // todo -- we want this more robust, ie only counts holdings, DOES count assets if
-        // asset is held in the account?
+        // Most recent statement or manual holdings update per account.
+        // Other update types (include_in_portfolio, mark_as_closed) don't count.
         const latestEffectiveByAccount: Map<AccountId, string> = new Map();
         for (const update of updatesData) {
-          if (update.account_id && !latestEffectiveByAccount.has(update.account_id)) {
+          if (
+            update.account_id &&
+            (update.update_type === 'statement' || update.update_type === 'manual_holdings') &&
+            !latestEffectiveByAccount.has(update.account_id)
+          ) {
             latestEffectiveByAccount.set(update.account_id, update.effective_date);
           }
         }
+
+        // todo, we need more robustness for needs-update nagging
+        //
+        // some claude which I believe is directionally correct, cadence thing might be overengineered:
+        //
+        // Reminder 1: an account is probably missing a statement. This is the cadence idea from before. If an account's typical gap between statements is about 30 days and it's been 70, flag the account. Accounts
+        // whose banks skip quiet months get a longer cadence, so they don't nag.
+        //
+        // Reminder 2: an asset's price is out of date. Flag an asset when both of these are true:
+        // • it's held with a nonzero quantity in at least one open account;
+        // • its latest price, from any statement or manual update, is older than some threshold, such as 45 days.
+        //
+        // This naturally ignores most assets. Anything held in an account that gets regular statements has its price refreshed for free. What gets flagged is exactly the case you described: the fund that sits only in
+        // the quiet IRA. The account itself stays unflagged because its gap matches its usual cadence, and the price reminder is the nudge you want.
+        //
+        // For cash, skip assets whose price has never changed across at least two observations. That's inferred from existing price rows, so the user never marks anything as fixed-price.
+        //
+        // Where they show up: Reminder 1 goes on the Accounts page and Reminder 2 on the Assets page, or both go into one small "Needs attention" list. The user fixes each by uploading a statement or updating a price,
+        // which they already know how to do.
 
         const latestPriceByAsset = getLatestPrices(pricesData);
         const latestHoldingByAccountAsset = getLatestHoldings(holdingsData);
@@ -276,7 +298,7 @@ export default defineComponent({
             <!-- As of date -->
             <p class="mt-3 text-xs text-placeholder-text">
               <span v-if="latestEffectiveDate(account.id)">
-                Current as of {{ relativeDate(latestEffectiveDate(account.id), { unit: 'day' }) }}
+                Holdings as of {{ relativeDate(latestEffectiveDate(account.id), { unit: 'day' }) }}
               </span>
               <span v-else class="italic">No data yet</span>
             </p>
