@@ -203,6 +203,15 @@ export default defineComponent({
     formatMonth,
     formatCurrency,
 
+    formatLegendValue(value: number): string {
+      // A latest value of $0 means the account is closed or the asset is no longer held.
+      if (value === 0) return '–';
+      return formatCurrency(value, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
+    },
+
     isSeriesSelected(name: string): boolean {
       return this.selectedSeries === null || this.selectedSeries.includes(name);
     },
@@ -491,12 +500,7 @@ export default defineComponent({
                 </span>
               </span>
               <span class="shrink-0 text-sm tabular-nums text-primary-text">
-                {{
-                  formatCurrency(item.latestValue, {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  })
-                }}
+                {{ formatLegendValue(item.latestValue) }}
               </span>
             </button>
           </div>
