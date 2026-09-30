@@ -9,15 +9,18 @@ import OnboardingModal from '@/components/modals/OnboardingModal.vue';
 import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue';
 import { supabase } from '@/lib/supabase';
 import {
+  getProfile,
   listAssetsWithAllocations,
+  listHoldingUpdatesWithContext,
   listPriceUpdatesWithContext,
   listAssetClasses,
   deleteAsset,
   type AssetWithAllocations,
   type AssetClass,
+  type HoldingUpdateWithContext,
   type PriceUpdateWithContext,
 } from '@/lib/data';
-import { getLatestPrices } from '@/lib/derived/derived';
+import { getCurrentAssets, getLatestPrices } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
 import { formatCurrency } from '@/lib/util/currency';
 import { relativeDate } from '@/lib/util/date';
@@ -45,8 +48,10 @@ export default defineComponent({
   },
   data(): {
     assets: AssetWithAllocations[];
+    holdings: HoldingUpdateWithContext[];
     assetClasses: AssetClass[];
     latestPrices: Map<AssetId, PriceUpdateWithContext>;
+    showFormerAssets: boolean;
     loading: boolean;
     error: string | null;
     searchQuery: string;
@@ -60,8 +65,10 @@ export default defineComponent({
   } {
     return {
       assets: [],
+      holdings: [],
       assetClasses: [],
       latestPrices: new Map(),
+      showFormerAssets: false,
       loading: true,
       error: null,
       searchQuery: '',
@@ -79,11 +86,15 @@ export default defineComponent({
     };
   },
   computed: {
+    visibleAssets(): AssetWithAllocations[] {
+      if (this.showFormerAssets) return this.assets;
+      return getCurrentAssets(this.assets, this.holdings);
+    },
     filteredAssets(): AssetWithAllocations[] {
       const query = this.searchQuery.toLowerCase().trim();
-      if (!query) return this.assets;
+      if (!query) return this.visibleAssets;
 
-      return this.assets.filter((asset) => {
+      return this.visibleAssets.filter((asset) => {
         // Search in name
         if (asset.name.toLowerCase().includes(query)) return true;
 
@@ -94,8 +105,10 @@ export default defineComponent({
       });
     },
     allAssetsCategorized(): boolean {
-      // All assets must have at least one allocation
-      return this.assets.length > 0 && this.assets.every((a) => a.allocations.length > 0);
+      // Listed assets must have at least one allocation
+      return (
+        this.visibleAssets.length > 0 && this.visibleAssets.every((a) => a.allocations.length > 0)
+      );
     },
     showContinueCard(): boolean {
       return this.allAssetsCategorized && !this.assetsCompleted;
@@ -119,11 +132,20 @@ export default defineComponent({
       this.error = null;
       try {
         // Load all data in parallel
-        const [assetsData, pricesData, classesData] = await Promise.all([
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        const [assetsData, holdingsData, pricesData, classesData, profile] = await Promise.all([
           listAssetsWithAllocations(),
+          listHoldingUpdatesWithContext('desc'),
           listPriceUpdatesWithContext('desc'),
           listAssetClasses(),
+          user ? getProfile(user.id) : Promise.resolve(null),
         ]);
+
+        this.holdings = holdingsData;
+        this.showFormerAssets = profile?.preferences?.show_former_assets ?? false;
 
         // Sort by name for dropdown display (original behavior)
         this.assetClasses = [...classesData].sort((a, b) => a.name.localeCompare(b.name));
@@ -256,7 +278,7 @@ export default defineComponent({
 
       <!-- Assets table -->
       <div v-if="!loading">
-        <div v-if="assets.length > 0" class="bg-page shadow rounded-lg overflow-x-auto">
+        <div v-if="visibleAssets.length > 0" class="bg-page shadow rounded-lg overflow-x-auto">
           <table class="min-w-full divide-y divide-surface-border bg-surface">
             <thead>
               <tr>

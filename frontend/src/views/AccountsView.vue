@@ -9,6 +9,7 @@ import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue';
 import InstitutionIcon from '@/components/InstitutionIcon.vue';
 import { supabase } from '@/lib/supabase';
 import {
+  getProfile,
   listAccounts,
   listUpdates,
   listHoldingUpdatesWithContext,
@@ -43,6 +44,7 @@ export default defineComponent({
     assetClassesByAccount: Map<AccountId, AssetClass[]>;
     unclassifiedByAccount: Set<AccountId>;
     hasAnyStatements: boolean;
+    showArchivedAccounts: boolean;
     loading: boolean;
     error: string | null;
     showAddAccountModal: boolean;
@@ -56,6 +58,7 @@ export default defineComponent({
       assetClassesByAccount: new Map(),
       unclassifiedByAccount: new Set(),
       hasAnyStatements: false,
+      showArchivedAccounts: false,
       loading: true,
       error: null,
 
@@ -69,7 +72,7 @@ export default defineComponent({
   },
   computed: {
     filteredAccounts(): Account[] {
-      return this.accounts.filter((account) => !account.is_archived);
+      return this.accounts.filter((account) => this.showArchivedAccounts || !account.is_archived);
     },
     showContinueCard(): boolean {
       // Show continue card if: has at least 1 account, has at least 1 statement, and not yet completed
@@ -94,15 +97,29 @@ export default defineComponent({
       this.error = null;
       try {
         // Load all data in parallel
-        const [accountsData, updatesData, holdingsData, pricesData, assetsData, assetClasses] =
-          await Promise.all([
-            listAccounts(),
-            listUpdates(),
-            listHoldingUpdatesWithContext('desc'),
-            listPriceUpdatesWithContext('desc'),
-            listAssetsWithAllocations(),
-            listAssetClasses(),
-          ]);
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        const [
+          accountsData,
+          updatesData,
+          holdingsData,
+          pricesData,
+          assetsData,
+          assetClasses,
+          profile,
+        ] = await Promise.all([
+          listAccounts(),
+          listUpdates(),
+          listHoldingUpdatesWithContext('desc'),
+          listPriceUpdatesWithContext('desc'),
+          listAssetsWithAllocations(),
+          listAssetClasses(),
+          user ? getProfile(user.id) : Promise.resolve(null),
+        ]);
+
+        this.showArchivedAccounts = profile?.preferences?.show_archived_accounts ?? false;
 
         // Track if any updates exist (for onboarding continue card)
         this.hasAnyStatements = updatesData.length > 0;
@@ -274,9 +291,12 @@ export default defineComponent({
               <h3 class="font-semibold text-primary-text min-w-0 truncate">{{ account.name }}</h3>
               <InstitutionIcon v-bind:name="account.institution" />
             </div>
+            <p v-if="account.is_archived" class="mt-3 text-xs text-placeholder-text">Closed</p>
             <!-- Asset class tags -->
             <div
-              v-if="accountAssetClasses(account.id).length || accountHasUnclassified(account.id)"
+              v-else-if="
+                accountAssetClasses(account.id).length || accountHasUnclassified(account.id)
+              "
               class="flex flex-wrap gap-1 mt-3"
             >
               <span

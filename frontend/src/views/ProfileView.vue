@@ -57,7 +57,7 @@ export default defineComponent({
     originalName: string;
     originalLlmProvider: LocalLlmConfig['api'];
     originalLlmPort: string;
-    originalShowClosedAccounts: boolean;
+    originalShowArchivedAccounts: boolean;
     originalShowFormerAssets: boolean;
     loading: boolean;
     saving: boolean;
@@ -70,7 +70,7 @@ export default defineComponent({
     localLlmOptions: { id: LocalLlmConfig['api']; name: string }[];
     localLlmProvider: LocalLlmConfig['api'];
     localLlmPort: string;
-    showClosedAccounts: boolean;
+    showArchivedAccounts: boolean;
     showFormerAssets: boolean;
   } {
     return {
@@ -85,7 +85,7 @@ export default defineComponent({
       originalName: '',
       originalLlmProvider: 'disabled',
       originalLlmPort: '11434',
-      originalShowClosedAccounts: false,
+      originalShowArchivedAccounts: false,
       originalShowFormerAssets: false,
 
       // UI state
@@ -110,7 +110,7 @@ export default defineComponent({
       ],
       localLlmProvider: 'disabled',
       localLlmPort: '11434',
-      showClosedAccounts: false,
+      showArchivedAccounts: false,
       showFormerAssets: false,
     };
   },
@@ -129,7 +129,7 @@ export default defineComponent({
     },
     hasDisplayChanges(): boolean {
       return (
-        this.showClosedAccounts !== this.originalShowClosedAccounts ||
+        this.showArchivedAccounts !== this.originalShowArchivedAccounts ||
         this.showFormerAssets !== this.originalShowFormerAssets
       );
     },
@@ -168,14 +168,14 @@ export default defineComponent({
         const llmConfig = profile?.preferences?.local_llm;
         this.localLlmProvider = llmConfig?.api || 'disabled';
         this.localLlmPort = llmConfig?.port || '11434';
-        this.showClosedAccounts = profile?.preferences?.show_closed_accounts ?? false;
+        this.showArchivedAccounts = profile?.preferences?.show_archived_accounts ?? false;
         this.showFormerAssets = profile?.preferences?.show_former_assets ?? false;
 
         // Store original values for change detection
         this.originalName = this.userName;
         this.originalLlmProvider = this.localLlmProvider;
         this.originalLlmPort = this.localLlmPort;
-        this.originalShowClosedAccounts = this.showClosedAccounts;
+        this.originalShowArchivedAccounts = this.showArchivedAccounts;
         this.originalShowFormerAssets = this.showFormerAssets;
       } catch (err) {
         this.error = formatError(err);
@@ -253,10 +253,10 @@ export default defineComponent({
 
       try {
         await updatePreferences(this.userId, {
-          show_closed_accounts: this.showClosedAccounts,
+          show_archived_accounts: this.showArchivedAccounts,
           show_former_assets: this.showFormerAssets,
         });
-        this.originalShowClosedAccounts = this.showClosedAccounts;
+        this.originalShowArchivedAccounts = this.showArchivedAccounts;
         this.originalShowFormerAssets = this.showFormerAssets;
       } catch (err) {
         this.error = formatError(err);
@@ -388,10 +388,10 @@ export default defineComponent({
                 </SwitchDescription>
               </div>
               <HeadlessSwitch
-                v-model="showClosedAccounts"
+                v-model="showArchivedAccounts"
                 class="grid h-5 w-5 shrink-0 cursor-pointer place-items-center rounded border focus:outline-none focus:ring-2 focus:ring-blue-500 sm:ml-4"
                 v-bind:class="
-                  showClosedAccounts
+                  showArchivedAccounts
                     ? 'border-blue-600 bg-blue-600 text-white'
                     : 'border-surface-border-strong bg-surface text-transparent'
                 "

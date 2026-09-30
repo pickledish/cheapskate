@@ -9,7 +9,7 @@ export interface LocalLlmConfig {
 
 export interface UserPreferences {
   local_llm?: LocalLlmConfig;
-  show_closed_accounts?: boolean;
+  show_archived_accounts?: boolean;
   show_former_assets?: boolean;
 }
 
