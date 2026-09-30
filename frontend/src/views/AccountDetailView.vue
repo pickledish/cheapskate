@@ -554,16 +554,16 @@ export default defineComponent({
                   </div>
                   <div class="mt-1 text-sm text-primary-text">
                     {{ displayEffectiveDate }}
-                    <span class="text-muted-text"
-                      >(<router-link
-                        class="text-blue-600 hover:text-blue-800 underline"
-                        v-bind:to="{
-                          name: 'history',
-                          query: { account: accountIdToString(account.id) },
-                        }"
-                        >view update history</router-link
-                      >)</span
+                    <span class="mx-1 text-muted-text">·</span>
+                    <router-link
+                      class="text-muted-text hover:text-secondary-text"
+                      v-bind:to="{
+                        name: 'history',
+                        query: { account: accountIdToString(account.id) },
+                      }"
                     >
+                      View update history →
+                    </router-link>
                   </div>
                 </div>
               </div>
