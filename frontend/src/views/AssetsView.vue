@@ -341,7 +341,7 @@ export default defineComponent({
                     {{ formatPrice(latestPrice(asset.id)) }}
                   </div>
                   <div v-if="latestEffectiveDate(asset.id)" class="text-xs text-placeholder-text">
-                    {{ relativeDate(latestEffectiveDate(asset.id)) }}
+                    {{ relativeDate(latestEffectiveDate(asset.id), { unit: 'day' }) }}
                   </div>
                 </td>
                 <td
