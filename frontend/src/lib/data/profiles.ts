@@ -9,6 +9,8 @@ export interface LocalLlmConfig {
 
 export interface UserPreferences {
   local_llm?: LocalLlmConfig;
+  show_closed_accounts?: boolean;
+  show_former_assets?: boolean;
 }
 
 export interface Profile {
@@ -77,8 +79,18 @@ export async function updateProfileFamily(id: string, familyId: string): Promise
   throwIfError(error);
 }
 
-export async function updatePreferences(id: string, preferences: UserPreferences): Promise<void> {
-  const { error } = await supabase.from('profiles').update({ preferences }).eq('id', id);
+export async function updatePreferences(
+  id: string,
+  preferences: Partial<UserPreferences>,
+): Promise<void> {
+  const profile = await getProfile(id);
+  const current = profile?.preferences ?? {};
+  const merged: UserPreferences = { ...current, ...preferences };
+  if (preferences.local_llm) {
+    merged.local_llm = { ...current.local_llm, ...preferences.local_llm };
+  }
+
+  const { error } = await supabase.from('profiles').update({ preferences: merged }).eq('id', id);
 
   throwIfError(error);
 }

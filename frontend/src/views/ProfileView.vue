@@ -14,7 +14,16 @@ import {
   type LocalLlmConfig,
 } from '@/lib/data';
 import { testConnection } from '@/lib/local-llm';
-import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue';
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOptions,
+  ListboxOption,
+  Switch as HeadlessSwitch,
+  SwitchDescription,
+  SwitchGroup,
+  SwitchLabel,
+} from '@headlessui/vue';
 import { ClipboardIcon } from '@heroicons/vue/24/outline';
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import dayjs from 'dayjs';
@@ -32,6 +41,10 @@ export default defineComponent({
     ListboxButton,
     ListboxOptions,
     ListboxOption,
+    HeadlessSwitch,
+    SwitchDescription,
+    SwitchGroup,
+    SwitchLabel,
     ChevronUpDownIcon,
     CheckIcon,
   },
@@ -44,6 +57,8 @@ export default defineComponent({
     originalName: string;
     originalLlmProvider: LocalLlmConfig['api'];
     originalLlmPort: string;
+    originalShowClosedAccounts: boolean;
+    originalShowFormerAssets: boolean;
     loading: boolean;
     saving: boolean;
     error: string | null;
@@ -55,6 +70,8 @@ export default defineComponent({
     localLlmOptions: { id: LocalLlmConfig['api']; name: string }[];
     localLlmProvider: LocalLlmConfig['api'];
     localLlmPort: string;
+    showClosedAccounts: boolean;
+    showFormerAssets: boolean;
   } {
     return {
       // User data
@@ -68,6 +85,8 @@ export default defineComponent({
       originalName: '',
       originalLlmProvider: 'disabled',
       originalLlmPort: '11434',
+      originalShowClosedAccounts: false,
+      originalShowFormerAssets: false,
 
       // UI state
       loading: true,
@@ -91,6 +110,8 @@ export default defineComponent({
       ],
       localLlmProvider: 'disabled',
       localLlmPort: '11434',
+      showClosedAccounts: false,
+      showFormerAssets: false,
     };
   },
   computed: {
@@ -104,6 +125,12 @@ export default defineComponent({
       return (
         this.localLlmProvider !== this.originalLlmProvider ||
         this.localLlmPort !== this.originalLlmPort
+      );
+    },
+    hasDisplayChanges(): boolean {
+      return (
+        this.showClosedAccounts !== this.originalShowClosedAccounts ||
+        this.showFormerAssets !== this.originalShowFormerAssets
       );
     },
   },
@@ -141,11 +168,15 @@ export default defineComponent({
         const llmConfig = profile?.preferences?.local_llm;
         this.localLlmProvider = llmConfig?.api || 'disabled';
         this.localLlmPort = llmConfig?.port || '11434';
+        this.showClosedAccounts = profile?.preferences?.show_closed_accounts ?? false;
+        this.showFormerAssets = profile?.preferences?.show_former_assets ?? false;
 
         // Store original values for change detection
         this.originalName = this.userName;
         this.originalLlmProvider = this.localLlmProvider;
         this.originalLlmPort = this.localLlmPort;
+        this.originalShowClosedAccounts = this.showClosedAccounts;
+        this.originalShowFormerAssets = this.showFormerAssets;
       } catch (err) {
         this.error = formatError(err);
       } finally {
@@ -207,6 +238,26 @@ export default defineComponent({
         });
         this.originalLlmProvider = this.localLlmProvider;
         this.originalLlmPort = this.localLlmPort;
+      } catch (err) {
+        this.error = formatError(err);
+      } finally {
+        this.saving = false;
+      }
+    },
+
+    async saveDisplaySettings() {
+      if (!this.hasDisplayChanges || !this.userId) return;
+
+      this.saving = true;
+      this.error = null;
+
+      try {
+        await updatePreferences(this.userId, {
+          show_closed_accounts: this.showClosedAccounts,
+          show_former_assets: this.showFormerAssets,
+        });
+        this.originalShowClosedAccounts = this.showClosedAccounts;
+        this.originalShowFormerAssets = this.showFormerAssets;
       } catch (err) {
         this.error = formatError(err);
       } finally {
@@ -313,6 +364,75 @@ export default defineComponent({
             v-bind:disabled="saving"
             class="px-4 py-2 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 hover:border-blue-700 disabled:opacity-50 transition-colors"
             v-on:click="saveProfile"
+          >
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+
+        <!-- Display Section -->
+        <section class="bg-surface rounded-lg shadow">
+          <div class="bg-header px-6 py-3 rounded-t-lg">
+            <h2 class="text-xs font-medium text-header-text uppercase tracking-wider">Display</h2>
+          </div>
+          <div class="p-6 space-y-4">
+            <SwitchGroup
+              as="div"
+              class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <SwitchLabel as="p" class="font-medium text-primary-text">
+                  Show closed accounts
+                </SwitchLabel>
+                <SwitchDescription class="text-sm text-muted-text">
+                  Include accounts marked as closed in the accounts list
+                </SwitchDescription>
+              </div>
+              <HeadlessSwitch
+                v-model="showClosedAccounts"
+                class="grid h-5 w-5 shrink-0 cursor-pointer place-items-center rounded border focus:outline-none focus:ring-2 focus:ring-blue-500 sm:ml-4"
+                v-bind:class="
+                  showClosedAccounts
+                    ? 'border-blue-600 bg-blue-600 text-white'
+                    : 'border-surface-border-strong bg-surface text-transparent'
+                "
+              >
+                <CheckIcon class="h-3.5 w-3.5" />
+              </HeadlessSwitch>
+            </SwitchGroup>
+
+            <hr class="border-surface-border" />
+
+            <SwitchGroup
+              as="div"
+              class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <SwitchLabel as="p" class="font-medium text-primary-text">
+                  Show former assets
+                </SwitchLabel>
+                <SwitchDescription class="text-sm text-muted-text">
+                  Include assets you used to hold but no longer do
+                </SwitchDescription>
+              </div>
+              <HeadlessSwitch
+                v-model="showFormerAssets"
+                class="grid h-5 w-5 shrink-0 cursor-pointer place-items-center rounded border focus:outline-none focus:ring-2 focus:ring-blue-500 sm:ml-4"
+                v-bind:class="
+                  showFormerAssets
+                    ? 'border-blue-600 bg-blue-600 text-white'
+                    : 'border-surface-border-strong bg-surface text-transparent'
+                "
+              >
+                <CheckIcon class="h-3.5 w-3.5" />
+              </HeadlessSwitch>
+            </SwitchGroup>
+          </div>
+        </section>
+        <div v-if="hasDisplayChanges" class="flex justify-end">
+          <button
+            v-bind:disabled="saving"
+            class="px-4 py-2 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 hover:border-blue-700 disabled:opacity-50 transition-colors"
+            v-on:click="saveDisplaySettings"
           >
             {{ saving ? 'Saving...' : 'Save' }}
           </button>
