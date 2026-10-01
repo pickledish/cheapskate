@@ -24,7 +24,7 @@ import { getCurrentAssets, getLatestPrices } from '@/lib/derived/derived';
 import { getColorClasses } from '@/lib/tagColors';
 import { formatCurrency } from '@/lib/util/currency';
 import { isStaleDate, relativeDate } from '@/lib/util/date';
-import { Bars3Icon } from '@heroicons/vue/24/solid';
+import { Bars3Icon, PlusIcon } from '@heroicons/vue/24/solid';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import { assetClassIdToString } from '@/lib/data/asset-classes';
@@ -41,6 +41,7 @@ export default defineComponent({
     OnboardingModal,
     OnboardingContinueCard,
     Bars3Icon,
+    PlusIcon,
     HeadlessMenu,
     MenuButton,
     MenuItems,
@@ -311,17 +312,18 @@ export default defineComponent({
               </tr>
             </thead>
             <tbody class="divide-y divide-surface-border">
-              <tr v-for="(asset, index) in filteredAssets" v-bind:key="assetIdToString(asset.id)">
-                <td
-                  class="px-6 py-4 whitespace-nowrap bg-surface"
-                  v-bind:class="{ 'rounded-bl-lg': index === filteredAssets.length - 1 }"
-                >
+              <tr
+                v-for="(asset, index) in filteredAssets"
+                v-bind:key="assetIdToString(asset.id)"
+                class="h-16"
+              >
+                <td class="px-6 py-3 whitespace-nowrap bg-surface">
                   <div class="text-sm font-medium text-primary-text">{{ asset.name }}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap bg-surface">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface">
                   <div class="text-sm text-muted-text">{{ asset.ticker || '-' }}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap bg-surface">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface">
                   <div v-if="asset.allocations.length" class="flex flex-nowrap gap-1">
                     <span
                       v-for="alloc in asset.allocations"
@@ -337,7 +339,7 @@ export default defineComponent({
                   </div>
                   <span v-else class="text-sm text-placeholder-text">-</span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap bg-surface">
+                <td class="px-6 py-3 whitespace-nowrap bg-surface">
                   <div class="text-sm text-primary-text">
                     {{ formatPrice(latestPrice(asset.id)) }}
                   </div>
@@ -353,10 +355,7 @@ export default defineComponent({
                     {{ relativeDate(latestEffectiveDate(asset.id), { unit: 'day' }) }}
                   </div>
                 </td>
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-right text-sm bg-surface"
-                  v-bind:class="{ 'rounded-br-lg': index === filteredAssets.length - 1 }"
-                >
+                <td class="px-6 py-3 whitespace-nowrap text-right text-sm bg-surface">
                   <HeadlessMenu
                     v-slot:default="{ open }"
                     as="div"
@@ -434,12 +433,26 @@ export default defineComponent({
                 </td>
               </tr>
             </tbody>
+            <tfoot>
+              <tr class="h-16">
+                <td colspan="5" class="relative bg-surface rounded-b-lg p-0">
+                  <button
+                    class="absolute inset-0 px-6 flex items-center gap-2 text-sm font-medium text-muted-text hover:text-blue-600 hover:bg-surface-recessed-deep rounded-b-lg transition-colors cursor-pointer"
+                    v-on:click="showAddAssetModal = true"
+                  >
+                    <PlusIcon class="w-4 h-4" />
+                    Add Asset
+                  </button>
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
-        <!-- Add asset button -->
+        <!-- Empty state: add asset button -->
         <button
-          class="mt-4 w-full bg-page border-2 border-dashed border-page-border rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors"
+          v-else
+          class="w-full bg-page border-2 border-dashed border-page-border rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors"
           v-on:click="showAddAssetModal = true"
         >
           <span class="text-xl mr-2">+</span>

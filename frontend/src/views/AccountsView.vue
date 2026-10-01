@@ -269,7 +269,7 @@ export default defineComponent({
       <!-- Investment Accounts Section -->
       <section v-if="!loading" class="space-y-6">
         <!-- Card grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 auto-rows-fr gap-4">
           <!-- Account cards -->
           <router-link
             v-for="account in filteredAccounts"
