@@ -499,7 +499,12 @@ export default defineComponent({
                   {{ item.name }}
                 </span>
               </span>
-              <span class="shrink-0 text-sm tabular-nums text-primary-text">
+              <span
+                class="shrink-0 text-sm tabular-nums"
+                v-bind:class="
+                  item.latestValue === 0 ? 'text-placeholder-text' : 'text-primary-text'
+                "
+              >
                 {{ formatLegendValue(item.latestValue) }}
               </span>
             </button>
