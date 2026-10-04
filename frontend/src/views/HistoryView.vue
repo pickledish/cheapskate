@@ -94,12 +94,16 @@ export default defineComponent({
     monthLabel(): string {
       return this.isAllTime ? 'All Time' : formatMonth(this.selectedMonthKey);
     },
-    titleSuffix(): string | null {
-      if (this.loading) return null;
+    pageTitle(): string {
+      if (this.loading) return 'Update History';
       const query = this.historyQuery;
-      if (query.scope === 'account') return this.accountNames.get(query.accountId) ?? null;
-      if (query.scope === 'asset') return this.assetLabels.get(query.assetId) ?? null;
-      return null;
+      const suffix =
+        query.scope === 'account'
+          ? this.accountNames.get(query.accountId)
+          : query.scope === 'asset'
+            ? this.assetLabels.get(query.assetId)
+            : null;
+      return suffix ? `Update History - ${suffix}` : 'Update History';
     },
   },
   watch: {
@@ -256,8 +260,8 @@ export default defineComponent({
   <AppLayout>
     <div class="space-y-6">
       <PageHeader
-        title="Update History"
-        v-bind:title-suffix="titleSuffix"
+        v-bind:title="pageTitle"
+        short-title="History"
         description="View all price and position updates, from statement uploads and manual entries. Undo mistakes."
       >
         <template v-slot:actions>
@@ -274,7 +278,7 @@ export default defineComponent({
             >
               <ChevronLeftIcon class="h-4 w-4" />
             </button>
-            <span class="px-3 py-1.5 w-22 sm:w-24 text-center">{{ monthLabel }}</span>
+            <span class="px-3 py-1.5 w-24 text-center">{{ monthLabel }}</span>
             <button
               class="px-2 py-1.5 hover:bg-surface-recessed rounded-r-md border-l border-page-border disabled:pointer-events-none"
               v-bind:disabled="isAllTime"
