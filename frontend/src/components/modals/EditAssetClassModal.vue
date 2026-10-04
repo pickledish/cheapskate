@@ -4,6 +4,7 @@ import BaseModal from './BaseModal.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
 import { updateAssetClass, type AssetClass } from '@/lib/data';
 import type { TagColorName } from '@/lib/tagColors';
+import { formatGoal } from '@/lib/util/currency';
 import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
@@ -34,7 +35,7 @@ export default defineComponent({
   mounted() {
     this.name = this.assetClass.name;
     this.color = this.assetClass.color as TagColorName;
-    this.goal = this.assetClass.goal * 100;
+    this.goal = formatGoal(this.assetClass.goal);
   },
   methods: {
     async save() {

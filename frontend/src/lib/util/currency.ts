@@ -17,6 +17,14 @@ export function formatNumber(value: number | null | undefined): string {
   return Number(value).toLocaleString(undefined, { maximumFractionDigits: 4 });
 }
 
+/**
+ * Stored goal fraction (0–1) as a percentage, with binary float noise removed.
+ * 0.07 → 7, 0.375 → 37.5. Does not round away real decimals.
+ */
+export function formatGoal(goal: number): number {
+  return parseFloat((goal * 100).toFixed(10));
+}
+
 /** Share quantity for display/edit: integers as-is, else trim trailing zeros (max 4 dp). */
 export function formatQuantity(qty: number): string {
   if (Number.isInteger(qty)) return qty.toString();

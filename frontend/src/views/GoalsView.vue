@@ -21,6 +21,7 @@ import { Bars3Icon } from '@heroicons/vue/24/solid';
 import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import type { AssetId } from '@/lib/data/assets';
 import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
+import { formatGoal } from '@/lib/util/currency';
 import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
@@ -167,6 +168,8 @@ export default defineComponent({
       return getColorClasses(colorName);
     },
 
+    formatGoal,
+
     assetClassIdToString,
 
     assetCount(classId: AssetClassId): number {
@@ -310,7 +313,7 @@ export default defineComponent({
                   {{ assetCount(assetClass.id) }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-primary-text bg-surface">
-                  {{ assetClass.goal > 0 ? assetClass.goal * 100 + '%' : '-' }}
+                  {{ assetClass.goal > 0 ? formatGoal(assetClass.goal) + '%' : '-' }}
                 </td>
                 <td
                   class="px-6 py-2 whitespace-nowrap text-right bg-surface"
