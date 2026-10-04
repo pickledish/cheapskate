@@ -369,16 +369,22 @@ export default defineComponent({
         const end = monthEnd(month);
         const holdings = Object.values(getLatestHoldings(this.holdingsData, end));
         const prices = getLatestPrices(this.pricesData, end);
-        // bug, unclassified is totally skipped
-        return getValueByClass(holdings, prices, this.assetsData).byClass;
+        return getValueByClass(holdings, prices, this.assetsData);
       });
 
-      return this.assetClassesData
+      const series = this.assetClassesData
         .map((assetClass) => ({
           name: classMap.get(assetClass.id) || `Class ${assetClassIdToString(assetClass.id)}`,
-          data: byClassPerMonth.map((byClass) => byClass.get(assetClass.id) || 0),
+          data: byClassPerMonth.map(({ byClass }) => byClass.get(assetClass.id) || 0),
         }))
         .filter((s) => s.data.some((v) => v !== 0));
+
+      const unclassified = byClassPerMonth.map(({ unclassified }) => unclassified);
+      if (unclassified.some((v) => v !== 0)) {
+        series.push({ name: 'Unclassified', data: unclassified });
+      }
+
+      return series;
     },
   },
 });
