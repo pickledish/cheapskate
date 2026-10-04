@@ -26,6 +26,7 @@ import { accountIdToString } from '@/lib/data/accounts';
 import { assetClassIdToString } from '@/lib/data/asset-classes';
 import { chartColor } from '@/lib/chartPalette';
 import { formatCurrency } from '@/lib/util/currency';
+import { formatError } from '@/lib/util/error';
 
 type GroupBy = 'none' | 'account' | 'owner' | 'asset' | 'assetClass';
 
@@ -69,6 +70,7 @@ export default defineComponent({
     monthLabels: string[];
     chartSeries: { name: string; data: number[] }[];
     loading: boolean;
+    error: string | null;
     groupByOptions: { value: GroupBy; label: string }[];
     selectedSeries: string[] | null;
     holdingsData: HoldingUpdateWithContext[];
@@ -85,6 +87,7 @@ export default defineComponent({
       monthLabels: [],
       chartSeries: [],
       loading: true,
+      error: null,
       groupByOptions: [
         { value: 'none', label: 'None' },
         { value: 'account', label: 'Account' },
@@ -155,26 +158,32 @@ export default defineComponent({
   methods: {
     async loadData() {
       this.loading = true;
+      this.error = null;
 
-      const [holdings, prices, accounts, profiles, assetsWithAllocs, assetClasses] =
-        await Promise.all([
-          listHoldingUpdatesWithContext('asc'),
-          listPriceUpdatesWithContext('asc'),
-          listAccounts(),
-          listProfiles(),
-          listAssetsWithAllocations(),
-          listAssetClasses(),
-        ]);
+      try {
+        const [holdings, prices, accounts, profiles, assetsWithAllocs, assetClasses] =
+          await Promise.all([
+            listHoldingUpdatesWithContext('asc'),
+            listPriceUpdatesWithContext('asc'),
+            listAccounts(),
+            listProfiles(),
+            listAssetsWithAllocations(),
+            listAssetClasses(),
+          ]);
 
-      this.holdingsData = holdings;
-      this.pricesData = prices;
-      this.accountsData = accounts;
-      this.profilesData = profiles;
-      this.assetsData = assetsWithAllocs;
-      this.assetClassesData = assetClasses;
+        this.holdingsData = holdings;
+        this.pricesData = prices;
+        this.accountsData = accounts;
+        this.profilesData = profiles;
+        this.assetsData = assetsWithAllocs;
+        this.assetClassesData = assetClasses;
 
-      this.computeChartData();
-      this.loading = false;
+        this.computeChartData();
+      } catch (err) {
+        this.error = formatError(err);
+      } finally {
+        this.loading = false;
+      }
     },
 
     computeChartData() {
@@ -429,11 +438,15 @@ export default defineComponent({
         </template>
       </PageHeader>
 
+      <div v-if="error" class="p-4 bg-error text-error-text rounded-md">
+        {{ error }}
+      </div>
+
       <!-- Loading state -->
       <div v-if="loading" class="text-muted-text">Loading...</div>
 
       <!-- Chart + legend islands -->
-      <div v-else class="flex flex-col gap-6 md:min-h-0 md:flex-1 md:flex-row">
+      <div v-if="!loading && !error" class="flex flex-col gap-6 md:min-h-0 md:flex-1 md:flex-row">
         <div
           class="min-w-0 overflow-hidden bg-surface shadow rounded-lg md:flex md:min-h-0 md:flex-1 md:flex-col"
         >
