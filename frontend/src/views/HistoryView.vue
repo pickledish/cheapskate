@@ -91,6 +91,9 @@ export default defineComponent({
     isAllTime(): boolean {
       return this.historyQuery.scope !== 'month';
     },
+    atCurrentMonth(): boolean {
+      return !this.isAllTime && this.selectedMonthKey >= currentMonthKey();
+    },
     monthLabel(): string {
       return this.isAllTime ? 'All Time' : formatMonth(this.selectedMonthKey);
     },
@@ -110,6 +113,11 @@ export default defineComponent({
     '$route.fullPath': {
       immediate: true,
       async handler() {
+        const raw = parseMonthParam(this.$route.query.month);
+        if (raw !== undefined && raw > currentMonthKey()) {
+          await this.setMonth(currentMonthKey());
+          return;
+        }
         await this.loadData();
       },
     },
@@ -124,7 +132,7 @@ export default defineComponent({
       );
     },
     async nextMonth() {
-      if (this.isAllTime) return;
+      if (this.isAllTime || this.atCurrentMonth) return;
       await this.setMonth(
         dayjs(this.selectedMonthKey + '-01')
           .add(1, 'month')
@@ -279,13 +287,18 @@ export default defineComponent({
               <ChevronLeftIcon class="h-4 w-4" />
             </button>
             <span class="px-3 py-1.5 w-24 text-center">{{ monthLabel }}</span>
-            <button
-              class="px-2 py-1.5 hover:bg-surface-recessed rounded-r-md border-l border-page-border disabled:pointer-events-none"
-              v-bind:disabled="isAllTime"
-              v-on:click="nextMonth"
+            <span
+              class="inline-flex"
+              v-bind:class="{ 'cursor-not-allowed': isAllTime || atCurrentMonth }"
             >
-              <ChevronRightIcon class="h-4 w-4" />
-            </button>
+              <button
+                class="px-2 py-1.5 hover:bg-surface-recessed rounded-r-md border-l border-page-border disabled:pointer-events-none disabled:text-placeholder-text"
+                v-bind:disabled="isAllTime || atCurrentMonth"
+                v-on:click="nextMonth"
+              >
+                <ChevronRightIcon class="h-4 w-4" />
+              </button>
+            </span>
           </div>
         </template>
       </PageHeader>
