@@ -68,6 +68,10 @@ const routes = [
     component: () => import('@/views/ProfileView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/accounts',
+  },
 ];
 
 const router = createRouter({
@@ -136,7 +140,7 @@ router.beforeEach(async (to, _from, next) => {
 async function prefetchAllRoutes() {
   const currentName = router.currentRoute.value.name;
   for (const route of routes) {
-    if (route.name === currentName) continue;
+    if (route.name === currentName || !route.component) continue;
     const path = route.path.replace(/:[^/?*]+/g, '_');
     try {
       await loadRouteLocation(router.resolve(path));
