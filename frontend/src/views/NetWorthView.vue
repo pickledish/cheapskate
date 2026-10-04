@@ -113,9 +113,6 @@ export default defineComponent({
       const opt = this.groupByOptions.find((o) => o.value === this.groupBy);
       return opt ? opt.label : 'None';
     },
-    showLegend(): boolean {
-      return this.groupBy !== 'none' && this.chartSeries.length > 1;
-    },
     legendTitle(): string {
       if (this.groupBy === 'none') return 'Breakdown';
       return LEGEND_TITLES[this.groupBy];
@@ -456,7 +453,6 @@ export default defineComponent({
         </div>
 
         <div
-          v-if="showLegend"
           class="flex w-full shrink-0 flex-col overflow-hidden self-start bg-surface shadow rounded-lg md:max-h-full md:w-80"
         >
           <div class="bg-header px-6 py-3 shrink-0">
