@@ -448,7 +448,7 @@ export default defineComponent({
   <AppLayout>
     <div class="space-y-6">
       <!-- Error display -->
-      <div v-if="error" class="p-4 bg-error text-error-text rounded-lg">
+      <div v-if="error" class="p-4 bg-error text-error-text rounded-md">
         {{ error }}
       </div>
 
@@ -465,7 +465,7 @@ export default defineComponent({
                 Manage<span class="hidden sm:inline">&nbsp;Account</span>
               </MenuButton>
               <MenuItems
-                class="absolute right-0 mt-1 w-42 bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none z-50 py-1 flex flex-col"
+                class="absolute right-0 mt-1 w-42 bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none z-50 py-1 flex flex-col"
               >
                 <MenuItem v-slot:default="{ active }">
                   <button
@@ -733,7 +733,7 @@ export default defineComponent({
                         <Teleport to="body">
                           <ComboboxOptions
                             v-bind:style="open ? comboboxDropdownStyle(index) : undefined"
-                            class="fixed z-50 max-h-60 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none"
+                            class="fixed z-50 max-h-60 overflow-auto bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none"
                           >
                             <div
                               v-if="filteredAssetsForRow(index).length === 0"

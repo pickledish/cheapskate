@@ -867,7 +867,7 @@ export default defineComponent({
               </ComboboxButton>
             </div>
             <ComboboxOptions
-              class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none"
+              class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none"
             >
               <div v-if="sortedAccounts.length === 0" class="px-3 py-2 text-sm text-muted-text">
                 No accounts found
@@ -1047,7 +1047,7 @@ export default defineComponent({
                     <Teleport to="body">
                       <ComboboxOptions
                         v-bind:style="open ? comboboxDropdownStyle(index) : undefined"
-                        class="fixed z-50 max-h-48 overflow-auto bg-surface border border-surface-border rounded-lg shadow-lg focus:outline-none"
+                        class="fixed z-50 max-h-48 overflow-auto bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none"
                       >
                         <ComboboxOption v-slot:default="{ active, selected }" v-bind:value="null">
                           <div
