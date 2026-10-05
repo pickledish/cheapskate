@@ -56,13 +56,20 @@ export default defineComponent({
     },
     chartOption() {
       const secondaryText = cssVar('--color-secondary-text');
+      const surface = cssVar('--color-surface');
+      const surfaceBorder = cssVar('--color-surface-border');
+      const gridLine = cssVar('--color-surface-border-strong');
       return {
         animation: false,
+        textStyle: { fontFamily: cssVar('--font-sans') },
         tooltip: this.isMobile
           ? { show: false }
           : {
               trigger: 'item' as const,
               transitionDuration: 0,
+              backgroundColor: surface,
+              borderColor: surfaceBorder,
+              textStyle: { color: secondaryText },
               formatter: (p: TooltipParam) => {
                 if (!p.name || p.value == null || typeof p.value !== 'number') return '';
                 // Use the full label in tooltips even when the axis shows a short form
@@ -83,6 +90,7 @@ export default defineComponent({
           type: 'value' as const,
           max: 1,
           interval: this.isMobile ? 0.5 : 0.25,
+          splitLine: { lineStyle: { color: gridLine } },
           axisLabel: {
             color: secondaryText,
             // Keep "100%" inside the canvas without extra right padding

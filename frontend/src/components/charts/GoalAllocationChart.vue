@@ -34,6 +34,7 @@ export default defineComponent({
 
       return {
         animation: false,
+        textStyle: { fontFamily: cssVar('--font-sans') },
         tooltip: { show: false },
         series: [
           {

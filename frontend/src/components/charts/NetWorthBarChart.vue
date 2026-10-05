@@ -71,16 +71,23 @@ export default defineComponent({
     },
     chartOption() {
       const secondaryText = cssVar('--color-secondary-text');
+      const surface = cssVar('--color-surface');
+      const surfaceBorder = cssVar('--color-surface-border');
+      const gridLine = cssVar('--color-surface-border-strong');
       const fmt = (value: number) =>
         formatCurrency(value, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
       return {
         animation: false,
+        textStyle: { fontFamily: cssVar('--font-sans') },
         tooltip: this.isMobile
           ? { show: false }
           : {
               trigger: 'item' as const,
               transitionDuration: 0,
+              backgroundColor: surface,
+              borderColor: surfaceBorder,
+              textStyle: { color: secondaryText },
               formatter: (p: TooltipParam) => {
                 if (!p.name || p.value == null || typeof p.value !== 'number') return '';
                 const fullLabel = this.labels[p.dataIndex ?? -1] || p.name;
@@ -111,6 +118,7 @@ export default defineComponent({
         yAxis: {
           type: 'value' as const,
           splitNumber: this.isMobile ? 3 : 5,
+          splitLine: { lineStyle: { color: gridLine } },
           axisLabel: {
             color: secondaryText,
             formatter: (value: number) => {
