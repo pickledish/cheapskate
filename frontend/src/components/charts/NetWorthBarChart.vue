@@ -7,6 +7,7 @@ import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import { cssVar } from '@/lib/cssVar';
 import { chartColor } from '@/lib/chartPalette';
+import { getHexForColor } from '@/lib/tagColors';
 import { formatCurrency } from '@/lib/util/currency';
 
 use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
@@ -14,6 +15,8 @@ use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]
 interface NetWorthSeries {
   name: string;
   data: number[];
+  /** Tag color name, used when grouping by asset class. */
+  color?: string;
 }
 
 // Local stub instead of echarts CallbackDataParams — we only read a few fields.
@@ -141,7 +144,9 @@ export default defineComponent({
             type: 'bar' as const,
             stack: this.isStacked ? 'total' : undefined,
             data: s.data,
-            itemStyle: { color: chartColor(colorIndex) },
+            itemStyle: {
+              color: s.color ? getHexForColor(s.color) : chartColor(colorIndex),
+            },
             silent: this.isMobile,
             emphasis: this.isMobile ? { disabled: true } : { focus: 'series' as const },
             cursor: this.isMobile ? 'default' : 'crosshair',

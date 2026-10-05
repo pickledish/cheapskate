@@ -25,6 +25,7 @@ import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import { accountIdToString } from '@/lib/data/accounts';
 import { assetClassIdToString } from '@/lib/data/asset-classes';
 import { chartColor } from '@/lib/chartPalette';
+import { getHexForColor } from '@/lib/tagColors';
 import { formatCurrency } from '@/lib/util/currency';
 import { formatError } from '@/lib/util/error';
 
@@ -68,7 +69,7 @@ export default defineComponent({
   },
   data(): {
     monthLabels: string[];
-    chartSeries: { name: string; data: number[] }[];
+    chartSeries: { name: string; data: number[]; color?: string }[];
     loading: boolean;
     error: string | null;
     groupByOptions: { value: GroupBy; label: string }[];
@@ -124,7 +125,7 @@ export default defineComponent({
     legendItems(): { name: string; color: string; latestValue: number }[] {
       return this.chartSeries.map((s, i) => ({
         name: s.name,
-        color: chartColor(i),
+        color: s.color ? getHexForColor(s.color) : chartColor(i),
         latestValue: s.data.length > 0 ? (s.data[s.data.length - 1] ?? 0) : 0,
       }));
     },
@@ -375,13 +376,14 @@ export default defineComponent({
       const series = this.assetClassesData
         .map((assetClass) => ({
           name: classMap.get(assetClass.id) || `Class ${assetClassIdToString(assetClass.id)}`,
+          color: assetClass.color,
           data: byClassPerMonth.map(({ byClass }) => byClass.get(assetClass.id) || 0),
         }))
         .filter((s) => s.data.some((v) => v !== 0));
 
       const unclassified = byClassPerMonth.map(({ unclassified }) => unclassified);
       if (unclassified.some((v) => v !== 0)) {
-        series.push({ name: 'Unclassified', data: unclassified });
+        series.push({ name: 'Unclassified', color: 'gray', data: unclassified });
       }
 
       return series;
