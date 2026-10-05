@@ -259,7 +259,7 @@ export default defineComponent({
                 <th
                   class="bg-header px-6 py-3 text-left text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap"
                 >
-                  Goal
+                  Target
                 </th>
                 <th
                   class="bg-header rounded-tr-lg px-6 py-3 text-right text-xs font-medium text-header-text uppercase tracking-wider whitespace-nowrap"

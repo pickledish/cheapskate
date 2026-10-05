@@ -506,8 +506,10 @@ export default defineComponent({
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p
-                  class="font-medium text-primary-text"
-                  v-bind:class="{ 'text-placeholder-text': localLlmProvider === 'disabled' }"
+                  class="font-medium"
+                  v-bind:class="
+                    localLlmProvider === 'disabled' ? 'text-placeholder-text' : 'text-primary-text'
+                  "
                 >
                   Port
                 </p>

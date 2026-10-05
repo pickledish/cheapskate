@@ -69,7 +69,7 @@ export default defineComponent({
     <div class="flex items-start gap-4">
       <CheckCircleIcon class="w-8 h-8 text-green-600 flex-shrink-0" />
       <div class="flex-1">
-        <h3 class="text-lg font-medium text-success-text">Ready to continue</h3>
+        <h3 class="text-lg font-semibold text-success-text">Ready to continue</h3>
         <p class="mt-1 text-success-text">{{ message }}</p>
 
         <div v-if="error" class="mt-3 text-sm text-error-text">
