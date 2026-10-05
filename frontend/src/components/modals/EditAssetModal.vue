@@ -280,7 +280,7 @@ export default defineComponent({
           <span
             v-if="totalAllocation > 0"
             class="text-sm"
-            v-bind:class="totalAllocation === 100 ? 'text-green-600' : 'text-orange-600'"
+            v-bind:class="totalAllocation === 100 ? 'text-green-600' : 'text-warning-text'"
           >
             Total: {{ totalAllocation }}%
           </span>

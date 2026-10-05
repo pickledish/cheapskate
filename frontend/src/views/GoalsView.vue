@@ -376,7 +376,7 @@ export default defineComponent({
                 <td class="bg-surface"></td>
                 <td
                   class="px-6 py-4 text-sm font-medium bg-surface"
-                  v-bind:class="goalsAreValid ? 'text-green-500' : 'text-warning-text'"
+                  v-bind:class="goalsAreValid ? 'text-green-600' : 'text-warning-text'"
                 >
                   {{ Math.round(totalGoals * 100) }}%
                 </td>
