@@ -427,9 +427,7 @@ export default defineComponent({
                       v-bind:class="[
                         'flex items-center justify-between w-full px-3 py-2 text-sm text-left',
                         active ? 'bg-surface-recessed-deep' : '',
-                        groupBy === option.value
-                          ? 'text-link font-medium'
-                          : 'text-secondary-text',
+                        groupBy === option.value ? 'text-link font-medium' : 'text-secondary-text',
                       ]"
                       v-on:click="setGroupBy(option.value)"
                     >

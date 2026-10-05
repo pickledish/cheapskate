@@ -98,12 +98,7 @@ export default defineComponent({
         "
       >
         <div class="flex items-center">
-          <input
-            v-model="mode"
-            type="radio"
-            value="create"
-            class="h-4 w-4 accent-blue-600"
-          />
+          <input v-model="mode" type="radio" value="create" class="h-4 w-4 accent-blue-600" />
           <span class="ml-3 font-medium text-primary-text">Start a new family</span>
         </div>
         <p class="ml-7 text-sm text-muted-text mt-1">
@@ -121,12 +116,7 @@ export default defineComponent({
         "
       >
         <div class="flex items-center">
-          <input
-            v-model="mode"
-            type="radio"
-            value="join"
-            class="h-4 w-4 accent-blue-600"
-          />
+          <input v-model="mode" type="radio" value="join" class="h-4 w-4 accent-blue-600" />
           <span class="ml-3 font-medium text-primary-text">Join an existing family</span>
         </div>
         <div class="mt-3 ml-7">

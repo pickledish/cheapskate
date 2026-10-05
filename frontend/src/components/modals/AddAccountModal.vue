@@ -113,11 +113,7 @@ export default defineComponent({
 
       <div>
         <label class="flex items-center space-x-2">
-          <input
-            v-model="in_portfolio"
-            type="checkbox"
-            class="accent-blue-600"
-          />
+          <input v-model="in_portfolio" type="checkbox" class="accent-blue-600" />
           <span class="text-sm text-secondary-text"> Include in portfolio </span>
         </label>
         <p class="mt-1 text-xs text-muted-text">
