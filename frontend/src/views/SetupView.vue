@@ -3,9 +3,11 @@ import { defineComponent } from 'vue';
 import { supabase } from '@/lib/supabase';
 import { insertFamily, insertProfile } from '@/lib/data';
 import { formatError } from '@/lib/util/error';
+import AppButton from '@/components/AppButton.vue';
 
 export default defineComponent({
   name: 'SetupView',
+  components: { AppButton },
   data(): {
     name: string;
     mode: 'create' | 'join';
@@ -173,13 +175,14 @@ export default defineComponent({
       </div>
 
       <!-- Submit button -->
-      <button
+      <AppButton
+        variant="primary"
+        class="mt-6 w-full"
         v-bind:disabled="!canSubmit || loading"
-        class="mt-6 w-full py-3 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-surface disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         v-on:click="submit"
       >
         {{ loading ? 'Setting up...' : 'Continue' }}
-      </button>
+      </AppButton>
     </div>
   </div>
 </template>

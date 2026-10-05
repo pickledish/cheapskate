@@ -28,6 +28,7 @@ import { ClipboardIcon } from '@heroicons/vue/24/outline';
 import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/20/solid';
 import dayjs from 'dayjs';
 import { formatError } from '@/lib/util/error';
+import AppButton from '@/components/AppButton.vue';
 
 export default defineComponent({
   name: 'ProfileView',
@@ -47,6 +48,7 @@ export default defineComponent({
     SwitchLabel,
     ChevronUpDownIcon,
     CheckIcon,
+    AppButton,
   },
   data(): {
     userId: string | null;
@@ -360,13 +362,9 @@ export default defineComponent({
           </div>
         </section>
         <div v-if="hasProfileChanges" class="flex justify-end">
-          <button
-            v-bind:disabled="saving"
-            class="px-4 py-2 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 hover:border-blue-700 disabled:opacity-50 transition-colors"
-            v-on:click="saveProfile"
-          >
+          <AppButton variant="primary" v-bind:disabled="saving" v-on:click="saveProfile">
             {{ saving ? 'Saving...' : 'Save' }}
-          </button>
+          </AppButton>
         </div>
 
         <!-- Display Section -->
@@ -429,13 +427,9 @@ export default defineComponent({
           </div>
         </section>
         <div v-if="hasDisplayChanges" class="flex justify-end">
-          <button
-            v-bind:disabled="saving"
-            class="px-4 py-2 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 hover:border-blue-700 disabled:opacity-50 transition-colors"
-            v-on:click="saveDisplaySettings"
-          >
+          <AppButton variant="primary" v-bind:disabled="saving" v-on:click="saveDisplaySettings">
             {{ saving ? 'Saving...' : 'Save' }}
-          </button>
+          </AppButton>
         </div>
 
         <!-- Local LLM Section -->
@@ -531,20 +525,16 @@ export default defineComponent({
           </div>
         </section>
         <div v-if="hasLlmChanges" class="flex justify-end gap-2">
-          <button
+          <AppButton
+            variant="secondary"
             v-bind:disabled="testing || localLlmProvider === 'disabled'"
-            class="px-4 py-2 border border-surface-border-strong text-secondary-text rounded-md hover:bg-surface-recessed text-sm font-medium disabled:opacity-50 transition-colors"
             v-on:click="testLlmConnection"
           >
             {{ testing ? 'Testing...' : 'Test' }}
-          </button>
-          <button
-            v-bind:disabled="saving"
-            class="px-4 py-2 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 hover:border-blue-700 disabled:opacity-50 transition-colors"
-            v-on:click="saveLlmSettings"
-          >
+          </AppButton>
+          <AppButton variant="primary" v-bind:disabled="saving" v-on:click="saveLlmSettings">
             {{ saving ? 'Saving...' : 'Save' }}
-          </button>
+          </AppButton>
         </div>
 
         <!-- Family Section -->
@@ -619,12 +609,13 @@ export default defineComponent({
                   Create or join another (access to this family's data will be lost)
                 </p>
               </div>
-              <button
-                class="w-full sm:w-auto px-4 py-2 border border-surface-border-strong text-secondary-text rounded-md hover:bg-surface-recessed text-sm font-medium sm:shrink-0 sm:ml-4"
+              <AppButton
+                variant="secondary"
+                class="w-full sm:w-auto sm:shrink-0 sm:ml-4"
                 v-on:click="openChangeFamilyModal"
               >
                 Leave Family
-              </button>
+              </AppButton>
             </div>
           </div>
         </section>
@@ -641,12 +632,13 @@ export default defineComponent({
                 <p class="font-medium text-primary-text">Sign Out</p>
                 <p class="text-sm text-muted-text">Sign out of your account on this device</p>
               </div>
-              <button
-                class="w-full sm:w-auto px-4 py-2 border border-surface-border-strong text-secondary-text rounded-md hover:bg-surface-recessed text-sm font-medium sm:shrink-0 sm:ml-4"
+              <AppButton
+                variant="secondary"
+                class="w-full sm:w-auto sm:shrink-0 sm:ml-4"
                 v-on:click="signOut"
               >
                 Sign Out
-              </button>
+              </AppButton>
             </div>
 
             <hr class="border-surface-border" />
@@ -657,12 +649,13 @@ export default defineComponent({
                 <p class="font-medium text-primary-text">Delete Account</p>
                 <p class="text-sm text-muted-text">Permanently delete your account and data</p>
               </div>
-              <button
-                class="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium sm:shrink-0 sm:ml-4"
+              <AppButton
+                variant="danger"
+                class="w-full sm:w-auto sm:shrink-0 sm:ml-4"
                 v-on:click="openDeleteAccountModal"
               >
                 Delete Account
-              </button>
+              </AppButton>
             </div>
           </div>
         </section>

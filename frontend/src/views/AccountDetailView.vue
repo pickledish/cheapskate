@@ -38,6 +38,7 @@ import {
   MenuItems,
   MenuItem,
 } from '@headlessui/vue';
+import AppButton from '@/components/AppButton.vue';
 import { assetIdToString, type AssetAllocationInfo, type AssetId } from '@/lib/data/assets';
 import { accountIdToString, type AccountId } from '@/lib/data/accounts';
 import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
@@ -62,6 +63,7 @@ export default defineComponent({
     ComboboxOption,
     HeadlessMenu,
     MenuButton,
+    AppButton,
     MenuItems,
     MenuItem,
   },
@@ -459,10 +461,10 @@ export default defineComponent({
         <PageHeader v-bind:title="account.name" v-bind:description="isArchived ? 'CLOSED' : null">
           <template v-slot:actions>
             <HeadlessMenu as="div" class="relative inline-block text-left shrink-0">
-              <MenuButton
-                class="inline-flex items-center rounded-md border border-page-border bg-surface px-4 py-2 text-sm font-medium text-secondary-text hover:bg-surface-recessed transition-colors"
-              >
-                Manage<span class="hidden sm:inline">&nbsp;Account</span>
+              <MenuButton as="template">
+                <AppButton variant="secondary">
+                  <span>Manage<span class="hidden sm:inline"> Account</span></span>
+                </AppButton>
               </MenuButton>
               <MenuItems
                 class="absolute right-0 mt-1 w-42 bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none z-50 py-1 flex flex-col"
@@ -813,15 +815,15 @@ export default defineComponent({
 
         <!-- Edit/Save button below table -->
         <div class="flex justify-end">
-          <button
+          <AppButton
             v-if="!editing"
-            class="px-4 py-2 flex items-center gap-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            variant="primary"
             title="Edit holdings"
             v-on:click="enterEditMode"
           >
             <PencilSquareIcon class="w-4 h-4" />
             Edit Holdings
-          </button>
+          </AppButton>
           <div v-else class="w-full flex flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
             <label
               class="flex items-center justify-center gap-2 text-sm text-muted-text sm:justify-start"
@@ -834,19 +836,17 @@ export default defineComponent({
               />
             </label>
             <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">
-              <button
-                class="px-4 py-2 text-sm text-secondary-text hover:text-primary-text transition-colors self-center sm:self-auto"
-                v-on:click="cancelEdit"
-              >
+              <AppButton variant="ghost" class="self-center sm:self-auto" v-on:click="cancelEdit">
                 Cancel
-              </button>
-              <button
+              </AppButton>
+              <AppButton
+                variant="primary"
+                class="w-full sm:w-auto"
                 v-bind:disabled="saving"
-                class="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 v-on:click="saveEdits"
               >
                 {{ saving ? 'Saving...' : 'Save' }}
-              </button>
+              </AppButton>
             </div>
           </div>
         </div>

@@ -2,9 +2,11 @@
 import { defineComponent } from 'vue';
 import { supabase } from '@/lib/supabase';
 import { formatError } from '@/lib/util/error';
+import AppButton from '@/components/AppButton.vue';
 
 export default defineComponent({
   name: 'LoginView',
+  components: { AppButton },
   data() {
     return {
       email: '',
@@ -72,11 +74,7 @@ export default defineComponent({
         {{ isSignup ? 'Create Account' : 'Sign In' }}
       </h1>
 
-      <button
-        type="button"
-        class="w-full py-2 px-4 bg-surface border border-surface-border-strong rounded-md hover:bg-surface-recessed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-surface flex items-center justify-center gap-2 text-secondary-text font-medium"
-        v-on:click="signInWithGoogle"
-      >
+      <AppButton variant="secondary" class="w-full" v-on:click="signInWithGoogle">
         <svg class="w-5 h-5" viewBox="0 0 24 24">
           <path
             fill="#4285F4"
@@ -96,7 +94,7 @@ export default defineComponent({
           />
         </svg>
         Continue with Google
-      </button>
+      </AppButton>
 
       <div class="relative my-4">
         <div class="absolute inset-0 flex items-center">
@@ -149,13 +147,9 @@ export default defineComponent({
           {{ error }}
         </div>
 
-        <button
-          type="submit"
-          v-bind:disabled="loading"
-          class="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-surface disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <AppButton variant="primary" type="submit" class="w-full" v-bind:disabled="loading">
           {{ buttonText }}
-        </button>
+        </AppButton>
       </form>
 
       <p class="mt-4 text-center text-sm text-muted-text">

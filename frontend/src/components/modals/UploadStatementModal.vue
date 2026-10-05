@@ -2,6 +2,7 @@
 import { defineComponent, type ComponentPublicInstance } from 'vue';
 import type { User } from '@supabase/supabase-js';
 import BaseModal from './BaseModal.vue';
+import AppButton from '@/components/AppButton.vue';
 import {
   Disclosure,
   DisclosureButton,
@@ -112,6 +113,7 @@ export default defineComponent({
   name: 'UploadStatementModal',
   components: {
     BaseModal,
+    AppButton,
     Disclosure,
     DisclosureButton,
     DisclosurePanel,
@@ -819,7 +821,7 @@ export default defineComponent({
       <input
         type="file"
         accept=".pdf"
-        class="block w-full text-sm text-muted-text file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-info file:text-info-text hover:file:brightness-90"
+        class="block w-full text-sm text-muted-text file:mr-4 file:py-1.5 file:px-4 file:rounded-md file:border file:border-info file:text-sm file:font-medium file:bg-info file:text-info-text hover:file:brightness-90"
         v-on:change="onFileChange"
       />
     </div>
@@ -1136,21 +1138,11 @@ export default defineComponent({
 
     <template v-if="step !== 'saving'" v-slot:secondary>
       <!-- Step 1: Upload -->
-      <button
-        v-if="step === 'upload'"
-        class="px-4 py-2 text-secondary-text hover:text-primary-text"
-        v-on:click="$emit('close')"
-      >
+      <AppButton v-if="step === 'upload'" variant="ghost" v-on:click="$emit('close')">
         Cancel
-      </button>
+      </AppButton>
       <!-- Step 2: Account matching / Step 3: Preview -->
-      <button
-        v-else
-        class="px-4 py-2 text-secondary-text hover:text-primary-text"
-        v-on:click="step = 'upload'"
-      >
-        Back
-      </button>
+      <AppButton v-else variant="ghost" v-on:click="step = 'upload'">Back</AppButton>
     </template>
 
     <template v-if="step !== 'saving'" v-slot:primary>
@@ -1158,15 +1150,15 @@ export default defineComponent({
       <div v-if="step === 'upload'" class="inline-flex rounded-md">
         <button
           v-bind:disabled="!file || loading"
-          class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white font-medium rounded-l-md hover:bg-blue-700 disabled:opacity-50"
+          class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-1.5 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-l-md hover:border-blue-700 hover:bg-blue-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           v-on:click="parseFile"
         >
           {{ parseButtonText }}
         </button>
-        <HeadlessMenu as="div" class="relative flex">
+        <HeadlessMenu as="div" class="relative flex -ml-px">
           <MenuButton
             v-bind:disabled="!file || loading"
-            class="px-2 bg-blue-600 text-white border-l border-blue-500 rounded-r-md hover:bg-blue-700 disabled:opacity-50 flex items-center"
+            class="inline-flex items-center justify-center px-2 py-1.5 border border-blue-600 border-l-blue-500 bg-blue-600 text-white rounded-r-md hover:border-y-blue-700 hover:border-r-blue-700 hover:bg-blue-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ChevronUpIcon class="w-4 h-4" />
           </MenuButton>
@@ -1199,23 +1191,23 @@ export default defineComponent({
         </HeadlessMenu>
       </div>
       <!-- Step 2: Account matching -->
-      <button
+      <AppButton
         v-else-if="step === 'match'"
+        variant="primary"
         v-bind:disabled="loading || (!selectedAccount && !createNewAccount)"
-        class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
         v-on:click="confirmAccountSelection"
       >
         {{ loading ? 'Loading...' : 'Continue' }}
-      </button>
+      </AppButton>
       <!-- Step 3: Preview -->
-      <button
+      <AppButton
         v-else-if="step === 'preview'"
+        variant="success"
         v-bind:disabled="!canSave"
-        class="px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 disabled:opacity-50"
         v-on:click="saveStatement"
       >
         Save Statement
-      </button>
+      </AppButton>
     </template>
   </BaseModal>
 </template>

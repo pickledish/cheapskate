@@ -1,13 +1,14 @@
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue';
 import BaseModal from './BaseModal.vue';
+import AppButton from '@/components/AppButton.vue';
 import { supabase } from '@/lib/supabase';
 import { insertUpdate, updateAccount, type Account } from '@/lib/data';
 import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'IncludeInPortfolioModal',
-  components: { BaseModal },
+  components: { BaseModal, AppButton },
   props: {
     account: {
       type: Object as PropType<Account>,
@@ -84,21 +85,12 @@ export default defineComponent({
     </div>
 
     <template v-slot:secondary>
-      <button
-        class="px-4 py-2 text-secondary-text hover:text-primary-text"
-        v-on:click="$emit('close')"
-      >
-        Cancel
-      </button>
+      <AppButton variant="ghost" v-on:click="$emit('close')">Cancel</AppButton>
     </template>
     <template v-slot:primary>
-      <button
-        v-bind:disabled="loading"
-        class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
-        v-on:click="save"
-      >
+      <AppButton variant="primary" v-bind:disabled="loading" v-on:click="save">
         {{ loading ? 'Saving...' : 'Include in Portfolio' }}
-      </button>
+      </AppButton>
     </template>
   </BaseModal>
 </template>

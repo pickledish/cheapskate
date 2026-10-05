@@ -23,6 +23,7 @@ import type { AssetId } from '@/lib/data/assets';
 import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
 import { formatGoal } from '@/lib/util/currency';
 import { formatError } from '@/lib/util/error';
+import AppButton from '@/components/AppButton.vue';
 
 export default defineComponent({
   name: 'GoalsView',
@@ -38,6 +39,7 @@ export default defineComponent({
     Bars3Icon,
     HeadlessMenu,
     MenuButton,
+    AppButton,
     MenuItems,
     MenuItem,
   },
@@ -218,12 +220,9 @@ export default defineComponent({
         description='Create and manage asset classes. Define a "goal" allocation for your portfolio.'
       >
         <template v-slot:actions>
-          <button
-            class="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-            v-on:click="showAddModal = true"
-          >
+          <AppButton variant="primary" class="shrink-0" v-on:click="showAddModal = true">
             Add Asset Class
-          </button>
+          </AppButton>
         </template>
       </PageHeader>
 
@@ -419,12 +418,7 @@ export default defineComponent({
         <p class="text-muted-text mb-4">
           No asset classes yet. Add your first to categorize your assets.
         </p>
-        <button
-          class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-          v-on:click="showAddModal = true"
-        >
-          Add Asset Class
-        </button>
+        <AppButton variant="primary" v-on:click="showAddModal = true">Add Asset Class</AppButton>
       </div>
     </div>
 

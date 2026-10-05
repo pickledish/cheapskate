@@ -1,12 +1,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import AppFooter from '@/components/AppFooter.vue';
+import AppButton from '@/components/AppButton.vue';
 import { supabase } from '@/lib/supabase';
 import { ChartPieIcon, DocumentChartBarIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline';
 
 export default defineComponent({
   name: 'SplashView',
-  components: { AppFooter, ChartPieIcon, DocumentChartBarIcon, ShieldCheckIcon },
+  components: { AppFooter, AppButton, ChartPieIcon, DocumentChartBarIcon, ShieldCheckIcon },
   data(): {
     hasSession: boolean | null;
   } {
@@ -39,13 +40,9 @@ export default defineComponent({
         <p class="mt-8 text-lg sm:text-xl text-secondary-text">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit.
         </p>
-        <router-link
-          v-if="hasSession !== null"
-          v-bind:to="ctaTo"
-          class="mt-12 inline-block py-2 px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-page font-medium"
-        >
+        <AppButton v-if="hasSession !== null" variant="primary" v-bind:to="ctaTo" class="mt-12">
           {{ ctaLabel }}
-        </router-link>
+        </AppButton>
       </div>
 
       <div class="mt-28 sm:mt-36 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">

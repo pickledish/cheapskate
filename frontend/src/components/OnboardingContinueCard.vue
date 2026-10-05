@@ -3,11 +3,13 @@ import { defineComponent, type PropType } from 'vue';
 import { supabase } from '@/lib/supabase';
 import { CheckCircleIcon } from '@heroicons/vue/24/solid';
 import { formatError } from '@/lib/util/error';
+import AppButton from '@/components/AppButton.vue';
 
 export default defineComponent({
   name: 'OnboardingContinueCard',
   components: {
     CheckCircleIcon,
+    AppButton,
   },
   props: {
     step: {
@@ -76,14 +78,15 @@ export default defineComponent({
           {{ error }}
         </div>
 
-        <button
+        <AppButton
+          variant="success"
+          class="mt-4"
           v-bind:disabled="loading"
-          class="mt-4 px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           v-on:click="continueToNextStep"
         >
           <span v-if="loading">Saving...</span>
           <span v-else>{{ nextStepLabel }}</span>
-        </button>
+        </AppButton>
       </div>
     </div>
   </div>

@@ -28,6 +28,7 @@ import { chartColor } from '@/lib/chartPalette';
 import { getHexForColor } from '@/lib/tagColors';
 import { formatCurrency } from '@/lib/util/currency';
 import { formatError } from '@/lib/util/error';
+import AppButton from '@/components/AppButton.vue';
 
 type GroupBy = 'none' | 'account' | 'owner' | 'asset' | 'assetClass';
 
@@ -66,6 +67,7 @@ export default defineComponent({
     MenuItem,
     ChevronDownIcon,
     CheckIcon,
+    AppButton,
   },
   data(): {
     monthLabels: string[];
@@ -401,11 +403,11 @@ export default defineComponent({
       >
         <template v-slot:actions>
           <HeadlessMenu as="div" class="relative shrink-0">
-            <MenuButton
-              class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-secondary-text bg-surface border border-page-border rounded-md hover:bg-surface-recessed focus:outline-none"
-            >
-              Group by: {{ selectedGroupByLabel }}
-              <ChevronDownIcon class="w-4 h-4 text-muted-text" />
+            <MenuButton as="template">
+              <AppButton variant="secondary">
+                Group by: {{ selectedGroupByLabel }}
+                <ChevronDownIcon class="w-4 h-4 text-muted-text" />
+              </AppButton>
             </MenuButton>
             <transition
               enter-active-class="transition duration-100 ease-out"

@@ -7,6 +7,7 @@ import UploadStatementModal from '@/components/modals/UploadStatementModal.vue';
 import OnboardingModal from '@/components/modals/OnboardingModal.vue';
 import OnboardingContinueCard from '@/components/OnboardingContinueCard.vue';
 import InstitutionIcon from '@/components/InstitutionIcon.vue';
+import AppButton from '@/components/AppButton.vue';
 import { supabase } from '@/lib/supabase';
 import {
   getProfile,
@@ -37,6 +38,7 @@ export default defineComponent({
     OnboardingModal,
     OnboardingContinueCard,
     InstitutionIcon,
+    AppButton,
   },
   data(): {
     accounts: Account[];
@@ -249,12 +251,13 @@ export default defineComponent({
         description="Create and manage accounts. Update holdings manually, or upload statements to be parsed automatically."
       >
         <template v-slot:actions>
-          <button
-            class="shrink-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+          <AppButton
+            variant="primary"
+            class="shrink-0"
             v-on:click="showUploadStatementModal = true"
           >
             Upload Statement
-          </button>
+          </AppButton>
         </template>
       </PageHeader>
 

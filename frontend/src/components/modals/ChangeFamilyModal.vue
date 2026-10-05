@@ -1,13 +1,14 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import BaseModal from './BaseModal.vue';
+import AppButton from '@/components/AppButton.vue';
 import { supabase } from '@/lib/supabase';
 import { insertFamily, updateProfileFamily } from '@/lib/data';
 import { formatError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'ChangeFamilyModal',
-  components: { BaseModal },
+  components: { BaseModal, AppButton },
   emits: ['close', 'changed'],
   data(): {
     mode: 'create' | 'join';
@@ -133,21 +134,16 @@ export default defineComponent({
     </div>
 
     <template v-slot:secondary>
-      <button
-        class="px-4 py-2 text-secondary-text hover:text-primary-text"
-        v-on:click="$emit('close')"
-      >
-        Cancel
-      </button>
+      <AppButton variant="ghost" v-on:click="$emit('close')">Cancel</AppButton>
     </template>
     <template v-slot:primary>
-      <button
+      <AppButton
+        variant="primary"
         v-bind:disabled="!canSubmit || loading"
-        class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
         v-on:click="executeChange"
       >
         {{ loading ? 'Processing...' : 'Change Family' }}
-      </button>
+      </AppButton>
     </template>
   </BaseModal>
 </template>
