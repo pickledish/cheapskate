@@ -86,7 +86,7 @@ export default defineComponent({
     <template v-slot:primary>
       <button
         v-bind:disabled="!canDelete || loading"
-        class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
         v-on:click="deleteAccount"
       >
         {{ loading ? 'Deleting...' : 'Delete My Account' }}

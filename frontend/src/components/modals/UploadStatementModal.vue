@@ -1158,7 +1158,7 @@ export default defineComponent({
       <div v-if="step === 'upload'" class="inline-flex rounded-md">
         <button
           v-bind:disabled="!file || loading"
-          class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-l-md hover:bg-blue-700 disabled:opacity-50"
+          class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white font-medium rounded-l-md hover:bg-blue-700 disabled:opacity-50"
           v-on:click="parseFile"
         >
           {{ parseButtonText }}
@@ -1202,7 +1202,7 @@ export default defineComponent({
       <button
         v-else-if="step === 'match'"
         v-bind:disabled="loading || (!selectedAccount && !createNewAccount)"
-        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+        class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
         v-on:click="confirmAccountSelection"
       >
         {{ loading ? 'Loading...' : 'Continue' }}
@@ -1211,7 +1211,7 @@ export default defineComponent({
       <button
         v-else-if="step === 'preview'"
         v-bind:disabled="!canSave"
-        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+        class="px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 disabled:opacity-50"
         v-on:click="saveStatement"
       >
         Save Statement

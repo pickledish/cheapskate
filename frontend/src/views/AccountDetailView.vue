@@ -815,7 +815,7 @@ export default defineComponent({
         <div class="flex justify-end">
           <button
             v-if="!editing"
-            class="px-4 py-2 flex items-center gap-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            class="px-4 py-2 flex items-center gap-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             title="Edit holdings"
             v-on:click="enterEditMode"
           >
@@ -835,14 +835,14 @@ export default defineComponent({
             </label>
             <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">
               <button
-                class="px-4 py-2 text-sm text-muted-text hover:text-primary-text transition-colors self-center sm:self-auto"
+                class="px-4 py-2 text-sm text-secondary-text hover:text-primary-text transition-colors self-center sm:self-auto"
                 v-on:click="cancelEdit"
               >
                 Cancel
               </button>
               <button
                 v-bind:disabled="saving"
-                class="w-full sm:w-auto px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                class="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 v-on:click="saveEdits"
               >
                 {{ saving ? 'Saving...' : 'Save' }}
