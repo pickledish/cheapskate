@@ -102,7 +102,7 @@ export default defineComponent({
             v-model="mode"
             type="radio"
             value="create"
-            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+            class="h-4 w-4 accent-blue-600"
           />
           <span class="ml-3 font-medium text-primary-text">Start a new family</span>
         </div>
@@ -125,7 +125,7 @@ export default defineComponent({
             v-model="mode"
             type="radio"
             value="join"
-            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+            class="h-4 w-4 accent-blue-600"
           />
           <span class="ml-3 font-medium text-primary-text">Join an existing family</span>
         </div>

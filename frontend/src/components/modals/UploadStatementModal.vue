@@ -902,7 +902,7 @@ export default defineComponent({
           <input
             v-model="createNewAccount"
             type="checkbox"
-            class="rounded border-surface-border-strong text-blue-600 mt-0.5"
+            class="accent-blue-600 mt-0.5"
             v-on:change="createNewAccount ? (selectedAccount = null) : null"
           />
           <div class="flex-1">

@@ -116,7 +116,7 @@ export default defineComponent({
           <input
             v-model="in_portfolio"
             type="checkbox"
-            class="rounded border-surface-border-strong"
+            class="accent-blue-600"
           />
           <span class="text-sm text-secondary-text"> Include in portfolio </span>
         </label>

@@ -74,7 +74,7 @@ export default defineComponent({
 
       <button
         type="button"
-        class="w-full py-2 px-4 bg-surface border border-surface-border-strong rounded-md hover:bg-surface-recessed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2 text-secondary-text font-medium"
+        class="w-full py-2 px-4 bg-surface border border-surface-border-strong rounded-md hover:bg-surface-recessed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-surface flex items-center justify-center gap-2 text-secondary-text font-medium"
         v-on:click="signInWithGoogle"
       >
         <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@ export default defineComponent({
         <button
           type="submit"
           v-bind:disabled="loading"
-          class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-surface disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {{ buttonText }}
         </button>

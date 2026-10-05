@@ -3,6 +3,8 @@
 /* Stop iOS viewport rubber-band / horizontal pan from nested overflow-x scrollers */
 @layer base {
   html {
+    /* Native controls (date picker, checkbox, radio, file) follow the OS scheme */
+    color-scheme: light dark;
     overscroll-behavior-x: none;
     /* Safari/iOS overscroll bounce uses the html/body canvas color */
     background-color: var(--color-page);
