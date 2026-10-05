@@ -323,7 +323,7 @@ export default defineComponent({
 
           <!-- Add account card -->
           <button
-            class="bg-page border-2 border-dashed border-page-border rounded-lg p-4 flex flex-col items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors min-h-[100px]"
+            class="bg-page border-2 border-dashed border-page-border rounded-lg p-4 flex flex-col items-center justify-center text-muted-text hover:border-blue-400 hover:text-link transition-colors min-h-[100px]"
             v-on:click="showAddAccountModal = true"
           >
             <span class="text-3xl mb-2">+</span>

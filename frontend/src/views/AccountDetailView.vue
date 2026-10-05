@@ -751,7 +751,7 @@ export default defineComponent({
                                 v-bind:class="[
                                   'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
                                   active ? 'bg-surface-recessed-deep' : '',
-                                  selected ? 'text-blue-600 font-medium' : 'text-secondary-text',
+                                  selected ? 'text-link font-medium' : 'text-secondary-text',
                                 ]"
                               >
                                 <!-- prettier-ignore -->

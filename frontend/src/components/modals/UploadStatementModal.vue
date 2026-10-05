@@ -882,7 +882,7 @@ export default defineComponent({
                   v-bind:class="[
                     'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
                     active ? 'bg-surface-recessed-deep' : '',
-                    selected ? 'text-blue-600 font-medium' : 'text-secondary-text',
+                    selected ? 'text-link font-medium' : 'text-secondary-text',
                   ]"
                 >
                   <span class="flex items-center gap-2">
@@ -927,7 +927,7 @@ export default defineComponent({
           <template v-if="matchingAccountIds.length === 1">
             Auto-matched to <strong>{{ resolvedAccount.name }}</strong><template v-if="resolvedAccount.last4 || parsedLast4"> (****{{ resolvedAccount.last4 || parsedLast4 }})</template>.
             <button
-              class="text-blue-600 hover:text-blue-800 underline"
+              class="text-link hover:text-link-hover underline"
               v-on:click="rejectAutoMatch"
             >
               Not the right account?
@@ -1054,7 +1054,7 @@ export default defineComponent({
                             v-bind:class="[
                               'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
                               active ? 'bg-surface-recessed-deep' : '',
-                              selected ? 'text-blue-600 font-medium' : 'text-muted-text',
+                              selected ? 'text-link font-medium' : 'text-muted-text',
                             ]"
                           >
                             <span>Create new asset</span>
@@ -1077,7 +1077,7 @@ export default defineComponent({
                             v-bind:class="[
                               'flex items-center justify-between px-3 py-2 text-sm cursor-pointer',
                               active ? 'bg-surface-recessed-deep' : '',
-                              selected ? 'text-blue-600 font-medium' : 'text-secondary-text',
+                              selected ? 'text-link font-medium' : 'text-secondary-text',
                             ]"
                           >
                             <span>{{ displayAsset(asset) }}</span>

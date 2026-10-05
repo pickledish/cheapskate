@@ -160,7 +160,7 @@ export default defineComponent({
 
       <p class="mt-4 text-center text-sm text-muted-text">
         {{ isSignup ? 'Already have an account?' : "Don't have an account?" }}
-        <button class="ml-1 text-blue-600 hover:text-blue-800 font-medium" v-on:click="toggleMode">
+        <button class="ml-1 text-link hover:text-link-hover font-medium" v-on:click="toggleMode">
           {{ isSignup ? 'Sign In' : 'Sign Up' }}
         </button>
       </p>

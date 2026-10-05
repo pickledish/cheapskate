@@ -50,7 +50,7 @@ export default defineComponent({
 
       <div class="mt-28 sm:mt-36 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
         <div class="bg-surface border border-surface-border rounded-lg p-8">
-          <ChartPieIcon class="w-8 h-8 text-blue-600" />
+          <ChartPieIcon class="w-8 h-8 text-link" />
           <h2 class="mt-6 text-lg font-semibold text-primary-text">Lorem ipsum</h2>
           <p class="mt-3 text-sm text-muted-text">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
@@ -58,7 +58,7 @@ export default defineComponent({
           </p>
         </div>
         <div class="bg-surface border border-surface-border rounded-lg p-8">
-          <DocumentChartBarIcon class="w-8 h-8 text-blue-600" />
+          <DocumentChartBarIcon class="w-8 h-8 text-link" />
           <h2 class="mt-6 text-lg font-semibold text-primary-text">Dolor sit amet</h2>
           <p class="mt-3 text-sm text-muted-text">
             Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
@@ -66,7 +66,7 @@ export default defineComponent({
           </p>
         </div>
         <div class="bg-surface border border-surface-border rounded-lg p-8">
-          <ShieldCheckIcon class="w-8 h-8 text-blue-600" />
+          <ShieldCheckIcon class="w-8 h-8 text-link" />
           <h2 class="mt-6 text-lg font-semibold text-primary-text">Consectetur elit</h2>
           <p class="mt-3 text-sm text-muted-text">
             Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat

@@ -428,7 +428,7 @@ export default defineComponent({
                         'flex items-center justify-between w-full px-3 py-2 text-sm text-left',
                         active ? 'bg-surface-recessed-deep' : '',
                         groupBy === option.value
-                          ? 'text-blue-600 font-medium'
+                          ? 'text-link font-medium'
                           : 'text-secondary-text',
                       ]"
                       v-on:click="setGroupBy(option.value)"

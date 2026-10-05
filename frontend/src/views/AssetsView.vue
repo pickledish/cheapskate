@@ -437,7 +437,7 @@ export default defineComponent({
               <tr class="h-16">
                 <td colspan="5" class="relative bg-surface rounded-b-lg p-0">
                   <button
-                    class="absolute inset-0 px-6 flex items-center gap-2 text-sm font-medium text-muted-text hover:text-blue-600 hover:bg-surface-recessed-deep rounded-b-lg transition-colors cursor-pointer"
+                    class="absolute inset-0 px-6 flex items-center gap-2 text-sm font-medium text-muted-text hover:text-link hover:bg-surface-recessed-deep rounded-b-lg transition-colors cursor-pointer"
                     v-on:click="showAddAssetModal = true"
                   >
                     <PlusIcon class="w-4 h-4" />
@@ -452,7 +452,7 @@ export default defineComponent({
         <!-- Empty state: add asset button -->
         <button
           v-else
-          class="w-full bg-page border-2 border-dashed border-page-border rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-blue-600 transition-colors"
+          class="w-full bg-page border-2 border-dashed border-page-border rounded-lg p-4 flex items-center justify-center text-muted-text hover:border-blue-400 hover:text-link transition-colors"
           v-on:click="showAddAssetModal = true"
         >
           <span class="text-xl mr-2">+</span>

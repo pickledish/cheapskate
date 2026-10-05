@@ -152,6 +152,10 @@
 
   /* for warning text; frustratingly gold is hard to read on white */
   --color-warning-text: color-mix(in oklab, var(--color-amber-600) 90%, transparent);
+
+  /* links and selected menu rows; blue-600 fails contrast on dark surfaces */
+  --color-link: var(--color-blue-600);
+  --color-link-hover: var(--color-blue-800);
 }
 
 /* Dark mode — flips semantic tokens via prefers-color-scheme (Tailwind default) */
@@ -196,6 +200,10 @@
 
       /* for warning text; alpha keeps the amber from shouting */
       --color-warning-text: color-mix(in oklab, var(--color-amber-400) 75%, transparent);
+
+      /* links and selected menu rows */
+      --color-link: var(--color-blue-400);
+      --color-link-hover: var(--color-blue-300);
     }
   }
 }

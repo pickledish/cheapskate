@@ -460,7 +460,7 @@ export default defineComponent({
         </p>
         <!-- prettier-ignore -->
         <p>
-          For example, a <a href="https://www.bogleheads.org/wiki/Three-fund_portfolio" class="text-blue-600 underline">Boglehead-style</a> composition might look like this:
+          For example, a <a href="https://www.bogleheads.org/wiki/Three-fund_portfolio" class="text-link hover:text-link-hover underline">Boglehead-style</a> composition might look like this:
         </p>
         <table class="mx-auto text-sm mt-5 mb-3">
           <tbody>

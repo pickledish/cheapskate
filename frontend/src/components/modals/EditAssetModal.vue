@@ -238,7 +238,7 @@ export default defineComponent({
                         'flex items-center justify-between px-3 py-2 text-sm',
                         disabled ? 'text-placeholder-text cursor-not-allowed' : 'cursor-pointer',
                         !disabled && active ? 'bg-surface-recessed-deep' : '',
-                        !disabled && selected ? 'text-blue-600 font-medium' : '',
+                        !disabled && selected ? 'text-link font-medium' : '',
                         !disabled && !selected ? 'text-secondary-text' : '',
                       ]"
                     >
@@ -272,7 +272,7 @@ export default defineComponent({
         <div class="mt-2 flex items-center justify-between">
           <button
             v-bind:disabled="availableClasses.length === 0"
-            class="text-sm text-blue-600 hover:text-blue-800 disabled:text-placeholder-text"
+            class="text-sm text-link hover:text-link-hover disabled:text-placeholder-text"
             v-on:click="addAllocation"
           >
             + Add more
