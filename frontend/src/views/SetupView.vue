@@ -104,7 +104,7 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-page">
+  <div class="min-h-screen flex items-center justify-center bg-page px-4">
     <div class="max-w-md w-full p-8 bg-surface rounded-lg shadow-md">
       <h1 class="text-2xl font-bold text-center mb-6 text-primary-text">Welcome to Cheapskate</h1>
 

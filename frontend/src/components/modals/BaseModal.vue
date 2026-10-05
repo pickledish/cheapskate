@@ -1,9 +1,11 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { XMarkIcon } from '@heroicons/vue/24/outline';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/util/body-scroll-lock';
 
 export default defineComponent({
   name: 'BaseModal',
+  components: { XMarkIcon },
   props: {
     title: {
       type: String,
@@ -43,10 +45,12 @@ export default defineComponent({
               {{ title }}
             </h2>
             <button
-              class="text-placeholder-text hover:text-muted-text text-2xl leading-none"
+              type="button"
+              class="-mr-1 flex h-7 w-7 items-center justify-center rounded text-placeholder-text hover:bg-surface-recessed-deep hover:text-muted-text cursor-pointer"
+              aria-label="Close"
               v-on:click="$emit('close')"
             >
-              &times;
+              <XMarkIcon class="w-5 h-5" />
             </button>
           </div>
         </div>
