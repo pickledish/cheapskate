@@ -373,11 +373,8 @@ export default defineComponent({
             <h2 class="text-xs font-medium text-header-text uppercase tracking-wider">Display</h2>
           </div>
           <div class="p-6 space-y-4">
-            <SwitchGroup
-              as="div"
-              class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
+            <SwitchGroup as="div" class="flex items-center justify-between gap-4">
+              <div class="min-w-0">
                 <SwitchLabel as="p" class="font-medium text-primary-text">
                   Show closed accounts
                 </SwitchLabel>
@@ -387,7 +384,7 @@ export default defineComponent({
               </div>
               <HeadlessSwitch
                 v-model="showArchivedAccounts"
-                class="grid h-5 w-5 shrink-0 cursor-pointer place-items-center rounded border focus:outline-none focus:ring-2 focus:ring-blue-500 sm:ml-4"
+                class="grid h-5 w-5 shrink-0 cursor-pointer place-items-center rounded border focus:outline-none focus:ring-2 focus:ring-blue-500"
                 v-bind:class="
                   showArchivedAccounts
                     ? 'border-blue-600 bg-blue-600 text-white'
@@ -400,11 +397,8 @@ export default defineComponent({
 
             <hr class="border-surface-border" />
 
-            <SwitchGroup
-              as="div"
-              class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
+            <SwitchGroup as="div" class="flex items-center justify-between gap-4">
+              <div class="min-w-0">
                 <SwitchLabel as="p" class="font-medium text-primary-text">
                   Show former assets
                 </SwitchLabel>
@@ -414,7 +408,7 @@ export default defineComponent({
               </div>
               <HeadlessSwitch
                 v-model="showFormerAssets"
-                class="grid h-5 w-5 shrink-0 cursor-pointer place-items-center rounded border focus:outline-none focus:ring-2 focus:ring-blue-500 sm:ml-4"
+                class="grid h-5 w-5 shrink-0 cursor-pointer place-items-center rounded border focus:outline-none focus:ring-2 focus:ring-blue-500"
                 v-bind:class="
                   showFormerAssets
                     ? 'border-blue-600 bg-blue-600 text-white'

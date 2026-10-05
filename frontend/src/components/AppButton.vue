@@ -25,7 +25,7 @@ export default defineComponent({
   computed: {
     classes(): string {
       const base = [
-        'inline-flex items-center justify-center gap-2 px-4 py-1.5',
+        'inline-flex items-center justify-center gap-2 px-3 py-1.5',
         'border rounded-md text-sm font-medium transition-colors',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
         'disabled:opacity-50 disabled:cursor-not-allowed',

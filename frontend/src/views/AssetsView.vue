@@ -265,8 +265,14 @@ export default defineComponent({
           <input
             v-model="searchQuery"
             type="text"
+            placeholder="Search..."
+            class="w-36 shrink-0 px-3 py-1.5 text-sm border border-page-border rounded-md bg-page text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 sm:hidden"
+          />
+          <input
+            v-model="searchQuery"
+            type="text"
             placeholder="Search assets..."
-            class="shrink-0 px-3 py-1.5 text-sm border border-page-border rounded-md bg-page text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+            class="hidden w-54 shrink-0 px-3 py-1.5 text-sm border border-page-border rounded-md bg-page text-primary-text focus:outline-none focus:ring-2 focus:ring-blue-500 sm:block"
           />
         </template>
       </PageHeader>
