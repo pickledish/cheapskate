@@ -195,7 +195,7 @@ export default defineComponent({
     },
     parseButtonText(): string {
       if (this.loading) return 'Parsing...';
-      return this.parseMode === 'local' ? 'Parse with Local LLM' : 'Parse with Cloud AI';
+      return this.parseMode === 'local' ? 'Parse with Local AI' : 'Parse with Cloud AI';
     },
     modalTitle(): string {
       if (this.step === 'match') return 'Select Account';
@@ -340,7 +340,7 @@ export default defineComponent({
       const llmConfig = profile?.preferences?.local_llm;
 
       if (!llmConfig || llmConfig.api === 'disabled') {
-        throw new Error('Local LLM not configured. Go to Profile & Settings to set it up.');
+        throw new Error('Local AI not configured. Go to Profile & Settings to set it up.');
       }
 
       const pdfArrayBuffer = await file.arrayBuffer();
@@ -1150,7 +1150,7 @@ export default defineComponent({
       <div v-if="step === 'upload'" class="inline-flex rounded-md">
         <button
           v-bind:disabled="!file || loading"
-          class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-1.5 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-l-md hover:border-blue-700 hover:bg-blue-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-1.5 border border-blue-600 bg-blue-600 text-white text-sm font-medium rounded-l-md hover:border-blue-700 hover:bg-blue-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           v-on:click="parseFile"
         >
           {{ parseButtonText }}
@@ -1163,7 +1163,7 @@ export default defineComponent({
             <ChevronUpIcon class="w-4 h-4" />
           </MenuButton>
           <MenuItems
-            class="absolute right-0 bottom-full mb-1 w-48 bg-surface border border-surface-border rounded-md shadow-lg z-50 py-1"
+            class="absolute right-0 bottom-full mb-1 w-40 bg-surface border border-surface-border rounded-md shadow-lg z-50 py-1"
           >
             <MenuItem v-slot:default="{ active }">
               <button
@@ -1184,7 +1184,7 @@ export default defineComponent({
                 ]"
                 v-on:click="parseMode = 'local'"
               >
-                Parse with Local LLM
+                Parse with Local AI
               </button>
             </MenuItem>
           </MenuItems>
