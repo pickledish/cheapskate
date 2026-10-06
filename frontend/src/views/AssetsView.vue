@@ -1,7 +1,8 @@
 <script lang="ts">
-import { defineComponent, type ComponentPublicInstance } from 'vue';
+import { defineComponent } from 'vue';
 import AppLayout from '@/components/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
+import ActionsMenu, { type ActionMenuItem } from '@/components/ActionsMenu.vue';
 import AddAssetModal from '@/components/modals/AddAssetModal.vue';
 import EditAssetModal from '@/components/modals/EditAssetModal.vue';
 import UpdatePriceModal from '@/components/modals/UpdatePriceModal.vue';
@@ -25,7 +26,6 @@ import { getColorClasses } from '@/lib/tagColors';
 import { formatCurrency } from '@/lib/util/currency';
 import { isStaleDate, relativeDate } from '@/lib/util/date';
 import { Bars3Icon, PlusIcon } from '@heroicons/vue/24/solid';
-import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import { assetClassIdToString } from '@/lib/data/asset-classes';
 import { formatError } from '@/lib/util/error';
@@ -40,12 +40,9 @@ export default defineComponent({
     UpdatePriceModal,
     OnboardingModal,
     OnboardingContinueCard,
-    Bars3Icon,
     PlusIcon,
-    HeadlessMenu,
-    MenuButton,
-    MenuItems,
-    MenuItem,
+    ActionsMenu,
+    Bars3Icon,
   },
   data(): {
     assets: AssetWithAllocations[];
@@ -56,7 +53,6 @@ export default defineComponent({
     loading: boolean;
     error: string | null;
     searchQuery: string;
-    menuAnchors: Record<number, HTMLElement>;
     showAddAssetModal: boolean;
     showEditAssetModal: boolean;
     showUpdatePriceModal: boolean;
@@ -73,7 +69,6 @@ export default defineComponent({
       loading: true,
       error: null,
       searchQuery: '',
-      menuAnchors: {},
 
       // Modal state
       showAddAssetModal: false,
@@ -216,22 +211,20 @@ export default defineComponent({
       return getColorClasses(colorName);
     },
 
-    setMenuAnchor(index: number, el: Element | ComponentPublicInstance | null) {
-      if (el instanceof HTMLElement) {
-        this.menuAnchors[index] = el;
-      } else {
-        delete this.menuAnchors[index];
-      }
-    },
-
-    menuDropdownStyle(index: number): Record<string, string> {
-      const el = this.menuAnchors[index];
-      if (!el) return {};
-      const rect = el.getBoundingClientRect();
-      return {
-        top: `${rect.bottom + 4}px`,
-        right: `${document.documentElement.clientWidth - rect.right}px`,
-      };
+    assetActions(asset: AssetWithAllocations): ActionMenuItem[] {
+      return [
+        { label: 'Edit', onClick: () => this.openEditModal(asset) },
+        { label: 'Update Price', onClick: () => this.openUpdatePriceModal(asset) },
+        {
+          label: 'View Update History',
+          to: { name: 'history', query: { asset: assetIdToString(asset.id) } },
+        },
+        {
+          label: 'Delete',
+          destructive: true,
+          onClick: () => this.doDeleteAsset(asset),
+        },
+      ];
     },
 
     async doDeleteAsset(asset: AssetWithAllocations) {
@@ -319,7 +312,7 @@ export default defineComponent({
             </thead>
             <tbody class="divide-y divide-surface-border">
               <tr
-                v-for="(asset, index) in filteredAssets"
+                v-for="asset in filteredAssets"
                 v-bind:key="assetIdToString(asset.id)"
                 class="h-16"
               >
@@ -362,80 +355,16 @@ export default defineComponent({
                   </div>
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap text-right text-sm bg-surface">
-                  <HeadlessMenu
-                    v-slot:default="{ open }"
-                    as="div"
-                    class="relative inline-block text-left"
-                  >
-                    <div v-bind:ref="(el) => setMenuAnchor(index, el)" class="inline-block">
-                      <MenuButton
+                  <ActionsMenu v-bind:items="assetActions(asset)">
+                    <template v-slot:button>
+                      <button
+                        type="button"
                         class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-surface-recessed-deep rounded cursor-pointer"
                       >
                         <Bars3Icon class="w-5 h-5" />
-                      </MenuButton>
-                    </div>
-                    <!-- Portal out of the table: overflow-x-auto clips absolute menus -->
-                    <Teleport to="body">
-                      <MenuItems
-                        v-bind:style="open ? menuDropdownStyle(index) : undefined"
-                        class="fixed z-50 w-44 bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
-                      >
-                        <MenuItem v-slot:default="{ active }">
-                          <button
-                            v-bind:class="[
-                              'w-full text-left px-4 py-2 text-sm cursor-pointer',
-                              active
-                                ? 'bg-surface-recessed-deep text-primary-text'
-                                : 'text-secondary-text',
-                            ]"
-                            v-on:click="openEditModal(asset)"
-                          >
-                            Edit
-                          </button>
-                        </MenuItem>
-                        <MenuItem v-slot:default="{ active }">
-                          <button
-                            v-bind:class="[
-                              'w-full text-left px-4 py-2 text-sm cursor-pointer',
-                              active
-                                ? 'bg-surface-recessed-deep text-primary-text'
-                                : 'text-secondary-text',
-                            ]"
-                            v-on:click="openUpdatePriceModal(asset)"
-                          >
-                            Update Price
-                          </button>
-                        </MenuItem>
-                        <MenuItem v-slot:default="{ active }">
-                          <router-link
-                            v-bind:to="{
-                              name: 'history',
-                              query: { asset: assetIdToString(asset.id) },
-                            }"
-                            v-bind:class="[
-                              'block w-full text-left px-4 py-2 text-sm cursor-pointer',
-                              active
-                                ? 'bg-surface-recessed-deep text-primary-text'
-                                : 'text-secondary-text',
-                            ]"
-                          >
-                            View Update History
-                          </router-link>
-                        </MenuItem>
-                        <MenuItem v-slot:default="{ active }">
-                          <button
-                            v-bind:class="[
-                              'w-full text-left px-4 py-2 text-sm cursor-pointer',
-                              active ? 'bg-error text-error-text' : 'text-secondary-text',
-                            ]"
-                            v-on:click="doDeleteAsset(asset)"
-                          >
-                            Delete
-                          </button>
-                        </MenuItem>
-                      </MenuItems>
-                    </Teleport>
-                  </HeadlessMenu>
+                      </button>
+                    </template>
+                  </ActionsMenu>
                 </td>
               </tr>
             </tbody>

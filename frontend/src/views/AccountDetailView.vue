@@ -2,6 +2,7 @@
 import { defineComponent, type ComponentPublicInstance } from 'vue';
 import AppLayout from '@/components/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
+import ActionsMenu, { type ActionMenuItem } from '@/components/ActionsMenu.vue';
 import EditAccountModal from '@/components/modals/EditAccountModal.vue';
 import CloseAccountModal from '@/components/modals/CloseAccountModal.vue';
 import IncludeInPortfolioModal from '@/components/modals/IncludeInPortfolioModal.vue';
@@ -33,10 +34,6 @@ import {
   ComboboxButton,
   ComboboxOptions,
   ComboboxOption,
-  Menu as HeadlessMenu,
-  MenuButton,
-  MenuItems,
-  MenuItem,
 } from '@headlessui/vue';
 import AppButton from '@/components/AppButton.vue';
 import { assetIdToString, type AssetAllocationInfo, type AssetId } from '@/lib/data/assets';
@@ -61,11 +58,8 @@ export default defineComponent({
     ComboboxButton,
     ComboboxOptions,
     ComboboxOption,
-    HeadlessMenu,
-    MenuButton,
     AppButton,
-    MenuItems,
-    MenuItem,
+    ActionsMenu,
   },
   data(): {
     account: Account | null;
@@ -133,6 +127,29 @@ export default defineComponent({
     },
     canIncludeInPortfolio(): boolean {
       return !!this.account && !this.account.in_portfolio && !this.isArchived;
+    },
+    accountActions(): ActionMenuItem[] {
+      const items: ActionMenuItem[] = [
+        { label: 'Edit', onClick: () => (this.showEditAccountModal = true) },
+      ];
+      if (this.canIncludeInPortfolio) {
+        items.push({
+          label: 'Include in Portfolio',
+          onClick: () => (this.showIncludeInPortfolioModal = true),
+        });
+      }
+      if (!this.isArchived) {
+        items.push({
+          label: 'Mark as Closed',
+          onClick: () => (this.showCloseAccountModal = true),
+        });
+      }
+      items.push({
+        label: 'Delete',
+        destructive: true,
+        onClick: () => this.doDeleteAccount(),
+      });
+      return items;
     },
     displayTotalHoldings(): string {
       return this.formatCurrency(this.totalValue || 0);
@@ -460,61 +477,13 @@ export default defineComponent({
       <template v-if="!loading && account">
         <PageHeader v-bind:title="account.name" v-bind:description="isArchived ? 'CLOSED' : null">
           <template v-slot:actions>
-            <HeadlessMenu as="div" class="relative inline-block text-left shrink-0">
-              <MenuButton as="template">
+            <ActionsMenu v-bind:items="accountActions">
+              <template v-slot:button>
                 <AppButton variant="secondary">
                   <span>Manage<span class="hidden sm:inline"> Account</span></span>
                 </AppButton>
-              </MenuButton>
-              <MenuItems
-                class="absolute right-0 mt-1 w-42 bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none z-50 py-1 flex flex-col"
-              >
-                <MenuItem v-slot:default="{ active }">
-                  <button
-                    v-bind:class="[
-                      'w-full text-left px-4 py-2 text-sm cursor-pointer',
-                      active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text',
-                    ]"
-                    v-on:click="showEditAccountModal = true"
-                  >
-                    Edit
-                  </button>
-                </MenuItem>
-                <MenuItem v-if="canIncludeInPortfolio" v-slot:default="{ active }">
-                  <button
-                    v-bind:class="[
-                      'w-full text-left px-4 py-2 text-sm cursor-pointer',
-                      active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text',
-                    ]"
-                    v-on:click="showIncludeInPortfolioModal = true"
-                  >
-                    Include in Portfolio
-                  </button>
-                </MenuItem>
-                <MenuItem v-if="!isArchived" v-slot:default="{ active }">
-                  <button
-                    v-bind:class="[
-                      'w-full text-left px-4 py-2 text-sm cursor-pointer',
-                      active ? 'bg-surface-recessed-deep text-primary-text' : 'text-secondary-text',
-                    ]"
-                    v-on:click="showCloseAccountModal = true"
-                  >
-                    Mark as Closed
-                  </button>
-                </MenuItem>
-                <MenuItem v-slot:default="{ active }">
-                  <button
-                    v-bind:class="[
-                      'w-full text-left px-4 py-2 text-sm cursor-pointer',
-                      active ? 'bg-error text-error-text' : 'text-secondary-text',
-                    ]"
-                    v-on:click="doDeleteAccount"
-                  >
-                    Delete
-                  </button>
-                </MenuItem>
-              </MenuItems>
-            </HeadlessMenu>
+              </template>
+            </ActionsMenu>
           </template>
         </PageHeader>
 

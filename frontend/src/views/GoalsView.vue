@@ -1,7 +1,8 @@
 <script lang="ts">
-import { defineComponent, type ComponentPublicInstance } from 'vue';
+import { defineComponent } from 'vue';
 import AppLayout from '@/components/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
+import ActionsMenu, { type ActionMenuItem } from '@/components/ActionsMenu.vue';
 import AddAssetClassModal from '@/components/modals/AddAssetClassModal.vue';
 import EditAssetClassModal from '@/components/modals/EditAssetClassModal.vue';
 import OnboardingModal from '@/components/modals/OnboardingModal.vue';
@@ -17,13 +18,12 @@ import {
   type AssetClass,
 } from '@/lib/data';
 import { getColorClasses } from '@/lib/tagColors';
-import { Bars3Icon } from '@heroicons/vue/24/solid';
-import { Menu as HeadlessMenu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue';
 import type { AssetId } from '@/lib/data/assets';
 import { assetClassIdToString, type AssetClassId } from '@/lib/data/asset-classes';
 import { formatGoal } from '@/lib/util/currency';
 import { formatError } from '@/lib/util/error';
 import AppButton from '@/components/AppButton.vue';
+import { Bars3Icon } from '@heroicons/vue/24/solid';
 
 export default defineComponent({
   name: 'GoalsView',
@@ -36,12 +36,9 @@ export default defineComponent({
     OnboardingContinueCard,
     GoalAllocationChart,
     VueDraggable,
-    Bars3Icon,
-    HeadlessMenu,
-    MenuButton,
     AppButton,
-    MenuItems,
-    MenuItem,
+    ActionsMenu,
+    Bars3Icon,
   },
   data(): {
     assetClasses: AssetClass[];
@@ -53,7 +50,6 @@ export default defineComponent({
     selectedAssetClass: AssetClass | null;
     showOnboardingModal: boolean;
     goalsCompleted: boolean;
-    menuAnchors: Record<number, HTMLElement>;
   } {
     return {
       assetClasses: [],
@@ -69,7 +65,6 @@ export default defineComponent({
       // Onboarding state
       showOnboardingModal: false,
       goalsCompleted: false,
-      menuAnchors: {},
     };
   },
   computed: {
@@ -178,22 +173,15 @@ export default defineComponent({
       return this.assetCountByClass.get(classId) || 0;
     },
 
-    setMenuAnchor(index: number, el: Element | ComponentPublicInstance | null) {
-      if (el instanceof HTMLElement) {
-        this.menuAnchors[index] = el;
-      } else {
-        delete this.menuAnchors[index];
-      }
-    },
-
-    menuDropdownStyle(index: number): Record<string, string> {
-      const el = this.menuAnchors[index];
-      if (!el) return {};
-      const rect = el.getBoundingClientRect();
-      return {
-        top: `${rect.bottom + 4}px`,
-        right: `${document.documentElement.clientWidth - rect.right}px`,
-      };
+    assetClassActions(assetClass: AssetClass): ActionMenuItem[] {
+      return [
+        { label: 'Edit', onClick: () => this.openEditModal(assetClass) },
+        {
+          label: 'Delete',
+          destructive: true,
+          onClick: () => this.doDeleteAssetClass(assetClass),
+        },
+      ];
     },
 
     async onReorder() {
@@ -320,51 +308,16 @@ export default defineComponent({
                     'rounded-br-lg': index === assetClasses.length - 1 && !hasAnyGoals,
                   }"
                 >
-                  <HeadlessMenu
-                    v-slot:default="{ open }"
-                    as="div"
-                    class="relative inline-block text-left"
-                  >
-                    <div v-bind:ref="(el) => setMenuAnchor(index, el)" class="inline-block">
-                      <MenuButton
+                  <ActionsMenu v-bind:items="assetClassActions(assetClass)">
+                    <template v-slot:button>
+                      <button
+                        type="button"
                         class="w-8 h-8 flex items-center justify-center text-placeholder-text hover:text-muted-text hover:bg-surface-recessed-deep rounded cursor-pointer"
                       >
                         <Bars3Icon class="w-5 h-5" />
-                      </MenuButton>
-                    </div>
-                    <!-- Portal out of the table: overflow-x-auto clips absolute menus -->
-                    <Teleport to="body">
-                      <MenuItems
-                        v-bind:style="open ? menuDropdownStyle(index) : undefined"
-                        class="fixed z-50 w-32 bg-surface border border-surface-border rounded-md shadow-lg focus:outline-none py-1 flex flex-col"
-                      >
-                        <MenuItem v-slot:default="{ active }">
-                          <button
-                            v-bind:class="[
-                              'w-full text-left px-4 py-2 text-sm cursor-pointer',
-                              active
-                                ? 'bg-surface-recessed-deep text-primary-text'
-                                : 'text-secondary-text',
-                            ]"
-                            v-on:click="openEditModal(assetClass)"
-                          >
-                            Edit
-                          </button>
-                        </MenuItem>
-                        <MenuItem v-slot:default="{ active }">
-                          <button
-                            v-bind:class="[
-                              'w-full text-left px-4 py-2 text-sm cursor-pointer',
-                              active ? 'bg-error text-error-text' : 'text-secondary-text',
-                            ]"
-                            v-on:click="doDeleteAssetClass(assetClass)"
-                          >
-                            Delete
-                          </button>
-                        </MenuItem>
-                      </MenuItems>
-                    </Teleport>
-                  </HeadlessMenu>
+                      </button>
+                    </template>
+                  </ActionsMenu>
                 </td>
               </tr>
             </VueDraggable>
