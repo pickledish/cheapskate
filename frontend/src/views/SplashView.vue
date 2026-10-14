@@ -28,7 +28,7 @@ export default defineComponent({
           image: landing1,
           alt: 'Asset groups with allocation goals',
           title: 'Set Investment Goals',
-          body: 'Define custom asset classes based on how you think about your finances, and set your portfolio\'s target allocation percentage for each one.',
+          body: "Define custom asset classes based on how you think about your finances, and set your portfolio's target allocation percentage for each one.",
         },
         {
           image: landing2,
@@ -100,9 +100,28 @@ export default defineComponent({
       </div>
 
       <section class="mt-28 sm:mt-36 max-w-3xl mx-auto text-center">
-        <h2 class="text-xl font-semibold text-primary-text">Always Free and Open Source</h2>
+        <h2 class="text-xl font-semibold text-primary-text">Forever Free and Open Source</h2>
         <p class="mt-6 text-secondary-text leading-relaxed">
-          Hi I'm [Brandon]()! I made Cheapskate because it was something I needed, not to make money, so there's no way to pay for it now and there never will be. To that end, it was designed such that it costs almost nothing to run! You can check out the source [here](), read more about the tech underpinning Cheapskate [here](), or shoot me an email [here]() if you have thoughts or questions about the site. Thanks for checking it out!
+          Hi I'm
+          <a href="https://www.willett.io/about/" class="text-link hover:text-link-hover underline"
+            >Brandon</a
+          >! I made Cheapskate because it was something I needed, not to make money, so there's no
+          way to pay for it now and there never will be. To that end, it was designed such that it
+          costs almost nothing to run! You can check out the source
+          <a
+            href="https://github.com/pickledish/cheapskate"
+            class="text-link hover:text-link-hover underline"
+            >here</a
+          >, read more about the tech underpinning Cheapskate
+          <a
+            href="https://www.willett.io/posts/cheapskate/"
+            class="text-link hover:text-link-hover underline"
+            >here</a
+          >, or shoot me an email
+          <a href="mailto:brandon@willett.io" class="text-link hover:text-link-hover underline"
+            >here</a
+          >
+          if you have thoughts or questions about the site. Thanks for checking it out!
         </p>
       </section>
     </main>
