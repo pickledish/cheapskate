@@ -70,9 +70,15 @@ export default defineComponent({
         <p class="mt-8 text-lg sm:text-xl text-secondary-text">
           Use local AI to help you stay on top of your investments
         </p>
-        <AppButton v-if="hasSession !== null" variant="primary" v-bind:to="ctaTo" class="mt-12">
-          {{ ctaLabel }}
-        </AppButton>
+        <div
+          v-if="hasSession !== null"
+          class="mt-12 flex flex-wrap items-center justify-center gap-3"
+        >
+          <AppButton variant="primary" v-bind:to="ctaTo">
+            {{ ctaLabel }}
+          </AppButton>
+          <AppButton v-if="!hasSession" variant="success" to="/login?demo=1"> View demo </AppButton>
+        </div>
       </div>
 
       <div class="mt-28 sm:mt-36 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">

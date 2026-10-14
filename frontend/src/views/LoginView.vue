@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { supabase } from '@/lib/supabase';
+import { DEMO_EMAIL, DEMO_PASSWORD } from '@/lib/data';
 import { formatError } from '@/lib/util/error';
 import AppButton from '@/components/AppButton.vue';
 
@@ -21,6 +22,11 @@ export default defineComponent({
       if (this.loading) return 'Loading...';
       return this.isSignup ? 'Sign Up' : 'Log In';
     },
+  },
+  created() {
+    if (this.$route.query.demo !== '1') return;
+    this.email = DEMO_EMAIL;
+    this.password = DEMO_PASSWORD;
   },
   methods: {
     async signInWithGoogle() {

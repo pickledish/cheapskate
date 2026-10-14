@@ -33,6 +33,8 @@ import {
   insertHoldingUpdate,
   updateAccount,
   DEMO_FAMILY_ID,
+  DEMO_EMAIL,
+  DEMO_PASSWORD,
   type Account,
 } from '@/lib/data';
 import type { AssetId } from '@/lib/data/assets';
@@ -44,9 +46,9 @@ import { lastNMonths, monthEnd } from '@/lib/util/date';
 // ---------------------------------------------------------------------------
 
 const FAMILY_ID = DEMO_FAMILY_ID;
-const PASSWORD = 'demo-password-123';
+const PASSWORD = DEMO_PASSWORD;
 
-const ALEX_EMAIL = 'alex@skate.cheap';
+const ALEX_EMAIL = DEMO_EMAIL;
 const JORDAN_EMAIL = 'jordan@skate.cheap';
 const NEWBIE_EMAIL = 'newbie@skate.cheap';
 const DEMO_EMAILS = [ALEX_EMAIL, JORDAN_EMAIL, NEWBIE_EMAIL] as const;

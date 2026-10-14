@@ -4,6 +4,10 @@ import { throwIfError } from '../util/error';
 /** Well-known demo household from `scripts/seed-demo.ts`. */
 export const DEMO_FAMILY_ID = '11111111-1111-4111-8111-111111111111';
 
+/** Alex, the seeded read-only demo login. Password is shared by the demo users. */
+export const DEMO_EMAIL = 'alex@skate.cheap';
+export const DEMO_PASSWORD = 'demo-password-123';
+
 export interface Family {
   id: string;
   created_at: string;

@@ -1,5 +1,11 @@
 // Families
-export { insertFamily, DEMO_FAMILY_ID, assertCanJoinFamily } from './families';
+export {
+  insertFamily,
+  DEMO_FAMILY_ID,
+  DEMO_EMAIL,
+  DEMO_PASSWORD,
+  assertCanJoinFamily,
+} from './families';
 export type { Family } from './families';
 
 // Accounts
