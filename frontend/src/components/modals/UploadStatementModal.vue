@@ -811,7 +811,7 @@ export default defineComponent({
               </p>
               <!-- prettier-ignore -->
               <p class="text-sm text-info-text">
-                The AI provider is configured with <a href="https://openrouter.ai/docs/guides/features/zdr" class="font-semibold underline hover:text-info-text">zero data retention</a>, so your document is not stored or used for training after parsing.
+                Cloud AI always uses <a href="https://openrouter.ai/docs/guides/features/zdr" class="font-semibold underline hover:text-info-text">zero data retention</a>, so your document is not stored or used for training after parsing -- or if you're worried, use local AI instead!
               </p>
             </div>
           </DisclosurePanel>
