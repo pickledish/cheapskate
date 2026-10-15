@@ -68,20 +68,24 @@ export default defineComponent({
       <div class="text-center max-w-2xl mx-auto">
         <h1 class="text-5xl sm:text-6xl font-bold text-primary-text tracking-tight">
           <!-- prettier-ignore -->
-          <span class="mr-3 sm:mr-4">🛼</span><span class="relative inline-block -translate-y-0.25 pb-9 sm:pb-11">Cheapskate<svg
-            class="absolute left-0 bottom-0 w-full h-7 sm:h-9 -rotate-3"
-            viewBox="0 0 100 12"
-            preserveAspectRatio="none"
-          ><path
-            d="M3 1 Q 25 3, 50 1 Q 75 0, 93 2
+          <span class="mr-3 sm:mr-4">🛼</span
+          ><span class="relative inline-block -translate-y-0.25 pb-9 sm:pb-11"
+            >Cheapskate<svg
+              class="absolute left-0 bottom-0 w-full h-7 sm:h-9 -rotate-3"
+              viewBox="0 0 100 12"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M3 1 Q 25 3, 50 1 Q 75 0, 93 2
                C 100 2, 101 7, 90 6 Q 60 4, 35 6
                C 8 7, 6 10, 18 9 Q 42 8, 68 10"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.25"
-            stroke-linecap="round"
-            class="text-amber-400"
-          /></svg></span>
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.25"
+                stroke-linecap="round"
+                class="text-amber-400"
+              /></svg
+          ></span>
         </h1>
         <p class="mt-10 sm:mt-12 text-lg sm:text-xl text-secondary-text">
           Use local AI to help you stay on top of your investments
@@ -128,8 +132,8 @@ export default defineComponent({
           <a href="https://www.willett.io/about/" class="text-link hover:text-link-hover underline"
             >Brandon</a
           >! I made Cheapskate because it was something I needed, not to make money, so there's no
-          way to pay for it now and there never will be. Besides, it was designed such that it
-          costs almost nothing to run anyway! You can look at the source
+          way to pay for it now and there never will be. Besides, it was designed such that it costs
+          almost nothing to run anyway! You can look at the source
           <a
             href="https://github.com/pickledish/cheapskate"
             class="text-link hover:text-link-hover underline"

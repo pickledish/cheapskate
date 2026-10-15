@@ -38,6 +38,8 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          # Footer "Generated" date links to this run. GITHUB_REPOSITORY is already set.
+          GITHUB_RUN_ID: ${{ github.run_id }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

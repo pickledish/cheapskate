@@ -7,4 +7,6 @@ declare module '*.vue' {
 }
 
 declare const __COMMIT_HASH__: string;
+declare const __COMMIT_URL__: string;
 declare const __BUILD_TIME__: string;
+declare const __WORKFLOW_RUN_URL__: string;
