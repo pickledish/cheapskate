@@ -76,6 +76,31 @@ export default defineComponent({
 <template>
   <div class="min-h-screen flex items-center justify-center bg-page px-4">
     <div class="max-w-md w-full p-8 bg-surface rounded-lg shadow-md">
+      <router-link
+        to="/"
+        class="mx-auto mb-8 flex w-fit justify-center text-4xl font-bold leading-none tracking-tight text-primary-text rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      >
+        <!-- prettier-ignore -->
+        <span class="mr-2.5">🛼</span
+        ><span class="relative inline-block -translate-y-0.25 pb-6"
+          >Cheapskate<svg
+            class="absolute left-0 bottom-0 w-full h-5 -rotate-3"
+            viewBox="0 0 100 12"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M3 1 Q 25 3, 50 1 Q 75 0, 93 2
+             C 100 2, 101 7, 90 6 Q 60 4, 35 6
+             C 8 7, 6 10, 18 9 Q 42 8, 68 10"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.25"
+              stroke-linecap="round"
+              class="text-amber-400"
+            /></svg
+        ></span>
+      </router-link>
+
       <h1 class="text-2xl font-bold text-center mb-6 text-primary-text">
         {{ isSignup ? 'Create Account' : 'Sign In' }}
       </h1>
