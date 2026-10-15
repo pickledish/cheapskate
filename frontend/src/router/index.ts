@@ -103,9 +103,10 @@ router.beforeEach(async (to, _from, next) => {
     return next('/accounts');
   }
 
-  // Splash is public even when logged in
-  if (to.path === '/') {
-    return next();
+  // Logged-in users skip the splash page. Onboarding guards still apply
+  // when the accounts route loads.
+  if (to.path === '/' && isAuthenticated) {
+    return next('/accounts');
   }
 
   // Setup page - always allow
