@@ -189,6 +189,11 @@ export default defineComponent({
           {{ isSignup ? 'Sign In' : 'Sign Up' }}
         </button>
       </p>
+
+      <p class="mt-3 text-center text-xs text-muted-text">
+        (note email signup might be flaky since I'm just using the Supabase test mail server; if you
+        get an error, use Google SSO or try again later!)
+      </p>
     </div>
   </div>
 </template>
