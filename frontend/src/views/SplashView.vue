@@ -91,8 +91,8 @@ export default defineComponent({
           Use local AI to help you stay on top of your investments
         </p>
         <div
-          v-if="hasSession !== null"
           class="mt-12 flex flex-wrap items-center justify-center gap-3"
+          v-bind:class="{ invisible: hasSession === null }"
         >
           <AppButton variant="primary" v-bind:to="ctaTo">
             {{ ctaLabel }}

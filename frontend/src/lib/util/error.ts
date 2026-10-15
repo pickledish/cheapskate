@@ -64,3 +64,33 @@ export function throwIfError(error: unknown): asserts error is null | undefined 
     throw new Error(formatError(error));
   }
 }
+
+/**
+ * `functions.invoke` reports non-2xx as "Edge Function returned a non-2xx status code"
+ * and stashes the JSON body on `context` (a Response). Surface that body instead.
+ */
+export async function throwIfInvokeError(error: unknown): Promise<void> {
+  if (error == null) return;
+
+  const message = await readInvokeErrorMessage(error);
+  if (message) throw new Error(message);
+  throw error instanceof Error ? error : new Error(formatError(error));
+}
+
+async function readInvokeErrorMessage(error: unknown): Promise<string | null> {
+  if (!error || typeof error !== 'object') return null;
+  const context = (error as { context?: unknown }).context;
+  if (!(context instanceof Response)) return null;
+
+  try {
+    const contentType = context.headers.get('Content-Type') ?? '';
+    const body = contentType.includes('application/json')
+      ? await context.json()
+      : await context.text();
+    const text = typeof body === 'string' ? body.trim() : formatError(body);
+    if (!text || text === 'Something went wrong') return null;
+    return text;
+  } catch {
+    return null;
+  }
+}

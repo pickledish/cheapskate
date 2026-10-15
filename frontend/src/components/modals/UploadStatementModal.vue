@@ -49,7 +49,7 @@ import {
 } from '@shared/parse-pdf-schema';
 import { assetIdToString, type AssetId } from '@/lib/data/assets';
 import { accountIdToString, type AccountId } from '@/lib/data/accounts';
-import { formatError } from '@/lib/util/error';
+import { formatError, throwIfInvokeError } from '@/lib/util/error';
 
 /**
  * ResolvedHolding — preview/save row after matching against tickers + per-account aliases.
@@ -326,7 +326,7 @@ export default defineComponent({
       const { data, error } = await supabase.functions.invoke('parse-pdf', {
         body: { tsv },
       });
-      if (error) throw error;
+      await throwIfInvokeError(error);
       return ParsePdfResponseSchema.parse(data);
     },
 

@@ -3,7 +3,7 @@ import { defineComponent } from 'vue';
 import BaseModal from './BaseModal.vue';
 import AppButton from '@/components/AppButton.vue';
 import { supabase } from '@/lib/supabase';
-import { formatError } from '@/lib/util/error';
+import { formatError, throwIfInvokeError } from '@/lib/util/error';
 
 export default defineComponent({
   name: 'DeleteAccountModal',
@@ -30,7 +30,7 @@ export default defineComponent({
 
       try {
         const { error: invokeError } = await supabase.functions.invoke('delete-account');
-        if (invokeError) throw invokeError;
+        await throwIfInvokeError(invokeError);
 
         // Account deleted - sign out locally and redirect
         await supabase.auth.signOut();
