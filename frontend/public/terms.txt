@@ -1,0 +1,19 @@
+Cheapskate Terms of Service
+Last updated: October 15, 2026
+
+Cheapskate (https://skate.cheap) is a free, open-source hobby project run by
+one person, Brandon Willett. By using it, you agree to the following:
+
+- Cheapskate is provided "as is", with no warranty of any kind. It may have
+  bugs, lose data, change, or shut down at any time.
+- Absolutely nothing in Cheapskate is financial advice! It's an informational
+  tool only, and all decisions you make regarding your finances are your own.
+  Numbers parsed from statements by AI can be wrong, so always check them
+  against your actual statements.
+- To the extent the law allows, I am not liable for any losses or damages
+  from using Cheapskate.
+- Don't abuse the service or try to access other people's data.
+- I may update these terms. If you keep using Cheapskate after an update, you
+  accept the new terms.
+
+Questions: brandon@willett.io

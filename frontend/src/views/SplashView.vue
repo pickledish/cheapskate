@@ -149,6 +149,11 @@ export default defineComponent({
           >
           if you have thoughts or questions about the site. Thanks for checking it out!
         </p>
+        <p class="mt-6 text-sm text-muted-text">
+          <a href="/privacy.txt" class="hover:underline">Privacy</a>
+          <span class="mx-2">·</span>
+          <a href="/terms.txt" class="hover:underline">Terms</a>
+        </p>
       </section>
     </main>
     <AppFooter class="shrink-0" />

@@ -191,8 +191,11 @@ export default defineComponent({
       </p>
 
       <p class="mt-3 text-center text-xs text-muted-text">
-        (note email signup might be flaky since I'm just using the Supabase test mail server; if you
-        get an error, use Google SSO or try again later!)
+        Please read the
+        <a href="/terms.txt" class="text-link hover:text-link-hover underline">Terms</a>
+        and
+        <a href="/privacy.txt" class="text-link hover:text-link-hover underline">Privacy Policy</a>,
+        they are short!
       </p>
     </div>
   </div>

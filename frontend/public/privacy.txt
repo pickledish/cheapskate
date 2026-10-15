@@ -1,0 +1,28 @@
+Cheapskate Privacy Policy
+Last updated: October 15, 2026
+
+Cheapskate (https://skate.cheap) is a free, open-source hobby project run by
+one person, Brandon Willett.
+
+WHAT IS COLLECTED
+- Your name and email address, from Google Sign-In or email sign-up.
+- The financial data you enter or upload (accounts, holdings, prices, goals).
+
+HOW IT IS USED
+Your data is only used to run the app for you and the family members you
+share it with. It is never sold, shared for advertising, or used for
+anything else. There are no ads and no analytics or tracking.
+
+WHERE IT GOES
+- Supabase stores the database and handles sign-in.
+- Bunny CDN serves the website.
+- If you use cloud statement parsing, the statement's text is sent to an AI
+  model through OpenRouter. If you use a local model instead, the text stays
+  on your machine.
+
+DELETING YOUR DATA
+You can delete your account at any time under Profile & Settings. Data in a
+shared family is deleted when the family's last member leaves.
+
+CONTACT
+brandon@willett.io
