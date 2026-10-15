@@ -88,7 +88,7 @@ export default defineComponent({
           ></span>
         </h1>
         <p class="mt-10 sm:mt-12 text-lg sm:text-xl text-secondary-text">
-          Use local AI to help you stay on top of your investments
+          Stay on top of your investments with (optional, local) AI
         </p>
         <div
           class="mt-12 flex flex-wrap items-center justify-center gap-3"

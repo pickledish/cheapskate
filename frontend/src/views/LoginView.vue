@@ -45,12 +45,19 @@ export default defineComponent({
 
       try {
         if (this.isSignup) {
-          const { error } = await supabase.auth.signUp({
+          const { data, error } = await supabase.auth.signUp({
             email: this.email,
             password: this.password,
           });
           if (error) throw error;
-          this.error = 'Check your email for a confirmation link!';
+          // Email confirmation is off, so Supabase returns a session and the
+          // account is already signed in. When confirmation is turned back on,
+          // there is no session and the user still needs the email link.
+          if (data.session) {
+            await this.$router.push('/accounts');
+          } else {
+            this.error = 'Check your email for a confirmation link!';
+          }
         } else {
           const { error } = await supabase.auth.signInWithPassword({
             email: this.email,
@@ -194,8 +201,8 @@ export default defineComponent({
         Please read the
         <a href="/terms.txt" class="text-link hover:text-link-hover underline">Terms</a>
         and
-        <a href="/privacy.txt" class="text-link hover:text-link-hover underline">Privacy Policy</a>,
-        they are short!
+        <a href="/privacy.txt" class="text-link hover:text-link-hover underline">Privacy</a>, they
+        are short
       </p>
     </div>
   </div>
