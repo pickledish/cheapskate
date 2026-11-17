@@ -22,8 +22,9 @@ cheapskate/
 │       ├── _shared/         # Shared parse-pdf schema/prompt (also imported by the frontend)
 │       ├── parse-pdf/       # PDF statement parsing via OpenRouter
 │       └── delete-account/  # Deletes the authenticated user's account
-└── frontend/            # Vue 3 + Vite app
-    └── scripts/         # Demo seed, institution icon fetch
+├── frontend/            # Vue 3 + Vite app
+│   └── scripts/         # Demo seed, institution icon fetch
+└── mcp/                 # CLI + MCP server for AI assistants (see mcp/README.md)
 ```
 
 ## External services
