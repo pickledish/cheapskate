@@ -1,0 +1,96 @@
+# Throwaway Cheapskate backend for the mcp/ integration tests: Postgres, auth
+# (GoTrue), REST (PostgREST) and a gateway that gives them one origin, the way
+# hosted Supabase does. Every secret here is a test value. Never deploy this.
+name: cheapskate-mcp-test
+
+x-test-secrets:
+  password: &pgpass test-postgres-password
+  jwt: &jwt test-jwt-secret-at-least-32-characters-long
+
+services:
+  db:
+    image: supabase/postgres:17.6.1.136
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      POSTGRES_PASSWORD: *pgpass
+      PGPASSWORD: *pgpass
+      POSTGRES_DB: postgres
+      PGDATABASE: postgres
+    volumes:
+      - ./db-roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres', '-h', 'localhost']
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  auth:
+    image: supabase/gotrue:v2.197.0
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://127.0.0.1:54329/auth/v1
+      GOTRUE_SITE_URL: http://127.0.0.1:54329
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:test-postgres-password@db:5432/postgres
+      GOTRUE_JWT_SECRET: *jwt
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: 'true'
+      GOTRUE_MAILER_AUTOCONFIRM: 'true'
+      GOTRUE_DISABLE_SIGNUP: 'false'
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: '100000'
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:9999/health']
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  # One-shot: applies ../../../supabase/migrations, the same files the app uses.
+  migrate:
+    image: supabase/postgres:17.6.1.136
+    depends_on:
+      auth:
+        condition: service_healthy
+    restart: 'no'
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: *pgpass
+      PGDATABASE: postgres
+    volumes:
+      - ../../../supabase/migrations:/migrations:ro
+      - ./migrate.sh:/migrate.sh:ro
+    entrypoint: ['sh', '/migrate.sh']
+
+  rest:
+    image: postgrest/postgrest:v14.18
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      PGRST_DB_URI: postgres://authenticator:test-postgres-password@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: *jwt
+      PGRST_DB_USE_LEGACY_GUCS: 'false'
+
+  gateway:
+    image: caddy:2
+    depends_on:
+      - auth
+      - rest
+    ports:
+      - '127.0.0.1:54329:8080'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:8080/auth/v1/health']
+      interval: 2s
+      timeout: 5s
+      retries: 60

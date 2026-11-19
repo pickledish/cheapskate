@@ -1,0 +1,35 @@
+{
+  "name": "cheapskate-mcp",
+  "version": "0.1.0",
+  "description": "Command-line tool and MCP server for a Cheapskate instance: create accounts and record holdings without the web UI.",
+  "license": "AGPL-3.0-only",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "cheapskate-cli": "dist/cli.js",
+    "cheapskate-mcp": "dist/mcp.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --check \"**/*.ts\"",
+    "format-fix": "prettier --write \"**/*.ts\"",
+    "stack:up": "docker compose -f test/stack/docker-compose.yml up -d --wait db auth rest gateway",
+    "stack:down": "docker compose -f test/stack/docker-compose.yml down -v",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "@supabase/supabase-js": "^2.90.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.7",
+    "prettier": "^3.9.6",
+    "typescript": "~5.9.3",
+    "vitest": "^5.1.0"
+  }
+}

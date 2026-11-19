@@ -17,6 +17,8 @@ Sign in with Google or email/password.
 
 Statement PDFs are converted to text in the browser, then parsed by an LLM — either the hosted `parse-pdf` function (OpenRouter) or a **local** model (Ollama or an OpenAI-compatible server) configured under Profile & Settings.
 
+An AI assistant can also set up accounts and record holdings through a small CLI and MCP server, with a dry run and undo; see [mcp/README.md](./mcp/README.md).
+
 ## How it’s built
 
 Vue 3 + Vite SPA, with Supabase for Postgres, auth, and edge functions. Portfolio history is a stream of **updates** (statement, manual price, manual holdings, close, include-in-portfolio) rather than standalone price/holdings tables. Row Level Security scopes every table to the user’s family.
