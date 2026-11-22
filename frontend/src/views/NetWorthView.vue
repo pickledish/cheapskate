@@ -136,6 +136,19 @@ export default defineComponent({
         .filter((item) => this.isSeriesSelected(item.name))
         .reduce((sum, item) => sum + item.latestValue, 0);
     },
+    hasHoldings(): boolean {
+      return this.holdingsData.length > 0;
+    },
+    /**
+     * True when holdings exist but every one is dated after the last charted
+     * month. The chart only covers completed months, so it would otherwise be
+     * a row of empty bars with no hint as to why.
+     */
+    onlyCurrentMonthHoldings(): boolean {
+      if (!this.hasHoldings) return false;
+      const lastChartedDay = monthEnd(lastNMonths(1)[0]!);
+      return this.holdingsData.every((h) => h.effective_date > lastChartedDay);
+    },
   },
   watch: {
     groupBy() {
@@ -453,8 +466,31 @@ export default defineComponent({
       <!-- Loading state -->
       <div v-if="loading" class="text-muted-text">Loading...</div>
 
+      <!-- Empty state: nothing recorded yet -->
+      <div
+        v-if="!loading && !error && !hasHoldings"
+        class="text-center py-12 bg-surface rounded-lg shadow"
+      >
+        <p class="text-muted-text mb-4">
+          No holdings yet. Add an account and record what it holds to start tracking your net worth.
+        </p>
+        <AppButton variant="primary" to="/accounts">Go to Accounts</AppButton>
+      </div>
+
+      <!-- Holdings exist, but only in the month still in progress -->
+      <div
+        v-if="!loading && !error && onlyCurrentMonthHoldings"
+        class="p-4 bg-surface text-muted-text rounded-lg shadow"
+      >
+        Net worth is charted by completed month. Your first updates are dated this month, so they'll
+        appear here once the month ends.
+      </div>
+
       <!-- Chart + legend islands -->
-      <div v-if="!loading && !error" class="flex flex-col gap-6 md:min-h-0 md:flex-1 md:flex-row">
+      <div
+        v-if="!loading && !error && hasHoldings"
+        class="flex flex-col gap-6 md:min-h-0 md:flex-1 md:flex-row"
+      >
         <div
           class="min-w-0 overflow-hidden bg-surface shadow rounded-lg md:flex md:min-h-0 md:flex-1 md:flex-col"
         >
